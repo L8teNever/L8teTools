@@ -127,5 +127,17 @@
             <p class="text-sm opacity-80 mt-1">Rechne Längen, Gewichte, Temperaturen und mehr um.</p>
         </div>
     </a>
+
+    <!-- Diff-Checker Card -->
+    <a href="{{ url_for('diff_checker') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">difference</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Diff-Checker</h3>
+            <p class="text-sm opacity-80 mt-1">Vergleiche zwei Texte und finde alle Unterschiede.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}

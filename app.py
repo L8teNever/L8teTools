@@ -249,6 +249,11 @@ def create_app():
     def unit_converter():
         return render_template('tools/unit_converter.html')
 
+    @app.route('/tools/diff-checker')
+    @login_required
+    def diff_checker():
+        return render_template('tools/diff_checker.html')
+
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required
     def api_delete_user(user_id):
