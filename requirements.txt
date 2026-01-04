@@ -6,3 +6,10 @@ gunicorn
 Pillow
 img2pdf
 PyMuPDF
+pillow-heif
+cairosvg
+pdf2docx
+markdown2
+moviepy
+pandas
+openpyxl

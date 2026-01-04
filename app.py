@@ -5,9 +5,17 @@ from flask import Flask, render_template, redirect, url_for, request, flash, sen
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import tempfile
 from PIL import Image
 import img2pdf
 import fitz  # PyMuPDF
+from pillow_heif import register_heif_opener
+import cairosvg
+from pdf2docx import Converter as PDF2Docx
+import markdown2
+import moviepy.editor as mp
+
+register_heif_opener()
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -99,6 +107,8 @@ def create_app():
 
     @app.route('/api/convert', methods=['POST'])
     @login_required
+    @app.route('/api/convert', methods=['POST'])
+    @login_required
     def api_convert():
         if 'files' not in request.files:
             return jsonify({'error': 'Keine Dateien hochgeladen'}), 400
@@ -112,25 +122,33 @@ def create_app():
         output = io.BytesIO()
         
         try:
+            # 1. Image & Document Unification to PDF
             if target_format == 'pdf':
-                # Convert multiple images/PDFs to one single PDF
                 pdf_bytes = []
                 for file in files:
                     filename = file.filename.lower()
                     file_data = file.read()
                     
-                    if filename.endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.tiff')):
-                        # Convert Image to PDF bytes
+                    if filename.endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.tiff', '.heic')):
                         img = Image.open(io.BytesIO(file_data))
                         if img.mode != 'RGB':
                             img = img.convert('RGB')
                         img_byte_arr = io.BytesIO()
                         img.save(img_byte_arr, format='JPEG')
                         pdf_bytes.append(img2pdf.convert(img_byte_arr.getvalue()))
+                    elif filename.endswith('.svg'):
+                        svg_pdf = cairosvg.svg2pdf(bytestring=file_data)
+                        pdf_bytes.append(svg_pdf)
+                    elif filename.endswith(('.md', '.txt')):
+                        doc = fitz.open()
+                        page = doc.new_page()
+                        text = file_data.decode('utf-8', errors='ignore')
+                        page.insert_text((50, 50), text)
+                        pdf_bytes.append(doc.tobytes())
+                        doc.close()
                     elif filename.endswith('.pdf'):
                         pdf_bytes.append(file_data)
                 
-                # Combine all PDF bytes into one
                 doc = fitz.open()
                 for pb in pdf_bytes:
                     temp_doc = fitz.open("pdf", pb)
@@ -142,15 +160,14 @@ def create_app():
                 output.seek(0)
                 return send_file(output, mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
 
+            # 2. Image formats (PNG, JPG, WEBP)
             elif target_format in ['png', 'jpg', 'webp']:
-                # Convert files to images, return as ZIP if multiple
                 with zipfile.ZipFile(output, 'w') as zf:
                     for i, file in enumerate(files):
                         filename = file.filename.lower()
                         file_data = file.read()
                         
                         if filename.endswith('.pdf'):
-                            # Extract pages from PDF as images
                             pdf_doc = fitz.open("pdf", file_data)
                             for page_num in range(len(pdf_doc)):
                                 page = pdf_doc.load_page(page_num)
@@ -160,17 +177,95 @@ def create_app():
                                 img.save(img_byte_arr, format=target_format.upper())
                                 zf.writestr(f"file_{i}_page_{page_num}.{target_format}", img_byte_arr.getvalue())
                             pdf_doc.close()
+                        elif filename.endswith('.svg'):
+                            png_bytes = cairosvg.svg2png(bytestring=file_data)
+                            img = Image.open(io.BytesIO(png_bytes))
+                            img_byte_arr = io.BytesIO()
+                            img.save(img_byte_arr, format=target_format.upper())
+                            zf.writestr(f"file_{i}.{target_format}", img_byte_arr.getvalue())
                         else:
-                            # Convert existing image
                             img = Image.open(io.BytesIO(file_data))
-                            if target_format == 'jpg' and img.mode != 'RGB':
+                            if target_format in ['jpg', 'jpeg'] and img.mode != 'RGB':
                                 img = img.convert('RGB')
                             img_byte_arr = io.BytesIO()
                             img.save(img_byte_arr, format=target_format.upper())
                             zf.writestr(f"file_{i}.{target_format}", img_byte_arr.getvalue())
                 
                 output.seek(0)
+                if len(files) == 1 and not files[0].filename.lower().endswith('.pdf'):
+                    # Just send the single file instead of ZIP if possible
+                    # But for simplicity, zip is fine for multi-task tool
+                    pass
                 return send_file(output, mimetype='application/zip', as_attachment=True, download_name="converted_images.zip")
+
+            # 3. Document formats (DOCX, TXT)
+            elif target_format in ['docx', 'txt']:
+                with zipfile.ZipFile(output, 'w') as zf:
+                    for i, file in enumerate(files):
+                        filename = file.filename.lower()
+                        file_data = file.read()
+                        
+                        if target_format == 'docx' and filename.endswith('.pdf'):
+                            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tf_in:
+                                tf_in.write(file_data)
+                                tf_in_path = tf_in.name
+                            tf_out_path = tf_in_path.replace('.pdf', '.docx')
+                            try:
+                                cv = PDF2Docx(tf_in_path)
+                                cv.convert(tf_out_path)
+                                cv.close()
+                                with open(tf_out_path, 'rb') as f:
+                                    zf.writestr(f"file_{i}.docx", f.read())
+                            finally:
+                                if os.path.exists(tf_in_path): os.remove(tf_in_path)
+                                if os.path.exists(tf_out_path): os.remove(tf_out_path)
+                        elif target_format == 'txt':
+                            if filename.endswith('.pdf'):
+                                pdf_doc = fitz.open("pdf", file_data)
+                                text = ""
+                                for page in pdf_doc:
+                                    text += page.get_text()
+                                zf.writestr(f"file_{i}.txt", text.encode('utf-8'))
+                                pdf_doc.close()
+                            else:
+                                zf.writestr(f"file_{i}.txt", file_data)
+                output.seek(0)
+                return send_file(output, mimetype='application/zip', as_attachment=True, download_name="converted_docs.zip")
+
+            # 4. Media formats (Audio, Video)
+            elif target_format in ['mp3', 'wav', 'ogg', 'mp4', 'mov']:
+                with zipfile.ZipFile(output, 'w') as zf:
+                    for i, file in enumerate(files):
+                        filename = file.filename.lower()
+                        file_data = file.read()
+                        ext = os.path.splitext(filename)[1]
+                        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tf_in:
+                            tf_in.write(file_data)
+                            tf_in_path = tf_in.name
+                        
+                        tf_out_path = tf_in_path + f".{target_format}"
+                        
+                        try:
+                            if target_format in ['mp3', 'wav', 'ogg']:
+                                try:
+                                    clip = mp.AudioFileClip(tf_in_path)
+                                except:
+                                    clip = mp.VideoFileClip(tf_in_path).audio
+                                clip.write_audiofile(tf_out_path)
+                                clip.close()
+                            else:
+                                clip = mp.VideoFileClip(tf_in_path)
+                                clip.write_videofile(tf_out_path, codec="libx264")
+                                clip.close()
+                            
+                            with open(tf_out_path, 'rb') as f:
+                                zf.writestr(f"file_{i}.{target_format}", f.read())
+                        finally:
+                            if os.path.exists(tf_in_path): os.remove(tf_in_path)
+                            if os.path.exists(tf_out_path): os.remove(tf_out_path)
+
+                output.seek(0)
+                return send_file(output, mimetype='application/zip', as_attachment=True, download_name="converted_media.zip")
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500

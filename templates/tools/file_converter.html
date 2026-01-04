@@ -18,11 +18,12 @@
             <div id="dropZone"
                 class="m3-card flex-1 flex flex-col items-center justify-center min-h-[400px] border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
                 <input type="file" id="fileInput" class="hidden" multiple
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff">
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff,.heic,.svg,.md,.txt,.mp4,.mov,.mp3,.wav,.ogg">
                 <span class="material-icons-round text-6xl text-blue-600 dark:text-blue-400 mb-4">upload_file</span>
                 <p class="text-lg font-medium text-gray-700 dark:text-gray-200">Dateien hierher ziehen</p>
                 <p class="text-sm text-gray-500 mt-1">oder klicken zum Auswählen</p>
-                <p class="text-xs text-gray-400 mt-4">PDF, PNG, JPG, WebP, GIF, BMP, TIFF unterstützt</p>
+                <p class="text-xs text-gray-400 mt-4">PDF, Bilder (SVG, HEIC), Dokumente (MD, TXT), Media (Video, Audio)
+                    unterstützt</p>
             </div>
         </div>
 
@@ -62,6 +63,34 @@
                             <div
                                 class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
                                 <span class="font-bold">WEBP</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="docx" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">DOCX</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="txt" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">TXT</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="mp3" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">MP3</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="mp4" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">MP4</span>
                             </div>
                         </label>
                     </div>
