@@ -18,6 +18,10 @@ from pillow_heif import register_heif_opener
 import cairosvg
 from pdf2docx import Converter as PDF2Docx
 import markdown2
+import glob
+import time
+from apscheduler.schedulers.background import BackgroundScheduler
+
 try:
     import moviepy.editor as mp
 except ImportError:
@@ -979,6 +983,44 @@ def create_app():
     return app
 
 app = create_app()
+
+def cleanup_job():
+    with app.app_context():
+        try:
+            retention_conf = SystemConfig.query.filter_by(key='file_retention_minutes').first()
+            if not retention_conf:
+                return
+            
+            minutes = int(retention_conf.value)
+            
+            # If retention is 0 (Immediate), we still clean up files older than 5 mins to catch abandoned ones
+            min_age_minutes = max(minutes, 5) if minutes == 0 else minutes
+            
+            cutoff_time = time.time() - (min_age_minutes * 60)
+            
+            temp_dir = tempfile.gettempdir()
+            # Only delete L8teTools related files
+            files = glob.glob(os.path.join(temp_dir, "l8te_*"))
+            
+            count = 0
+            for f in files:
+                try:
+                    if os.path.getmtime(f) < cutoff_time:
+                        os.remove(f)
+                        count += 1
+                except:
+                    pass
+            
+            if count > 0:
+                print(f"[Cleanup] Removed {count} old temporary files.")
+                
+        except Exception as e:
+            print(f"[Cleanup] Error: {e}")
+
+# Scheduler setup
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=cleanup_job, trigger="interval", minutes=60)
+scheduler.start()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
