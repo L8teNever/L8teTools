@@ -57,40 +57,73 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-    let qrcode = null;
+    let qrcodeInstance = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         const qrInput = document.getElementById('qrInput');
         const qrContainer = document.getElementById('qrcode');
 
-        // Setup initial QR
-        qrcode = new QRCode(qrContainer, {
-            text: "L8teTools",
-            width: 256,
-            height: 256,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        function updateQR(val) {
+            // Check if we need to clear the placeholder
+            if (val && qrContainer.querySelector('.material-icons-round')) {
+                qrContainer.innerHTML = '';
+            }
+
+            if (val) {
+                if (!qrcodeInstance) {
+                    qrcodeInstance = new QRCode(qrContainer, {
+                        text: val,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } else {
+                    qrcodeInstance.clear();
+                    qrcodeInstance.makeCode(val);
+                }
+                document.getElementById('downloadBtn').classList.remove('hidden');
+            } else {
+                // Show placeholder again
+                qrContainer.innerHTML = `
+                    <div class="w-48 h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
+                        <span class="material-icons-round text-5xl">qr_code_scanner</span>
+                    </div>
+                `;
+                qrcodeInstance = null;
+                document.getElementById('downloadBtn').classList.add('hidden');
+            }
+        }
+
+        // Initial update with empty string to show placeholder
+        updateQR("");
 
         // Update on input
         qrInput.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            if (val) {
-                qrcode.clear();
-                qrcode.makeCode(val);
-                document.getElementById('downloadBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('downloadBtn').classList.add('hidden');
-            }
+            updateQR(e.target.value.trim());
         });
     });
 
     function generateQRManual() {
         const val = document.getElementById('qrInput').value.trim();
         if (val) {
-            qrcode.clear();
-            qrcode.makeCode(val);
+            const qrContainer = document.getElementById('qrcode');
+            // If placeholder is there, clear it
+            if (qrContainer.querySelector('.material-icons-round')) {
+                qrContainer.innerHTML = '';
+                qrcodeInstance = new QRCode(qrContainer, {
+                    text: val,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else if (qrcodeInstance) {
+                qrcodeInstance.clear();
+                qrcodeInstance.makeCode(val);
+            }
             document.getElementById('downloadBtn').classList.remove('hidden');
         }
     }
