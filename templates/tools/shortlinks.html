@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Shortlinks{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">URL Shortener</h2>
+    </div>
+
+    <div class="tool-grid">
+        <!-- Create Link Column -->
+        <div class="m3-card flex flex-col gap-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Neuen Link erstellen</h3>
+
+            <div class="space-y-4">
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Ziel-URL</label>
+                    <div class="relative">
+                        <input type="url" id="targetUrl" class="m3-text-input pl-10"
+                            placeholder="https://beispiel.de/sehr-lange-url" required>
+                        <span
+                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">link</span>
+                    </div>
+                </div>
+
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Wunsch-Slug
+                        (Endung)</label>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl text-gray-500 font-medium whitespace-nowrap border border-gray-200 dark:border-gray-700">
+                            l8tenever.de/
+                        </div>
+                        <div class="relative flex-1">
+                            <input type="text" id="linkSlug" class="m3-text-input" placeholder="test">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2 px-1">Nur Buchstaben, Zahlen und Bindestriche erlaubt.</p>
+                </div>
+
+                <button class="m3-button m3-button-filled w-full py-4 text-lg mt-4" onclick="createLink()">
+                    <span class="material-icons-round">add_link</span>
+                    Kurzlink erstellen
+                </button>
+            </div>
+
+            <div
+                class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl text-xs text-blue-700 dark:text-blue-300 flex items-start gap-3 border border-blue-100 dark:border-blue-900/30">
+                <span class="material-icons-round text-sm mt-0.5">info</span>
+                <p>Deine Kurzlinks werden unter der Domain <strong>l8tenever.de/dein-slug</strong> erreichbar sein.</p>
+            </div>
+        </div>
+
+        <!-- My Links Column -->
+        <div class="m3-card flex flex-col min-h-[500px]">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6">Meine Kurzlinks</h3>
+
+            <div id="linksList" class="space-y-3 flex-1">
+                {% if links %}
+                {% for link in links %}
+                <div
+                    class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 group">
+                    <div class="flex flex-col gap-1 overflow-hidden">
+                        <span class="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                            l8tenever.de/{{ link.slug }}
+                            <button class="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                onclick="copyToClipboard('l8tenever.de/{{ link.slug }}')">
+                                <span class="material-icons-round text-xs">content_copy</span>
+                            </button>
+                        </span>
+                        <span class="text-xs text-gray-500 truncate max-w-[200px]">{{ link.target_url }}</span>
+                    </div>
+                    <button class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        onclick="deleteLink({{ link.id }})">
+                        <span class="material-icons-round">delete_outline</span>
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="flex flex-col items-center justify-center h-full text-gray-400 py-20" id="emptyState">
+                    <span class="material-icons-round text-6xl mb-4">link_off</span>
+                    <p>Noch keine Kurzlinks vorhanden.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function createLink() {
+        const target = document.getElementById('targetUrl').value;
+        const slug = document.getElementById('linkSlug').value;
+
+        if (!target || !slug) {
+            showToast('Bitte fülle alle Felder aus.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/shortlinks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: target, slug: slug })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast('Link erfolgreich erstellt!');
+                location.reload();
+            } else {
+                showToast(data.error || 'Fehler beim Erstellen');
+            }
+        } catch (err) {
+            showToast('Netzwerkfehler');
+        }
+    }
+
+    async function deleteLink(id) {
+        if (!confirm('Möchtest du diesen Link wirklich löschen?')) return;
+
+        try {
+            const response = await fetch(`/api/shortlinks/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                showToast('Link gelöscht');
+                location.reload();
+            }
+        } catch (err) {
+            showToast('Fehler beim Löschen');
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Link kopiert!');
+        });
+    }
+</script>
+{% endblock %}

@@ -42,6 +42,15 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class Shortlink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(100), unique=True, nullable=False)
+    target_url = db.Column(db.String(500), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('shortlinks', lazy=True))
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -127,6 +136,47 @@ def create_app():
     @login_required
     def color_picker():
         return render_template('tools/color_picker.html')
+
+    @app.route('/tools/shortlinks')
+    @login_required
+    def shortlinks():
+        user_links = Shortlink.query.filter_by(user_id=current_user.id).order_by(Shortlink.created_at.desc()).all()
+        return render_template('tools/shortlinks.html', links=user_links)
+
+    @app.route('/api/shortlinks', methods=['POST'])
+    @login_required
+    def api_add_shortlink():
+        data = request.json
+        slug = data.get('slug', '').strip().lower()
+        target = data.get('target', '').strip()
+
+        if not slug or not target:
+            return jsonify({'error': 'Slug und Ziel-URL sind erforderlich'}), 400
+        
+        # Simple validation: no slashes in slug
+        if '/' in slug:
+            return jsonify({'error': 'Slug darf keine Schrägstriche enthalten'}), 400
+
+        # Check if slug exists
+        existing = Shortlink.query.filter_by(slug=slug).first()
+        if existing:
+            return jsonify({'error': 'Dieser Slug ist bereits vergeben'}), 400
+
+        new_link = Shortlink(slug=slug, target_url=target, user_id=current_user.id)
+        db.session.add(new_link)
+        db.session.commit()
+        return jsonify({'message': 'Shortlink erstellt'})
+
+    @app.route('/api/shortlinks/<int:link_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_shortlink(link_id):
+        link = Shortlink.query.get_or_404(link_id)
+        if link.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+        
+        db.session.delete(link)
+        db.session.commit()
+        return jsonify({'message': 'Shortlink gelöscht'})
 
     @app.route('/api/convert', methods=['POST'])
     @login_required
@@ -290,6 +340,15 @@ def create_app():
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/<path:slug>')
+    def catch_all_redirect(slug):
+        # Check if the slug exists in our shortlinks
+        link = Shortlink.query.filter_by(slug=slug.lower()).first()
+        if link:
+            return redirect(link.target_url)
+        # If not found, you might want to show a 404 or redirect back to index
+        return redirect(url_for('index'))
 
     return app
 
