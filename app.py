@@ -225,6 +225,11 @@ def create_app():
     def playground():
         return render_template('tools/playground.html')
 
+    @app.route('/tools/unit-converter')
+    @login_required
+    def unit_converter():
+        return render_template('tools/unit_converter.html')
+
     @app.route('/api/shortlinks', methods=['POST'])
     @login_required
     def api_add_shortlink():

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Einheiten-Umrechner{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Einheiten-Umrechner</h2>
+    </div>
+
+    <div class="tool-grid">
+        <div class="m3-card flex flex-col gap-6">
+            <div
+                class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-2xl border border-gray-100 dark:border-gray-700">
+                <button onclick="setCategory('length')" id="cat-length"
+                    class="flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center gap-1 bg-white dark:bg-gray-700 shadow-sm text-blue-600 dark:text-blue-400">
+                    <span class="material-icons-round">straighten</span>
+                    Länge
+                </button>
+                <button onclick="setCategory('weight')" id="cat-weight"
+                    class="flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center gap-1 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+                    <span class="material-icons-round">scale</span>
+                    Gewicht
+                </button>
+                <button onclick="setCategory('temp')" id="cat-temp"
+                    class="flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center gap-1 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+                    <span class="material-icons-round">thermostat</span>
+                    Temp.
+                </button>
+                <button onclick="setCategory('volume')" id="cat-volume"
+                    class="flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center gap-1 text-gray-500 hover:text-gray-800 dark:hover:text-white">
+                    <span class="material-icons-round">water_drop</span>
+                    Volumen
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- From -->
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Von</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="fromValue" class="m3-text-input flex-1" value="1" oninput="convert()">
+                        <select id="fromUnit" class="m3-text-input w-32 cursor-pointer" onchange="convert()"></select>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="flex justify-center -my-2">
+                    <button onclick="swapUnits()"
+                        class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-sm">
+                        <span class="material-icons-round">swap_vert</span>
+                    </button>
+                </div>
+
+                <!-- To -->
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Zu</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="toValue" class="m3-text-input flex-1 bg-gray-50 dark:bg-gray-800/50"
+                            readonly>
+                        <select id="toUnit" class="m3-text-input w-32 cursor-pointer" onchange="convert()"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="mt-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                <div class="flex items-center gap-3 text-blue-700 dark:text-blue-400">
+                    <span class="material-icons-round">info</span>
+                    <span class="text-sm font-medium" id="formulaText">Wähle Einheiten zum Umrechnen</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="m3-card !bg-transparent border-none shadow-none p-0 flex flex-col gap-6">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white px-2">Häufige Umrechnungen</h3>
+            <div id="quickRef" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const units = {
+        length: {
+            mm: { name: 'Millimeter', factor: 0.001 },
+            cm: { name: 'Zentimeter', factor: 0.01 },
+            m: { name: 'Meter', factor: 1 },
+            km: { name: 'Kilometer', factor: 1000 },
+            in: { name: 'Zoll', factor: 0.0254 },
+            ft: { name: 'Fuß', factor: 0.3048 },
+            yd: { name: 'Yard', factor: 0.9144 },
+            mi: { name: 'Meile', factor: 1609.344 }
+        },
+        weight: {
+            mg: { name: 'Milligramm', factor: 0.000001 },
+            g: { name: 'Gramm', factor: 0.001 },
+            kg: { name: 'Kilogramm', factor: 1 },
+            t: { name: 'Tonne', factor: 1000 },
+            oz: { name: 'Unze', factor: 0.0283495 },
+            lb: { name: 'Pfund', factor: 0.453592 }
+        },
+        temp: {
+            C: { name: 'Celsius' },
+            F: { name: 'Fahrenheit' },
+            K: { name: 'Kelvin' }
+        },
+        volume: {
+            ml: { name: 'Milliliter', factor: 0.001 },
+            l: { name: 'Liter', factor: 1 },
+            m3: { name: 'Kubikmeter', factor: 1000 },
+            cup: { name: 'Tasse', factor: 0.236588 },
+            gal: { name: 'Gallone', factor: 3.78541 }
+        }
+    };
+
+    let currentCategory = 'length';
+
+    function setCategory(cat) {
+        currentCategory = cat;
+
+        // Update UI
+        ['length', 'weight', 'temp', 'volume'].forEach(c => {
+            const btn = document.getElementById(`cat-${c}`);
+            if (c === cat) {
+                btn.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-blue-600', 'dark:text-blue-400');
+                btn.classList.remove('text-gray-500');
+            } else {
+                btn.classList.remove('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-blue-600', 'dark:text-blue-400');
+                btn.classList.add('text-gray-500');
+            }
+        });
+
+        // Update Selects
+        const fromSelect = document.getElementById('fromUnit');
+        const toSelect = document.getElementById('toUnit');
+        fromSelect.innerHTML = '';
+        toSelect.innerHTML = '';
+
+        Object.entries(units[cat]).forEach(([key, val]) => {
+            fromSelect.add(new Option(val.name, key));
+            toSelect.add(new Option(val.name, key));
+        });
+
+        // Set defaults
+        toSelect.selectedIndex = 1;
+
+        updateQuickRef();
+        convert();
+    }
+
+    function convert() {
+        const fromVal = parseFloat(document.getElementById('fromValue').value) || 0;
+        const fromUnit = document.getElementById('fromUnit').value;
+        const toUnit = document.getElementById('toUnit').value;
+        const toInput = document.getElementById('toValue');
+        const formulaText = document.getElementById('formulaText');
+
+        if (currentCategory === 'temp') {
+            let result;
+            let val = fromVal;
+
+            // Normalize to Celsius
+            if (fromUnit === 'F') val = (fromVal - 32) * 5 / 9;
+            if (fromUnit === 'K') val = fromVal - 273.15;
+
+            // Convert back
+            if (toUnit === 'C') result = val;
+            if (toUnit === 'F') result = (val * 9 / 5) + 32;
+            if (toUnit === 'K') result = val + 273.15;
+
+            toInput.value = result.toFixed(2);
+        } else {
+            const fromFactor = units[currentCategory][fromUnit].factor;
+            const toFactor = units[currentCategory][toUnit].factor;
+            const result = (fromVal * fromFactor) / toFactor;
+
+            toInput.value = result > 0.001 ? result.toFixed(4) : result.toExponential(4);
+        }
+
+        formulaText.innerText = `Umrechnung von ${units[currentCategory][fromUnit].name} in ${units[currentCategory][toUnit].name}`;
+    }
+
+    function swapUnits() {
+        const fromUnit = document.getElementById('fromUnit');
+        const toUnit = document.getElementById('toUnit');
+        const fromValue = document.getElementById('fromValue');
+        const toValue = document.getElementById('toValue');
+
+        const tempIdx = fromUnit.selectedIndex;
+        fromUnit.selectedIndex = toUnit.selectedIndex;
+        toUnit.selectedIndex = tempIdx;
+
+        fromValue.value = toValue.value;
+        convert();
+    }
+
+    function updateQuickRef() {
+        const container = document.getElementById('quickRef');
+        container.innerHTML = '';
+
+        const catUnits = Object.entries(units[currentCategory]);
+        const base = catUnits.find(([k, v]) => currentCategory === 'temp' ? k === 'C' : v.factor === 1);
+        const others = catUnits.filter(([k, v]) => k !== base[0]).slice(0, 4);
+
+        others.forEach(([key, val]) => {
+            let conversion;
+            if (currentCategory === 'temp') {
+                if (key === 'F') conversion = "0 °C = 32 °F";
+                if (key === 'K') conversion = "0 °C = 273.15 K";
+            } else {
+                const res = 1 / val.factor;
+                conversion = `1 ${base[0]} = ${res.toFixed(2)} ${key}`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'm3-card !p-4 flex flex-col gap-1 border-gray-100 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50';
+            card.innerHTML = `
+                <span class="text-xs font-bold text-gray-400 uppercase">${val.name}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${conversion}</span>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Initialize
+    setCategory('length');
+</script>
+{% endblock %}
