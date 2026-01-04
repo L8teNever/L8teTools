@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Einstellungen{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Einstellungen</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Account Settings -->
+        <div class="m3-card space-y-6">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-icons-round text-blue-600">manage_accounts</span>
+                Account Sicherheit
+            </h3>
+
+            <div class="m3-input-group">
+                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Neues Passwort</label>
+                <div class="relative">
+                    <input type="password" id="newPassword" class="m3-text-input pl-10" placeholder="Minimum 4 Zeichen">
+                    <span
+                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                </div>
+            </div>
+
+            <button class="m3-button m3-button-filled w-full py-3" onclick="changePassword()">
+                Passwort speichern
+            </button>
+        </div>
+
+        {% if current_user.is_admin %}
+        <!-- Admin: Domain Settings -->
+        <div class="m3-card space-y-6 border-2 border-blue-100 dark:border-blue-900/30">
+            <h3 class="text-xl font-bold flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                <span class="material-icons-round">language</span>
+                Admin: Shortener Domain
+            </h3>
+
+            <div class="m3-input-group">
+                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Aktive Domain</label>
+                <div class="relative">
+                    <input type="text" id="shortenerDomain" class="m3-text-input pl-10" value="{{ domain }}">
+                    <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">dns</span>
+                </div>
+            </div>
+
+            <button class="m3-button m3-button-filled w-full py-3 !bg-blue-600" onclick="updateDomain()">
+                Domain aktualisieren
+            </button>
+            <p class="text-[10px] text-gray-400">Diese Einstellung ändert nur die Anzeige in der App. Die tatsächliche
+                Domain muss im Webserver/DNS konfiguriert sein.</p>
+        </div>
+
+        <!-- Admin: Create User -->
+        <div class="m3-card space-y-6 md:col-span-2">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-icons-round text-green-600">person_add</span>
+                Admin: Neuen Account erstellen
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Benutzername</label>
+                    <input type="text" id="newUsername" class="m3-text-input" placeholder="Name">
+                </div>
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Passwort</label>
+                    <input type="password" id="newUserPassword" class="m3-text-input" placeholder="Passwort">
+                </div>
+                <div class="flex items-end pb-1">
+                    <label
+                        class="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 w-full">
+                        <input type="checkbox" id="isAdmin"
+                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium">Administrator Rechte</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="m3-button m3-button-filled w-full py-4 text-lg" onclick="createUser()">
+                Benutzer erstellen
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    async function changePassword() {
+        const password = document.getElementById('newPassword').value;
+        if (password.length < 4) {
+            showToast('Passwort muss mindestens 4 Zeichen haben.');
+            return;
+        }
+
+        const res = await fetch('/api/settings/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+
+        if (res.ok) {
+            showToast('Passwort wurde erfolgreich geändert!');
+            document.getElementById('newPassword').value = '';
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Fehler beim Ändern');
+        }
+    }
+
+    {% if current_user.is_admin %}
+    async function updateDomain() {
+        const domain = document.getElementById('shortenerDomain').value.trim();
+        const res = await fetch('/api/settings/domain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain })
+        });
+
+        if (res.ok) {
+            showToast('Domain wurde aktualisiert.');
+        } else {
+            showToast('Fehler beim Aktualisieren.');
+        }
+    }
+
+    async function createUser() {
+        const username = document.getElementById('newUsername').value.trim();
+        const password = document.getElementById('newUserPassword').value;
+        const is_admin = document.getElementById('isAdmin').checked;
+
+        if (!username || !password) {
+            showToast('Name und Passwort erforderlich.');
+            return;
+        }
+
+        const res = await fetch('/api/settings/create-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, is_admin })
+        });
+
+        if (res.ok) {
+            showToast(`Benutzer ${username} wurde erstellt.`);
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newUserPassword').value = '';
+            document.getElementById('isAdmin').checked = false;
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Fehler beim Erstellen');
+        }
+    }
+    {% endif %}
+</script>
+{% endblock %}

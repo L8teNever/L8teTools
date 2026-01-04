@@ -25,8 +25,13 @@
             <span class="material-icons-round text-blue-700">grid_view</span>
             <span class="font-medium">L8teTools</span>
         </a>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 hidden sm:block">{{ current_user.username }}</span>
+            <a href="{{ url_for('settings') }}"
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                title="Einstellungen">
+                <span class="material-icons-round">settings</span>
+            </a>
             <a href="{{ url_for('logout') }}" class="m3-button py-2 px-4 text-sm" style="width: auto;">Abmelden</a>
         </div>
     </header>

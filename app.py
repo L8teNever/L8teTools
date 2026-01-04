@@ -35,6 +35,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -51,6 +52,11 @@ class Shortlink(db.Model):
 
     user = db.relationship('User', backref=db.backref('shortlinks', lazy=True))
 
+class SystemConfig(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    value = db.Column(db.String(255))
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -61,6 +67,18 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Ensure default domain exists
+        domain_config = SystemConfig.query.filter_by(key='shortener_domain').first()
+        if not domain_config:
+            db.session.add(SystemConfig(key='shortener_domain', value='tools.l8tenever.de'))
+            db.session.commit()
+        
+        # Optional: Promote first user to admin if no admin exists
+        if not User.query.filter_by(is_admin=True).first():
+            first_user = User.query.first()
+            if first_user:
+                first_user.is_admin = True
+                db.session.commit()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -141,7 +159,66 @@ def create_app():
     @login_required
     def shortlinks():
         user_links = Shortlink.query.filter_by(user_id=current_user.id).order_by(Shortlink.created_at.desc()).all()
-        return render_template('tools/shortlinks.html', links=user_links)
+        domain = SystemConfig.query.filter_by(key='shortener_domain').first().value
+        return render_template('tools/shortlinks.html', links=user_links, domain=domain)
+
+    @app.route('/settings')
+    @login_required
+    def settings():
+        domain = SystemConfig.query.filter_by(key='shortener_domain').first().value
+        return render_template('settings.html', domain=domain)
+
+    @app.route('/api/settings/password', methods=['POST'])
+    @login_required
+    def api_change_password():
+        data = request.json
+        new_password = data.get('password')
+        if not new_password or len(new_password) < 4:
+            return jsonify({'error': 'Passwort zu kurz'}), 400
+        
+        current_user.set_password(new_password)
+        db.session.commit()
+        return jsonify({'message': 'Passwort geändert'})
+
+    @app.route('/api/settings/create-user', methods=['POST'])
+    @login_required
+    def api_create_user():
+        # Optional: only allow if current user is admin, or always allow? 
+        # User requested: "auch neue acc erstllen" - usually for admins or if open.
+        # I'll check is_admin.
+        if not current_user.is_admin:
+            return jsonify({'error': 'Nur Admins können Benutzer erstellen'}), 403
+            
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        is_admin = data.get('is_admin', False)
+
+        if User.query.filter_by(username=username).first():
+            return jsonify({'error': 'Benutzer existiert bereits'}), 400
+        
+        new_user = User(username=username)
+        new_user.set_password(password)
+        new_user.is_admin = is_admin
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': f'Benutzer {username} erstellt'})
+
+    @app.route('/api/settings/domain', methods=['POST'])
+    @login_required
+    def api_update_domain():
+        if not current_user.is_admin:
+            return jsonify({'error': 'Nur Admins können die Domain ändern'}), 403
+        
+        data = request.json
+        new_domain = data.get('domain', '').strip()
+        if not new_domain:
+            return jsonify({'error': 'Domain darf nicht leer sein'}), 400
+            
+        config = SystemConfig.query.filter_by(key='shortener_domain').first()
+        config.value = new_domain
+        db.session.commit()
+        return jsonify({'message': 'Domain aktualisiert'})
 
     @app.route('/tools/playground')
     @login_required
