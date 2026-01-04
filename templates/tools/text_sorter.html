@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Text Sorter{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Text Sorter</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <!-- Input Column -->
+        <div class="flex flex-col gap-4">
+            <div class="m3-card !p-0 overflow-hidden flex flex-col h-full">
+                <div
+                    class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center">
+                    <span class="font-bold text-gray-500 text-sm uppercase">Eingabe</span>
+                    <button class="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline"
+                        onclick="document.getElementById('inputText').value=''; updateList()">Leeren</button>
+                </div>
+                <textarea id="inputText"
+                    class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                    placeholder="Füge hier deine Liste ein..." oninput="updateList()"></textarea>
+            </div>
+        </div>
+
+        <!-- Controls & Output Column -->
+        <div class="flex flex-col gap-6">
+            <div class="m3-card !p-4">
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button onclick="sortList('asc')"
+                        class="m3-button !py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-none hover:shadow-md">
+                        <span class="material-icons-round">arrow_downward</span> A-Z
+                    </button>
+                    <button onclick="sortList('desc')"
+                        class="m3-button !py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-none hover:shadow-md">
+                        <span class="material-icons-round">arrow_upward</span> Z-A
+                    </button>
+                    <button onclick="sortList('random')"
+                        class="m3-button !py-3 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-none hover:shadow-md">
+                        <span class="material-icons-round">shuffle</span> Zufall
+                    </button>
+                    <button onclick="sortList('reverse')"
+                        class="m3-button !py-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-none hover:shadow-md">
+                        <span class="material-icons-round">swap_vert</span> Umkehren
+                    </button>
+                </div>
+
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="removeDuplicates"
+                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            onchange="updateList()">
+                        <span
+                            class="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">Doppelte
+                            entfernen</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="trimLines"
+                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            onchange="updateList()" checked>
+                        <span
+                            class="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">Leerzeichen
+                            trimmen</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="removeEmpty"
+                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            onchange="updateList()" checked>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors">Leere
+                            Zeilen entfernen</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="m3-card !p-0 overflow-hidden flex flex-col flex-1 min-h-[300px]">
+                <div
+                    class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center">
+                    <span class="font-bold text-gray-500 text-sm uppercase">Ergebnis (<span id="count">0</span>)</span>
+                    <button class="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline"
+                        onclick="copyOutput()">Kopieren</button>
+                </div>
+                <textarea id="outputText"
+                    class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                    readonly></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSort = null;
+
+    function getLines() {
+        const text = document.getElementById('inputText').value;
+        return text.split('\n');
+    }
+
+    function processList(lines) {
+        let processed = [...lines]; // Copy
+
+        // 1. Trim
+        if (document.getElementById('trimLines').checked) {
+            processed = processed.map(l => l.trim());
+        }
+
+        // 2. Remove Empty
+        if (document.getElementById('removeEmpty').checked) {
+            processed = processed.filter(l => l.length > 0);
+        }
+
+        // 3. Remove Duplicates
+        if (document.getElementById('removeDuplicates').checked) {
+            processed = [...new Set(processed)];
+        }
+
+        // 4. Sort
+        if (currentSort === 'asc') processed.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        if (currentSort === 'desc') processed.sort((a, b) => b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));
+        if (currentSort === 'reverse') processed.reverse();
+        if (currentSort === 'random') {
+            for (let i = processed.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [processed[i], processed[j]] = [processed[j], processed[i]];
+            }
+        }
+
+        return processed;
+    }
+
+    function sortList(type) {
+        currentSort = type;
+        updateList();
+    }
+
+    function updateList() {
+        const lines = getLines();
+        const processed = processList(lines);
+
+        document.getElementById('outputText').value = processed.join('\n');
+        document.getElementById('count').innerText = processed.length;
+    }
+
+    function copyOutput() {
+        const text = document.getElementById('outputText').value;
+        if (text) {
+            navigator.clipboard.writeText(text);
+            showToast('Liste kopiert!');
+        }
+    }
+</script>
+{% endblock %}

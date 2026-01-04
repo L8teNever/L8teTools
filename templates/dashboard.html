@@ -223,5 +223,53 @@
             <p class="text-sm opacity-80 mt-1">Berechne deinen Body Mass Index unkompliziert.</p>
         </div>
     </a>
+
+    <!-- Text Sorter Card -->
+    <a href="{{ url_for('text_sorter') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">sort_by_alpha</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Text Sorter</h3>
+            <p class="text-sm opacity-80 mt-1">Sortiere Listen alphabetisch oder entferne Duplikate.</p>
+        </div>
+    </a>
+
+    <!-- Regex Replacer Card -->
+    <a href="{{ url_for('regex_replacer') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">find_replace</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Regex Suchen & Ersetzen</h3>
+            <p class="text-sm opacity-80 mt-1">Suchen und Ersetzen mit mächtigen RegEx-Mustern.</p>
+        </div>
+    </a>
+
+    <!-- List Comparator Card -->
+    <a href="{{ url_for('list_comparator') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">compare_arrows</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Listen Vergleicher</h3>
+            <p class="text-sm opacity-80 mt-1">Finde gemeinsame oder fehlende Einträge in zwei Listen.</p>
+        </div>
+    </a>
+
+    <!-- Morse Code Card -->
+    <a href="{{ url_for('morse_code') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">graphic_eq</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Morsecode Übersetzer</h3>
+            <p class="text-sm opacity-80 mt-1">Übersetze Text in Morsecode und zurück, inkl. Sound.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}

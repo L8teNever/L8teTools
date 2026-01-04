@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Listen Vergleicher{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Listen Vergleicher</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <!-- Input Lists -->
+        <div class="flex flex-col gap-8">
+            <div class="m3-card !p-0 overflow-hidden flex flex-col h-[300px]">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 p-4">
+                    <span class="font-bold text-blue-700 dark:text-blue-300 text-sm uppercase">Liste A</span>
+                </div>
+                <textarea id="listA" class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                    placeholder="Eintrag 1&#10;Eintrag 2..." oninput="compareLists()"></textarea>
+            </div>
+
+            <div class="m3-card !p-0 overflow-hidden flex flex-col h-[300px]">
+                <div
+                    class="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900/30 p-4">
+                    <span class="font-bold text-purple-700 dark:text-purple-300 text-sm uppercase">Liste B</span>
+                </div>
+                <textarea id="listB" class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                    placeholder="Eintrag 2&#10;Eintrag 3..." oninput="compareLists()"></textarea>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="flex flex-col gap-6">
+            <!-- Settings -->
+            <div class="m3-card !p-4">
+                <div class="flex gap-4 flex-wrap">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="ignoreCase" class="w-4 h-4" onchange="compareLists()" checked>
+                        <span class="text-sm">Groß/Klein egal</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="trim" class="w-4 h-4" onchange="compareLists()" checked>
+                        <span class="text-sm">Trimmen</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Result Cards -->
+            <div class="m3-card !p-0 overflow-hidden flex flex-col flex-1 min-h-[200px]">
+                <div
+                    class="bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-900/30 p-4 flex justify-between">
+                    <span class="font-bold text-green-700 dark:text-green-300 text-sm uppercase">Gemeinsam (A &
+                        B)</span>
+                    <span class="font-mono font-bold text-green-700 dark:text-green-300" id="countCommon">0</span>
+                </div>
+                <textarea id="resCommon"
+                    class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                    readonly></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 h-[250px]">
+                <div class="m3-card !p-0 overflow-hidden flex flex-col">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 p-4 flex justify-between">
+                        <span class="font-bold text-blue-700 dark:text-blue-300 text-xs uppercase">Nur in A</span>
+                        <span class="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs" id="countA">0</span>
+                    </div>
+                    <textarea id="resA"
+                        class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                        readonly></textarea>
+                </div>
+
+                <div class="m3-card !p-0 overflow-hidden flex flex-col">
+                    <div
+                        class="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-900/30 p-4 flex justify-between">
+                        <span class="font-bold text-purple-700 dark:text-purple-300 text-xs uppercase">Nur in B</span>
+                        <span class="font-mono font-bold text-purple-700 dark:text-purple-300 text-xs"
+                            id="countB">0</span>
+                    </div>
+                    <textarea id="resB"
+                        class="w-full flex-1 p-4 bg-transparent outline-none resize-none font-mono text-sm"
+                        readonly></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function getItems(id) {
+        const text = document.getElementById(id).value;
+        let items = text.split('\n');
+
+        if (document.getElementById('trim').checked) {
+            items = items.map(i => i.trim());
+        }
+
+        items = items.filter(i => i.length > 0);
+        return items;
+    }
+
+    function normalize(item) {
+        return document.getElementById('ignoreCase').checked ? item.toLowerCase() : item;
+    }
+
+    function compareLists() {
+        const listA = getItems('listA');
+        const listB = getItems('listB');
+
+        const setA = new Set(listA.map(normalize));
+        const setB = new Set(listB.map(normalize));
+
+        // Common
+        // Filter from original lists to keep case if possible, but match against normalized sets
+        const common = listA.filter(item => setB.has(normalize(item)));
+        // Remove duplicates in result
+        const uniqueCommon = [...new Set(common)];
+
+        // Only A
+        const onlyA = listA.filter(item => !setB.has(normalize(item)));
+        const uniqueA = [...new Set(onlyA)];
+
+        // Only B
+        const onlyB = listB.filter(item => !setA.has(normalize(item)));
+        const uniqueB = [...new Set(onlyB)];
+
+        document.getElementById('resCommon').value = uniqueCommon.join('\n');
+        document.getElementById('countCommon').innerText = uniqueCommon.length;
+
+        document.getElementById('resA').value = uniqueA.join('\n');
+        document.getElementById('countA').innerText = uniqueA.length;
+
+        document.getElementById('resB').value = uniqueB.join('\n');
+        document.getElementById('countB').innerText = uniqueB.length;
+    }
+</script>
+{% endblock %}

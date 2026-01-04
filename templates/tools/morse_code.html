@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Morsecode Übersetzer{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Morsecode Übersetzer</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <!-- Text Input -->
+        <div class="flex flex-col h-full">
+            <div class="m3-card !p-0 overflow-hidden flex flex-col h-full min-h-[300px]">
+                <div class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4">
+                    <span class="font-bold text-gray-500 text-sm uppercase">Text</span>
+                </div>
+                <textarea id="textInput"
+                    class="w-full flex-1 p-6 bg-transparent outline-none resize-none font-sans text-lg"
+                    placeholder="Schreibe hier..." oninput="toMorse()"></textarea>
+            </div>
+        </div>
+
+        <!-- Arrow / Controls -->
+        <div class="flex items-center justify-center py-4 lg:hidden">
+            <span class="material-icons-round text-gray-300 transform rotate-90">arrow_forward</span>
+        </div>
+
+        <!-- Morse Input/Output -->
+        <div class="flex flex-col h-full">
+            <div class="m3-card !p-0 overflow-hidden flex flex-col h-full min-h-[300px] border-2 border-transparent transition-colors"
+                id="morseCard">
+                <div
+                    class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center">
+                    <span class="font-bold text-gray-500 text-sm uppercase">Morse Code</span>
+                    <div class="flex gap-2">
+                        <button onclick="playMorse()"
+                            class="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full text-blue-600 dark:text-blue-400"
+                            title="Abspielen">
+                            <span class="material-icons-round text-lg">volume_up</span>
+                        </button>
+                        <button onclick="copyMorse()"
+                            class="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline">Kopieren</button>
+                    </div>
+                </div>
+                <textarea id="morseInput"
+                    class="w-full flex-1 p-6 bg-transparent outline-none resize-none font-mono text-xl tracking-widest leading-loose"
+                    placeholder="... --- ..." oninput="fromMorse()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cheatsheet -->
+    <div class="mt-8 m3-card bg-gray-50 dark:bg-gray-800/50">
+        <h3 class="font-bold text-gray-700 dark:text-gray-200 mb-4">Morse Alphabet</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 font-mono text-sm">
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>A</span> <span
+                    class="font-bold">.-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>B</span> <span
+                    class="font-bold">-...</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>C</span> <span
+                    class="font-bold">-.-.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>D</span> <span
+                    class="font-bold">-..</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>E</span> <span
+                    class="font-bold">.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>F</span> <span
+                    class="font-bold">..-.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>G</span> <span
+                    class="font-bold">--.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>H</span> <span
+                    class="font-bold">....</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>I</span> <span
+                    class="font-bold">..</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>J</span> <span
+                    class="font-bold">.---</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>K</span> <span
+                    class="font-bold">-.-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>L</span> <span
+                    class="font-bold">.-..</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>M</span> <span
+                    class="font-bold">--</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>N</span> <span
+                    class="font-bold">-.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>O</span> <span
+                    class="font-bold">---</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>P</span> <span
+                    class="font-bold">.--.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>Q</span> <span
+                    class="font-bold">--.-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>R</span> <span
+                    class="font-bold">.-.</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>S</span> <span
+                    class="font-bold">...</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>T</span> <span
+                    class="font-bold">-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>U</span> <span
+                    class="font-bold">..-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>V</span> <span
+                    class="font-bold">...-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>W</span> <span
+                    class="font-bold">.--</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>X</span> <span
+                    class="font-bold">-..-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>Y</span> <span
+                    class="font-bold">-.--</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>Z</span> <span
+                    class="font-bold">--..</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>0</span> <span
+                    class="font-bold">-----</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>1</span> <span
+                    class="font-bold">.----</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>2</span> <span
+                    class="font-bold">..---</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>3</span> <span
+                    class="font-bold">...--</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>4</span> <span
+                    class="font-bold">....-</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>5</span> <span
+                    class="font-bold">.....</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>6</span> <span
+                    class="font-bold">-....</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>7</span> <span
+                    class="font-bold">--...</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>8</span> <span
+                    class="font-bold">---..</span></div>
+            <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-1"><span>9</span> <span
+                    class="font-bold">----.</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const morseCode = {
+        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+        'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+        'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+        'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+        'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+        '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+        '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--', '?': '..--..',
+        '\'': '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-',
+        '&': '.-...', ':': '---...', ';': '-.-.-.', '=': '-...-', '+': '.-.-.',
+        '-': '-....-', '_': '..--.-', '"': '.-..-.', '$': '...-..-', '@': '.--.-.'
+    };
+
+    const revMorseCode = Object.entries(morseCode).reduce((acc, [key, val]) => {
+        acc[val] = key;
+        return acc;
+    }, {});
+
+    function toMorse() {
+        const text = document.getElementById('textInput').value.toUpperCase();
+        let result = "";
+
+        for (let char of text) {
+            if (char === ' ') {
+                result += '/ '; // Space between words
+            } else if (morseCode[char]) {
+                result += morseCode[char] + ' ';
+            } else if (char === '\n') {
+                result += '\n';
+            }
+        }
+
+        document.getElementById('morseInput').value = result.trim();
+    }
+
+    function fromMorse() {
+        const morse = document.getElementById('morseInput').value.trim();
+        const words = morse.split('/'); // Split words usually by / or double space
+        let result = "";
+
+        for (let word of words) {
+            const chars = word.trim().split(/\s+/); // Split chars by space
+            for (let char of chars) {
+                if (revMorseCode[char]) {
+                    result += revMorseCode[char];
+                }
+            }
+            result += " ";
+        }
+
+        document.getElementById('textInput').value = result.trim();
+    }
+
+    function copyMorse() {
+        const text = document.getElementById('morseInput').value;
+        if (text) {
+            navigator.clipboard.writeText(text);
+            showToast('Code kopiert!');
+        }
+    }
+
+    function playMorse() {
+        const morse = document.getElementById('morseInput').value;
+        if (!morse) return;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        let time = ctx.currentTime;
+
+        const dot = 0.08; // Duration of dot
+
+        for (let char of morse) {
+            if (char === '.') {
+                const osc = ctx.createOscillator();
+                osc.connect(ctx.destination);
+                osc.start(time);
+                osc.stop(time + dot);
+                time += dot;
+            } else if (char === '-') {
+                const osc = ctx.createOscillator();
+                osc.connect(ctx.destination);
+                osc.start(time);
+                osc.stop(time + (dot * 3));
+                time += (dot * 3);
+            } else if (char === ' ') {
+                time += (dot * 3); // Space between chars
+            } else if (char === '/') {
+                time += (dot * 7); // Space between words
+            }
+            time += dot; // Gap between parts
+        }
+    }
+</script>
+{% endblock %}

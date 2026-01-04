@@ -396,6 +396,26 @@ def create_app():
     def bmi_calculator():
         return render_template('tools/bmi_calculator.html')
 
+    @app.route('/tools/text-sorter')
+    @login_required
+    def text_sorter():
+        return render_template('tools/text_sorter.html')
+
+    @app.route('/tools/regex-replacer')
+    @login_required
+    def regex_replacer():
+        return render_template('tools/regex_replacer.html')
+
+    @app.route('/tools/list-comparator')
+    @login_required
+    def list_comparator():
+        return render_template('tools/list_comparator.html')
+
+    @app.route('/tools/morse-code')
+    @login_required
+    def morse_code():
+        return render_template('tools/morse_code.html')
+
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
     def api_get_my_ip():
