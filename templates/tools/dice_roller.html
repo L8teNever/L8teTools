@@ -130,6 +130,7 @@
                 const val = Math.floor(Math.random() * 6) + 1;
                 total += val;
                 wrapper.querySelector('span').textContent = diceIcons[val];
+                wrapper.classList.remove('rolling');
 
                 if (index === wrappers.length - 1) {
                     sumVal.textContent = total;
