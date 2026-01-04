@@ -110,6 +110,11 @@ def create_app():
     def wheel_of_fortune():
         return render_template('tools/wheel_of_fortune.html')
 
+    @app.route('/tools/dice-roller')
+    @login_required
+    def dice_roller():
+        return render_template('tools/dice_roller.html')
+
     @app.route('/api/convert', methods=['POST'])
     @login_required
     def api_convert():

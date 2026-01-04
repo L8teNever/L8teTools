@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Würfel{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Würfel</h2>
+    </div>
+
+    <div class="tool-grid">
+        <!-- Dice Display Column -->
+        <div
+            class="m3-card flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-blue-900/20">
+            <div id="diceContainer" class="flex flex-wrap items-center justify-center gap-8 w-full">
+                <!-- Single default die -->
+                <div class="dice-wrapper">
+                    <span class="material-icons-round text-9xl text-blue-600 dark:text-blue-400">filter_6</span>
+                </div>
+            </div>
+
+            <div id="diceResult"
+                class="mt-8 text-2xl font-bold text-gray-800 dark:text-white opacity-0 transition-opacity">
+                Summe: <span id="sumVal">0</span>
+            </div>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="m3-card">
+            <div class="mb-10">
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <span class="text-base font-medium text-gray-600 dark:text-gray-400">Anzahl der Würfel</span>
+                    <span id="countVal" class="font-bold text-blue-700 dark:text-blue-400 text-2xl">1</span>
+                </div>
+                <input type="range" min="1" max="6" value="1" class="m3-slider" id="diceCount">
+            </div>
+
+            <button id="rollBtn" class="m3-button m3-button-filled shadow-lg py-5 text-xl w-full" onclick="rollDice()">
+                <span class="material-icons-round text-2xl">casino</span>
+                Würfeln
+            </button>
+
+            <p class="text-center text-sm text-gray-500 mt-6">
+                Klicke auf den Button oder direkt auf die Würfel zum Rollen.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dice-wrapper {
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+    }
+
+    .dice-wrapper.rolling {
+        animation: diceRoll 0.6s ease-in-out;
+    }
+
+    @keyframes diceRoll {
+        0% {
+            transform: rotate(0deg) scale(1);
+        }
+
+        25% {
+            transform: rotate(90deg) scale(1.2);
+        }
+
+        50% {
+            transform: rotate(180deg) scale(0.9);
+        }
+
+        75% {
+            transform: rotate(270deg) scale(1.1);
+        }
+
+        100% {
+            transform: rotate(360deg) scale(1);
+        }
+    }
+</style>
+
+<script>
+    const diceContainer = document.getElementById('diceContainer');
+    const diceCountInput = document.getElementById('diceCount');
+    const countVal = document.getElementById('countVal');
+    const diceResult = document.getElementById('diceResult');
+    const sumVal = document.getElementById('sumVal');
+
+    const diceIcons = {
+        1: 'filter_1',
+        2: 'filter_2',
+        3: 'filter_3',
+        4: 'filter_4',
+        5: 'filter_5',
+        6: 'filter_6'
+    };
+
+    function updateDiceCount() {
+        const count = parseInt(diceCountInput.value);
+        countVal.textContent = count;
+
+        diceContainer.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'dice-wrapper';
+            wrapper.onclick = rollDice;
+            wrapper.innerHTML = `<span class="material-icons-round text-9xl text-blue-600 dark:text-blue-400">filter_6</span>`;
+            diceContainer.appendChild(wrapper);
+        }
+        diceResult.classList.add('opacity-0');
+    }
+
+    function rollDice() {
+        if (document.querySelector('.dice-wrapper.rolling')) return;
+
+        const wrappers = document.querySelectorAll('.dice-wrapper');
+        let total = 0;
+
+        wrappers.forEach((wrapper, index) => {
+            wrapper.classList.remove('rolling');
+            void wrapper.offsetWidth; // Trigger reflow
+            wrapper.classList.add('rolling');
+
+            setTimeout(() => {
+                const val = Math.floor(Math.random() * 6) + 1;
+                total += val;
+                wrapper.querySelector('span').textContent = diceIcons[val];
+
+                if (index === wrappers.length - 1) {
+                    sumVal.textContent = total;
+                    diceResult.classList.remove('opacity-0');
+                }
+            }, 600);
+        });
+    }
+
+    diceCountInput.addEventListener('input', updateDiceCount);
+    document.addEventListener('DOMContentLoaded', updateDiceCount);
+</script>
+{% endblock %}
