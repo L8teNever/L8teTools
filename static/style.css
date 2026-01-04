@@ -3,26 +3,48 @@
   --m3-on-primary: #ffffff;
   --m3-primary-container: #d1e4ff;
   --m3-on-primary-container: #001d36;
-
   --m3-secondary: #535f70;
   --m3-on-secondary: #ffffff;
   --m3-secondary-container: #d7e3f7;
   --m3-on-secondary-container: #101c2b;
-
   --m3-surface: #fdfcff;
   --m3-on-surface: #1a1c1e;
   --m3-surface-variant: #e0e2ec;
   --m3-on-surface-variant: #44474e;
-
   --m3-outline: #74777f;
   --m3-background: #fdfcff;
   --m3-on-background: #1a1c1e;
-
   --m3-error: #ba1a1a;
   --m3-on-error: #ffffff;
+  --m3-inverse-surface: #2f3033;
+  --m3-inverse-on-surface: #f1f0f4;
 
   --shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --m3-primary: #d0e4ff;
+    --m3-on-primary: #003258;
+    --m3-primary-container: #00497d;
+    --m3-on-primary-container: #d1e4ff;
+    --m3-secondary: #bbc7db;
+    --m3-on-secondary: #253140;
+    --m3-secondary-container: #3b4858;
+    --m3-on-secondary-container: #d7e3f7;
+    --m3-surface: #1a1c1e;
+    --m3-on-surface: #e2e2e6;
+    --m3-surface-variant: #44474e;
+    --m3-on-surface-variant: #c4c6d0;
+    --m3-outline: #8e9099;
+    --m3-background: #1a1c1e;
+    --m3-on-background: #e2e2e6;
+    --m3-error: #ffb4ab;
+    --m3-on-error: #690005;
+    --m3-inverse-surface: #e2e2e6;
+    --m3-inverse-on-surface: #2f3033;
+  }
 }
 
 body {
@@ -37,12 +59,19 @@ body {
 
 /* Material Components */
 .m3-card {
-  background-color: white;
+  background-color: var(--m3-surface-variant);
   border-radius: 28px;
-  padding: 24px;
+  padding: 32px;
   box-shadow: var(--shadow-2);
   width: 100%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid transparent;
+}
+
+@media (prefers-color-scheme: light) {
+  .m3-card {
+    background-color: white;
+  }
 }
 
 .m3-card-hover:hover {
@@ -81,6 +110,7 @@ body {
 
 .m3-slider {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 44px;
   background: var(--m3-secondary-container);
