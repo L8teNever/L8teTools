@@ -9,6 +9,8 @@ import tempfile
 import uuid
 import whois
 import requests
+import holidays
+from datetime import datetime, timedelta
 from PIL import Image, ExifTags
 import img2pdf
 import fitz  # PyMuPDF
@@ -54,6 +56,16 @@ class Shortlink(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     user = db.relationship('User', backref=db.backref('shortlinks', lazy=True))
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200))
+    content = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('notes', lazy=True))
 
 class SystemConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -416,6 +428,21 @@ def create_app():
     def morse_code():
         return render_template('tools/morse_code.html')
 
+    @app.route('/tools/workday-calculator')
+    @login_required
+    def workday_calculator():
+        return render_template('tools/workday_calculator.html')
+
+    @app.route('/tools/prefix-suffix')
+    @login_required
+    def prefix_suffix():
+        return render_template('tools/prefix_suffix.html')
+
+    @app.route('/tools/notes')
+    @login_required
+    def notes_tool():
+        return render_template('tools/notes.html')
+
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
     def api_get_my_ip():
@@ -475,6 +502,116 @@ def create_app():
                 return jsonify({'vendor': 'Fehler bei der Abfrage'}), 500
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/tools/workdays', methods=['POST'])
+    @login_required
+    def api_calculate_workdays():
+        data = request.json
+        start_str = data.get('start')
+        end_str = data.get('end')
+        state = data.get('state', 'DE') # Default to Germany, or maybe a specific state
+
+        if not start_str or not end_str:
+            return jsonify({'error': 'Start- und Enddatum erforderlich'}), 400
+
+        try:
+            start_date = datetime.strptime(start_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_str, '%Y-%m-%d').date()
+
+            if start_date > end_date:
+                start_date, end_date = end_date, start_date
+
+            de_holidays = holidays.DE() # Germany holidays
+            
+            total_days = (end_date - start_date).days + 1
+            workdays = 0
+            weekends = 0
+            public_holidays = 0
+            
+            mondays = 0
+            
+            current = start_date
+            while current <= end_date:
+                is_weekend = current.weekday() >= 5 # 5=Sat, 6=Sun
+                is_holiday = current in de_holidays
+                
+                if current.weekday() == 0:
+                    mondays += 1
+
+                if is_weekend:
+                    weekends += 1
+                elif is_holiday:
+                    public_holidays += 1
+                else:
+                    workdays += 1
+                
+                current += timedelta(days=1)
+
+            return jsonify({
+                'total_days': total_days,
+                'workdays': workdays,
+                'weekends': weekends,
+                'public_holidays': public_holidays,
+                'mondays': mondays
+            })
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    # Notes API
+    @app.route('/api/notes', methods=['GET'])
+    @login_required
+    def api_get_notes():
+        notes = Note.query.filter_by(user_id=current_user.id).order_by(Note.updated_at.desc()).all()
+        return jsonify([{
+            'id': n.id,
+            'title': n.title,
+            'content': n.content,
+            'updated_at': n.updated_at.isoformat()
+        } for n in notes])
+
+    @app.route('/api/notes', methods=['POST'])
+    @login_required
+    def api_create_note():
+        data = request.json
+        title = data.get('title', 'Neue Notiz')
+        content = data.get('content', '')
+        
+        note = Note(title=title, content=content, user_id=current_user.id)
+        db.session.add(note)
+        db.session.commit()
+        
+        return jsonify({
+            'id': note.id,
+            'title': note.title,
+            'content': note.content,
+            'updated_at': note.updated_at.isoformat()
+        })
+
+    @app.route('/api/notes/<int:note_id>', methods=['PUT'])
+    @login_required
+    def api_update_note(note_id):
+        note = Note.query.get_or_404(note_id)
+        if note.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+            
+        data = request.json
+        note.title = data.get('title', note.title)
+        note.content = data.get('content', note.content)
+        db.session.commit()
+        
+        return jsonify({'message': 'Gespeichert'})
+
+    @app.route('/api/notes/<int:note_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_note(note_id):
+        note = Note.query.get_or_404(note_id)
+        if note.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+            
+        db.session.delete(note)
+        db.session.commit()
+        return jsonify({'message': 'Gelöscht'})
 
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required

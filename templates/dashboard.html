@@ -271,5 +271,41 @@
             <p class="text-sm opacity-80 mt-1">Übersetze Text in Morsecode und zurück, inkl. Sound.</p>
         </div>
     </a>
+
+    <!-- Workday Calculator Card -->
+    <a href="{{ url_for('workday_calculator') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">event_available</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Arbeitstage Rechner</h3>
+            <p class="text-sm opacity-80 mt-1">Berechne Werktage zwischen zwei Daten (ohne Feiertage/Wochenenden).</p>
+        </div>
+    </a>
+
+    <!-- Prefix/Suffix Adder Card -->
+    <a href="{{ url_for('prefix_suffix') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">format_quote</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Prefix/Suffix Adder</h3>
+            <p class="text-sm opacity-80 mt-1">Füge automatisch Text am Anfang oder Ende jeder Zeile hinzu.</p>
+        </div>
+    </a>
+
+    <!-- Notes Card -->
+    <a href="{{ url_for('notes_tool') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">edit_note</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Notizen</h3>
+            <p class="text-sm opacity-80 mt-1">Speichere deine Gedanken und Snippets direkt in deinem Account.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}

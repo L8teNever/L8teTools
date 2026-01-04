@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Prefix/Suffix Adder{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Prefix/Suffix Adder</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <!-- Input -->
+        <div class="m3-card !p-0 overflow-hidden flex flex-col h-[600px]">
+            <div
+                class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex justify-between items-center">
+                <span class="font-bold text-gray-500 text-sm uppercase">Eingabe</span>
+                <button class="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline"
+                    onclick="document.getElementById('inputText').value=''; updateText()">Leeren</button>
+            </div>
+            <textarea id="inputText"
+                class="w-full flex-1 p-6 bg-transparent outline-none resize-none font-mono text-sm leading-relaxed"
+                placeholder="Zeile 1&#10;Zeile 2&#10;Zeile 3..." oninput="updateText()"></textarea>
+        </div>
+
+        <!-- Controls & Output -->
+        <div class="flex flex-col gap-6 h-[600px]">
+            <!-- Controls -->
+            <div class="m3-card p-6">
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="m3-input-group !mb-0">
+                        <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Prefix (Anfang)</label>
+                        <input type="text" id="prefix" class="m3-text-input font-mono !py-3"
+                            placeholder='z.B. "item": "' oninput="updateText()">
+                    </div>
+                    <div class="m3-input-group !mb-0">
+                        <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Suffix (Ende)</label>
+                        <input type="text" id="suffix" class="m3-text-input font-mono !py-3" placeholder='z.B. ",'
+                            oninput="updateText()">
+                    </div>
+
+                    <div class="flex items-center gap-4 mt-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="ignoreEmpty"
+                                class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" onchange="updateText()"
+                                checked>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Leere Zeilen ignorieren</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div
+                class="m3-card !p-0 overflow-hidden flex flex-col flex-1 border-2 border-transparent transition-colors items-stretch">
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-900/30 p-4 flex justify-between items-center">
+                    <span class="font-bold text-blue-700 dark:text-blue-300 text-sm uppercase">Ergebnis</span>
+                    <button class="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline"
+                        onclick="copyResult()">Kopieren</button>
+                </div>
+                <textarea id="outputText"
+                    class="w-full flex-1 p-6 bg-transparent outline-none resize-none font-mono text-sm leading-relaxed"
+                    readonly></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateText() {
+        const text = document.getElementById('inputText').value;
+        const prefix = document.getElementById('prefix').value;
+        const suffix = document.getElementById('suffix').value;
+        const ignoreEmpty = document.getElementById('ignoreEmpty').checked;
+
+        const lines = text.split('\n');
+        const processed = lines.map(line => {
+            if (ignoreEmpty && !line.trim()) return line;
+            return prefix + line + suffix;
+        });
+
+        document.getElementById('outputText').value = processed.join('\n');
+    }
+
+    function copyResult() {
+        const text = document.getElementById('outputText').value;
+        if (text) {
+            navigator.clipboard.writeText(text);
+            showToast('Ergebnis kopiert!');
+        }
+    }
+</script>
+{% endblock %}

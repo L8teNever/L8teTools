@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Arbeitstage Rechner{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Arbeitstage Rechner</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <div class="m3-card flex flex-col gap-6 h-fit">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Startdatum</label>
+                    <input type="date" id="startDate" class="m3-text-input text-lg !py-3">
+                </div>
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Enddatum</label>
+                    <input type="date" id="endDate" class="m3-text-input text-lg !py-3">
+                </div>
+            </div>
+
+            <button onclick="calculateDays()" class="m3-button m3-button-filled py-4 text-lg w-full">
+                <span class="material-icons-round">calculate</span>
+                Berechnen
+            </button>
+        </div>
+
+        <div class="m3-card !p-0 overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-800/50 relative">
+            <div id="loading"
+                class="hidden absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-20 backdrop-blur-sm">
+                <div class="flex flex-col items-center">
+                    <span class="material-icons-round animate-spin text-4xl text-blue-600 mb-2">autorenew</span>
+                </div>
+            </div>
+
+            <div id="resultContent"
+                class="opacity-50 transition-opacity p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 items-center h-full">
+                <div class="text-center sm:text-left">
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Arbeitstage</p>
+                    <div class="text-6xl font-bold text-blue-600 dark:text-blue-400" id="workdaysCount">0</div>
+                    <p class="text-xs text-gray-400 mt-2">Mo - Fr, ohne Feiertage</p>
+                </div>
+
+                <div class="space-y-4 border-l border-gray-200 dark:border-gray-700 pl-0 sm:pl-8">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 dark:text-gray-300">Gesamttage</span>
+                        <span class="font-bold font-mono text-xl" id="totalDays">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 dark:text-gray-300">Wochenendtage</span>
+                        <span class="font-bold font-mono text-xl" id="weekendsCount">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 dark:text-gray-300">Feiertage (DE)</span>
+                        <span class="font-bold font-mono text-xl" id="holidaysCount">0</span>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 dark:text-gray-300">Montage</span>
+                        <span class="font-bold font-mono text-xl text-purple-600" id="mondaysCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+
+    // Default end date + 1 week
+    const neexWeek = new Date();
+    neexWeek.setDate(neexWeek.getDate() + 7);
+    document.getElementById('endDate').value = neexWeek.toISOString().split('T')[0];
+
+    async function calculateDays() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+
+        if (!start || !end) return;
+
+        const loading = document.getElementById('loading');
+        const content = document.getElementById('resultContent');
+
+        loading.classList.remove('hidden');
+        content.classList.add('opacity-50');
+
+        try {
+            const res = await fetch('/api/tools/workdays', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start, end })
+            });
+            const data = await res.json();
+
+            loading.classList.add('hidden');
+            content.classList.remove('opacity-50');
+
+            if (res.ok) {
+                document.getElementById('workdaysCount').innerText = data.workdays;
+                document.getElementById('totalDays').innerText = data.total_days;
+                document.getElementById('weekendsCount').innerText = data.weekends;
+                document.getElementById('holidaysCount').innerText = data.public_holidays;
+                document.getElementById('mondaysCount').innerText = data.mondays;
+            } else {
+                showToast(data.error || 'Fehler bei der Berechnung');
+            }
+
+        } catch (e) {
+            loading.classList.add('hidden');
+            showToast('Verbindungsfehler');
+        }
+    }
+
+    // Initial calc
+    calculateDays();
+</script>
+{% endblock %}
