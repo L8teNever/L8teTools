@@ -10,6 +10,7 @@ pillow-heif
 cairosvg
 pdf2docx
 markdown2
-moviepy
+moviepy==1.0.3
+decorator
 pandas
 openpyxl

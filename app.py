@@ -13,7 +13,10 @@ from pillow_heif import register_heif_opener
 import cairosvg
 from pdf2docx import Converter as PDF2Docx
 import markdown2
-import moviepy.editor as mp
+try:
+    import moviepy.editor as mp
+except ImportError:
+    import moviepy as mp
 
 register_heif_opener()
 
