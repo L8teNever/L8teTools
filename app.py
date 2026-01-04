@@ -82,11 +82,6 @@ def create_app():
     def dashboard():
         return render_template('dashboard.html', user=current_user)
 
-    @app.route('/tools/password-generator')
-    @login_required
-    def password_generator():
-        return render_template('tools/password_generator.html')
-
     @app.route('/tools/qr-generator')
     @login_required
     def qr_generator():
