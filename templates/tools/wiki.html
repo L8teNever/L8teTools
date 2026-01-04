@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Wiki / Cheatsheet{% endblock %}
+
+{% block content %}
+<div class="tool-page-container h-[calc(100vh-100px)]">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Wiki & Cheatsheets</h2>
+        <div class="flex-1"></div>
+        <button onclick="createEntry()" class="m3-button m3-button-filled">
+            <span class="material-icons-round">add</span>
+            Neuer Eintrag
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 h-full min-h-0">
+        <!-- Sidebar List -->
+        <div
+            class="m3-card !p-0 flex flex-col overflow-hidden h-full border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 col-span-1">
+            <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+                <input type="text" id="searchWiki" placeholder="Suchen..."
+                    class="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 outline-none text-sm"
+                    oninput="filterEntries()">
+                <div class="flex gap-2 text-xs overflow-x-auto pb-1" id="categoryFilter">
+                    <!-- Categories injected here -->
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="entryList">
+                <div class="flex flex-col items-center justify-center h-40 text-gray-400">
+                    <span class="material-icons-round animate-spin">autorenew</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- content area -->
+        <div class="md:col-span-3 m3-card !p-0 flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden relative"
+            id="contentContainer">
+            <!-- Empty State -->
+            <div id="emptyState"
+                class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50 dark:bg-gray-800 z-10 transition-opacity">
+                <span class="material-icons-round text-6xl mb-4 opacity-20">library_books</span>
+                <p>Wähle einen Eintrag oder erstelle einen neuen.</p>
+            </div>
+
+            <!-- View / Edit Container -->
+            <div id="entryView" class="hidden flex-col h-full z-20 bg-white dark:bg-gray-900 h-full">
+                <!-- Header -->
+                <div
+                    class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                    <div class="flex-1 mr-4">
+                        <input type="text" id="entryTitleInput"
+                            class="hidden text-2xl font-bold bg-transparent outline-none w-full placeholder-gray-400"
+                            placeholder="Titel">
+                        <h1 id="entryTitleView" class="text-2xl font-bold text-gray-800 dark:text-gray-100 truncate">
+                        </h1>
+                        <div class="flex gap-2 items-center mt-1">
+                            <span id="entryCategoryView"
+                                class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-500">General</span>
+                            <span class="text-xs text-gray-400" id="entryDate"></span>
+                            <input type="text" id="entryCategoryInput"
+                                class="hidden text-xs bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded outline-none border border-gray-200 dark:border-gray-700"
+                                placeholder="Kategorie">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <!-- View Actions -->
+                        <div id="viewActions" class="flex gap-2">
+                            <button onclick="toggleEditMode(true)"
+                                class="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 rounded-full transition-colors"
+                                title="Bearbeiten">
+                                <span class="material-icons-round">edit</span>
+                            </button>
+                            <button onclick="deleteEntry()"
+                                class="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-full transition-colors"
+                                title="Löschen">
+                                <span class="material-icons-round">delete</span>
+                            </button>
+                        </div>
+                        <!-- Edit Actions -->
+                        <div id="editActions" class="hidden flex gap-2">
+                            <button onclick="saveEntry()"
+                                class="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 rounded-full transition-colors"
+                                title="Speichern">
+                                <span class="material-icons-round">save</span>
+                            </button>
+                            <button onclick="toggleEditMode(false)"
+                                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 rounded-full transition-colors"
+                                title="Abbrechen">
+                                <span class="material-icons-round">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 overflow-hidden relative">
+                    <!-- Markdown Review -->
+                    <div id="markdownContent"
+                        class="absolute inset-0 overflow-y-auto p-8 prose dark:prose-invert max-w-none"></div>
+
+                    <!-- Editor -->
+                    <textarea id="markdownEditor"
+                        class="hidden absolute inset-0 w-full h-full p-6 bg-gray-50 dark:bg-gray-900 outline-none resize-none font-mono text-sm leading-relaxed border-none text-gray-800 dark:text-gray-200"
+                        placeholder="# Titel..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let entries = [];
+    let currentEntryId = null;
+    let isEditing = false;
+
+    async function loadEntries() {
+        try {
+            const res = await fetch('/api/wiki');
+            entries = await res.json();
+            renderList();
+            renderCategories();
+        } catch (e) {
+            console.error(e);
+            showToast('Fehler beim Laden');
+        }
+    }
+
+    function renderList(categoryFilter = null) {
+        const list = document.getElementById('entryList');
+        const search = document.getElementById('searchWiki').value.toLowerCase();
+
+        list.innerHTML = '';
+
+        // Sort by category then title
+        let filtered = entries.filter(e => {
+            const matchesSearch = e.title.toLowerCase().includes(search) || (e.category && e.category.toLowerCase().includes(search));
+            const matchesCat = categoryFilter ? e.category === categoryFilter : true;
+            return matchesSearch && matchesCat;
+        });
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm">Keine Einträge</div>`;
+            return;
+        }
+
+        let lastCat = null;
+        filtered.forEach(entry => {
+            if (entry.category !== lastCat) {
+                const catHeader = document.createElement('div');
+                catHeader.className = "px-4 py-2 bg-gray-50 dark:bg-gray-800/50 text-xs font-bold text-gray-500 uppercase tracking-widest sticky top-0 backdrop-blur-sm z-10";
+                catHeader.innerText = entry.category || 'General';
+                list.appendChild(catHeader);
+                lastCat = entry.category;
+            }
+
+            const active = entry.id === currentEntryId ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 text-blue-700 dark:text-blue-300' : 'hover:bg-gray-50 dark:hover:bg-gray-800 border-l-4 border-transparent text-gray-700 dark:text-gray-300';
+
+            const el = document.createElement('div');
+            el.className = `p-3 pl-4 cursor-pointer transition-all border-b border-gray-100 dark:border-gray-800 text-sm font-medium ${active}`;
+            el.onclick = () => selectEntry(entry.id);
+            el.innerText = entry.title;
+            list.appendChild(el);
+        });
+    }
+
+    function renderCategories() {
+        const cats = [...new Set(entries.map(e => e.category || 'General'))].sort();
+        const container = document.getElementById('categoryFilter');
+        container.innerHTML = `<button onclick="renderList(null)" class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 whitespace-nowrap">Alle</button>`;
+
+        cats.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = "px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 whitespace-nowrap";
+            btn.innerText = c;
+            btn.onclick = () => renderList(c);
+            container.appendChild(btn);
+        });
+    }
+
+    function filterEntries() {
+        renderList();
+    }
+
+    async function createEntry() {
+        try {
+            const res = await fetch('/api/wiki', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: 'Neuer Eintrag', content: '# Überschrift\n', category: 'General' })
+            });
+            const data = await res.json();
+
+            // Reload fully to get new ID in list correctly sortable
+            await loadEntries();
+            selectEntry(data.id);
+            toggleEditMode(true);
+
+        } catch (e) {
+            showToast('Fehler beim Erstellen');
+        }
+    }
+
+    async function selectEntry(id) {
+        currentEntryId = id;
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('entryView').classList.remove('hidden');
+        document.getElementById('entryView').classList.add('flex');
+
+        // Reset edit mode if switching
+        if (isEditing) toggleEditMode(false);
+
+        // Load details
+        try {
+            // Show loading state in view?
+            const res = await fetch(`/api/wiki/${id}`);
+            const data = await res.json();
+
+            // Update View
+            document.getElementById('entryTitleView').innerText = data.title;
+            document.getElementById('entryCategoryView').innerText = data.category;
+            document.getElementById('entryDate').innerText = new Date(data.updated_at).toLocaleDateString();
+            document.getElementById('markdownContent').innerHTML = data.html;
+
+            // Update Editor Inputs (hidden)
+            document.getElementById('entryTitleInput').value = data.title;
+            document.getElementById('entryCategoryInput').value = data.category;
+            document.getElementById('markdownEditor').value = data.content;
+
+            renderList(); // Update active highlight
+
+        } catch (e) {
+            showToast('Konnte Eintrag nicht laden');
+        }
+    }
+
+    function toggleEditMode(edit) {
+        isEditing = edit;
+        const viewActions = document.getElementById('viewActions');
+        const editActions = document.getElementById('editActions');
+        const titleView = document.getElementById('entryTitleView');
+        const titleInput = document.getElementById('entryTitleInput');
+        const catView = document.getElementById('entryCategoryView');
+        const catInput = document.getElementById('entryCategoryInput');
+        const contentView = document.getElementById('markdownContent');
+        const contentEditor = document.getElementById('markdownEditor');
+
+        if (edit) {
+            viewActions.classList.add('hidden');
+            editActions.classList.remove('hidden');
+            editActions.classList.add('flex');
+
+            titleView.classList.add('hidden');
+            titleInput.classList.remove('hidden');
+
+            catView.classList.add('hidden');
+            catInput.classList.remove('hidden');
+
+            contentView.classList.add('hidden');
+            contentEditor.classList.remove('hidden');
+            contentEditor.focus();
+        } else {
+            viewActions.classList.remove('hidden');
+            editActions.classList.add('hidden');
+            editActions.classList.remove('flex');
+
+            titleView.classList.remove('hidden');
+            titleInput.classList.add('hidden');
+
+            catView.classList.remove('hidden');
+            catInput.classList.add('hidden');
+
+            contentView.classList.remove('hidden');
+            contentEditor.classList.add('hidden');
+
+            // Revert changes visually if cancelled
+            if (currentEntryId) selectEntry(currentEntryId);
+        }
+    }
+
+    async function saveEntry() {
+        if (!currentEntryId) return;
+
+        const title = document.getElementById('entryTitleInput').value;
+        const category = document.getElementById('entryCategoryInput').value;
+        const content = document.getElementById('markdownEditor').value;
+
+        try {
+            const res = await fetch(`/api/wiki/${currentEntryId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, category, content })
+            });
+            const data = await res.json();
+
+            // Update local list (simple update)
+            const entry = entries.find(e => e.id === currentEntryId);
+            if (entry) {
+                entry.title = title;
+                entry.category = category;
+            }
+
+            // Update view html
+            document.getElementById('markdownContent').innerHTML = data.html;
+            document.getElementById('entryTitleView').innerText = title;
+            document.getElementById('entryCategoryView').innerText = category;
+
+            // Refresh list and cats
+            renderList();
+            renderCategories();
+
+            toggleEditMode(false);
+            showToast('Gespeichert');
+
+        } catch (e) {
+            showToast('Fehler beim Speichern');
+        }
+    }
+
+    async function deleteEntry() {
+        if (!currentEntryId || !confirm('Diesen Eintrag wirklich löschen?')) return;
+
+        try {
+            await fetch(`/api/wiki/${currentEntryId}`, { method: 'DELETE' });
+
+            entries = entries.filter(e => e.id !== currentEntryId);
+            currentEntryId = null;
+
+            document.getElementById('entryView').classList.add('hidden');
+            document.getElementById('entryView').classList.remove('flex');
+            document.getElementById('emptyState').classList.remove('hidden');
+
+            renderList();
+            renderCategories();
+            showToast('Gelöscht');
+
+        } catch (e) {
+            showToast('Fehler beim Löschen');
+        }
+    }
+
+    // Init
+    loadEntries();
+</script>
+{% endblock %}

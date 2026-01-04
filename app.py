@@ -67,6 +67,17 @@ class Note(db.Model):
 
     user = db.relationship('User', backref=db.backref('notes', lazy=True))
 
+class WikiEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text)
+    category = db.Column(db.String(100), default='General')
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('wiki_entries', lazy=True))
+
 class SystemConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
@@ -443,6 +454,11 @@ def create_app():
     def notes_tool():
         return render_template('tools/notes.html')
 
+    @app.route('/tools/wiki')
+    @login_required
+    def wiki_tool():
+        return render_template('tools/wiki.html')
+
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
     def api_get_my_ip():
@@ -610,6 +626,79 @@ def create_app():
             return jsonify({'error': 'Nicht autorisiert'}), 403
             
         db.session.delete(note)
+        db.session.commit()
+        return jsonify({'message': 'Gelöscht'})
+
+    # Wiki API
+    @app.route('/api/wiki', methods=['GET'])
+    @login_required
+    def api_get_wiki_entries():
+        entries = WikiEntry.query.filter_by(user_id=current_user.id).order_by(WikiEntry.category, WikiEntry.title).all()
+        return jsonify([{
+            'id': e.id,
+            'title': e.title,
+            'category': e.category,
+            'updated_at': e.updated_at.isoformat()
+        } for e in entries])
+
+    @app.route('/api/wiki/<int:entry_id>', methods=['GET'])
+    @login_required
+    def api_get_wiki_entry(entry_id):
+        entry = WikiEntry.query.get_or_404(entry_id)
+        if entry.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+            
+        html_content = markdown2.markdown(entry.content or "", extras=["fenced-code-blocks", "tables", "break-on-newline"])
+        
+        return jsonify({
+            'id': entry.id,
+            'title': entry.title,
+            'content': entry.content,
+            'category': entry.category,
+            'html': html_content,
+            'updated_at': entry.updated_at.isoformat()
+        })
+
+    @app.route('/api/wiki', methods=['POST'])
+    @login_required
+    def api_create_wiki_entry():
+        data = request.json
+        title = data.get('title', 'Neuer Eintrag')
+        content = data.get('content', '')
+        category = data.get('category', 'Allgemein')
+        
+        entry = WikiEntry(title=title, content=content, category=category, user_id=current_user.id)
+        db.session.add(entry)
+        db.session.commit()
+        
+        return jsonify({'id': entry.id, 'message': 'Erstellt'})
+
+    @app.route('/api/wiki/<int:entry_id>', methods=['PUT'])
+    @login_required
+    def api_update_wiki_entry(entry_id):
+        entry = WikiEntry.query.get_or_404(entry_id)
+        if entry.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+            
+        data = request.json
+        entry.title = data.get('title', entry.title)
+        entry.content = data.get('content', entry.content)
+        entry.category = data.get('category', entry.category)
+        
+        db.session.commit()
+        
+        # Return updated HTML for preview update
+        html_content = markdown2.markdown(entry.content or "", extras=["fenced-code-blocks", "tables", "break-on-newline"])
+        return jsonify({'message': 'Gespeichert', 'html': html_content})
+
+    @app.route('/api/wiki/<int:entry_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_wiki_entry(entry_id):
+        entry = WikiEntry.query.get_or_404(entry_id)
+        if entry.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+            
+        db.session.delete(entry)
         db.session.commit()
         return jsonify({'message': 'Gelöscht'})
 
