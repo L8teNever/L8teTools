@@ -31,24 +31,17 @@
         </div>
 
         <!-- Controls Column -->
-        <div class="m3-card">
-            <div class="mb-10">
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 px-1">Links oder Text
-                    eingeben</label>
-                <div class="m3-input-group">
-                    <textarea id="qrInput" class="m3-text-input h-32 resize-none" placeholder="https://google.de"
-                        autofocus></textarea>
-                </div>
+        <div class="m3-card flex flex-col min-h-[400px]">
+            <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 px-1">
+                Links oder Text eingeben
+            </label>
+            <div class="m3-input-group flex-1 flex flex-col">
+                <textarea id="qrInput" class="m3-text-input flex-1 w-full p-6 text-lg resize-none"
+                    placeholder="https://google.de" autofocus></textarea>
             </div>
-
-            <div class="space-y-4 mb-10">
-                <p class="text-xs text-gray-500 px-1">Der QR-Code wird automatisch generiert, während du tippst.</p>
-            </div>
-
-            <button class="m3-button m3-button-filled shadow-lg py-5 text-xl" onclick="generateQRManual()">
-                <span class="material-icons-round text-2xl">qr_code</span>
-                Code generieren
-            </button>
+            <p class="text-xs text-gray-500 px-1 mt-4">
+                Der QR-Code wird automatisch generiert, während du tippst.
+            </p>
         </div>
     </div>
 </div>
@@ -105,28 +98,6 @@
         });
     });
 
-    function generateQRManual() {
-        const val = document.getElementById('qrInput').value.trim();
-        if (val) {
-            const qrContainer = document.getElementById('qrcode');
-            // If placeholder is there, clear it
-            if (qrContainer.querySelector('.material-icons-round')) {
-                qrContainer.innerHTML = '';
-                qrcodeInstance = new QRCode(qrContainer, {
-                    text: val,
-                    width: 256,
-                    height: 256,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            } else if (qrcodeInstance) {
-                qrcodeInstance.clear();
-                qrcodeInstance.makeCode(val);
-            }
-            document.getElementById('downloadBtn').classList.remove('hidden');
-        }
-    }
 
     function downloadQR() {
         const img = document.querySelector('#qrcode img');
