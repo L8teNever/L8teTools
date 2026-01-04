@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Anmelden{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2 class="auth-title">Willkommen zurück</h2>
+    <form method="POST">
+        <div class="input-group">
+            <label for="username" class="input-label">Benutzername</label>
+            <input type="text" id="username" name="username" class="text-input" required autofocus>
+        </div>
+        <div class="input-group">
+            <label for="password" class="input-label">Passwort</label>
+            <input type="password" id="password" name="password" class="text-input" required>
+        </div>
+        <button type="submit" class="btn-primary">Anmelden</button>
+    </form>
+</div>
+{% endblock %}

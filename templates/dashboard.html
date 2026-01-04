@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1>Hallo, {{ user.username }}</h1>
+    <p style="color: var(--md-sys-color-on-surface-variant);">Wähle ein Tool aus, um zu beginnen.</p>
+</div>
+
+<div class="card-grid">
+    <!-- Password Generator Card -->
+    <a href="{{ url_for('password_generator') }}" class="card">
+        <span class="material-icons-round card-icon">password</span>
+        <h3>Passwort Generator</h3>
+        <p>Erstelle sichere Passwörter mit anpassbaren Kriterien.</p>
+    </a>
+
+    <!-- Placeholder for future tools -->
+    <div class="card" style="opacity: 0.5; cursor: default;">
+        <span class="material-icons-round card-icon">construction</span>
+        <h3>Demnächst</h3>
+        <p>Weitere Tools sind in Entwicklung.</p>
+    </div>
+</div>
+{% endblock %}
