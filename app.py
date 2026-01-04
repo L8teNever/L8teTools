@@ -82,6 +82,11 @@ def create_app():
     def dashboard():
         return render_template('dashboard.html', user=current_user)
 
+    @app.route('/tools/password-generator')
+    @login_required
+    def password_generator():
+        return render_template('tools/password_generator.html')
+
     @app.route('/tools/qr-generator')
     @login_required
     def qr_generator():
@@ -114,7 +119,7 @@ def create_app():
                     filename = file.filename.lower()
                     file_data = file.read()
                     
-                    if filename.endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                    if filename.endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.tiff')):
                         # Convert Image to PDF bytes
                         img = Image.open(io.BytesIO(file_data))
                         if img.mode != 'RGB':
@@ -137,7 +142,7 @@ def create_app():
                 output.seek(0)
                 return send_file(output, mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
 
-            elif target_format in ['png', 'jpg']:
+            elif target_format in ['png', 'jpg', 'webp']:
                 # Convert files to images, return as ZIP if multiple
                 with zipfile.ZipFile(output, 'w') as zf:
                     for i, file in enumerate(files):
