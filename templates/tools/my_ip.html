@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Meine IP{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Was ist meine IP?</h2>
+    </div>
+
+    <div class="max-w-2xl mx-auto w-full">
+        <div
+            class="m3-card flex flex-col items-center justify-center min-h-[400px] text-center gap-8 relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 opacity-50">
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center gap-2">
+                <span class="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Deine
+                    Öffentliche IP-Adresse</span>
+                <div class="text-5xl sm:text-7xl font-mono font-bold text-gray-800 dark:text-white mt-4 tracking-tight"
+                    id="ipAddress">
+                    ---.---.---.---
+                </div>
+            </div>
+
+            <div class="relative z-10 flex gap-4 mt-8">
+                <button onclick="fetchIP()"
+                    class="m3-button m3-button-filled w-auto px-8 shadow-lg shadow-blue-200 dark:shadow-none">
+                    <span class="material-icons-round animate-spin" id="refreshIcon"
+                        style="display:none;">refresh</span>
+                    <span class="material-icons-round" id="staticRefreshIcon">refresh</span>
+                    Aktualisieren
+                </button>
+                <button onclick="copyIP()" class="m3-button m3-button-outline w-auto px-6 bg-white dark:bg-transparent">
+                    <span class="material-icons-round">content_copy</span>
+                </button>
+            </div>
+
+            <div class="relative z-10 mt-8 max-w-md text-sm text-gray-500">
+                <p>Das ist die Adresse, unter der du im Internet sichtbar bist. Wenn du ein VPN benutzt, wird hier die
+                    Adresse des VPN-Servers angezeigt.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function fetchIP() {
+        const display = document.getElementById('ipAddress');
+        const refreshIcon = document.getElementById('refreshIcon');
+        const staticRefreshIcon = document.getElementById('staticRefreshIcon');
+
+        refreshIcon.style.display = 'block';
+        staticRefreshIcon.style.display = 'none';
+        display.style.opacity = '0.5';
+
+        try {
+            const res = await fetch('/api/tools/my-ip');
+            const data = await res.json();
+            display.textContent = data.ip;
+        } catch (e) {
+            display.textContent = 'Fehler';
+            showToast('Konnte IP nicht laden');
+        } finally {
+            refreshIcon.style.display = 'none';
+            staticRefreshIcon.style.display = 'inline-block';
+            display.style.opacity = '1';
+        }
+    }
+
+    function copyIP() {
+        const ip = document.getElementById('ipAddress').textContent.trim();
+        if (ip && ip !== '---.---.---.---' && ip !== 'Fehler') {
+            navigator.clipboard.writeText(ip);
+            showToast('IP-Adresse kopiert!');
+        }
+    }
+
+    // Load on start
+    document.addEventListener('DOMContentLoaded', fetchIP);
+</script>
+{% endblock %}

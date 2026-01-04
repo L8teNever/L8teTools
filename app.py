@@ -374,6 +374,21 @@ def create_app():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
+    @app.route('/tools/my-ip')
+    @login_required
+    def my_ip():
+        return render_template('tools/my_ip.html')
+
+    @app.route('/api/tools/my-ip', methods=['GET'])
+    @login_required
+    def api_get_my_ip():
+        # Try to get the real IP if behind proxy
+        if request.headers.get('X-Forwarded-For'):
+            ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+        else:
+            ip = request.remote_addr
+        return jsonify({'ip': ip})
+
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required
     def api_delete_user(user_id):

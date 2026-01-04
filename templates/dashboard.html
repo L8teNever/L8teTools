@@ -175,5 +175,17 @@
             <p class="text-sm opacity-80 mt-1">Entferne oder bearbeite versteckte Metadaten aus deinen Fotos.</p>
         </div>
     </a>
+
+    <!-- My IP Card -->
+    <a href="{{ url_for('my_ip') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">public</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Was ist meine IP?</h3>
+            <p class="text-sm opacity-80 mt-1">Zeige deine aktuelle öffentliche IP-Adresse mit einem Klick.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}
