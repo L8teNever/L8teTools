@@ -17,9 +17,6 @@
         <!-- Dice Display Column -->
         <div class="m3-card flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-blue-900/20 relative overflow-hidden"
             id="diceDisplayCard">
-            <button class="fullscreen-btn" onclick="toggleFocusMode()" title="Fokus-Modus">
-                <span class="material-icons-round">fullscreen</span>
-            </button>
             <div id="diceContainer" class="flex flex-wrap items-center justify-center gap-8 w-full cursor-pointer"
                 onclick="rollDice()">
                 <!-- Single default die -->
@@ -55,17 +52,6 @@
             </p>
         </div>
     </div>
-</div>
-
-<div id="focusOverlay" class="focus-overlay">
-    <div class="focus-header">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Würfel</h2>
-        <button class="m3-button" onclick="toggleFocusMode()">
-            <span class="material-icons-round">fullscreen_exit</span>
-            Beenden
-        </button>
-    </div>
-    <div class="focus-content flex-col" id="focusContent"></div>
 </div>
 
 <style>
@@ -166,25 +152,6 @@
         });
     }
 
-    function toggleFocusMode() {
-        const focusOverlay = document.getElementById('focusOverlay');
-        const focusContent = document.getElementById('focusContent');
-        const diceCard = document.getElementById('diceDisplayCard');
-        const diceContainer = document.getElementById('diceContainer');
-        const diceResult = document.getElementById('diceResult');
-
-        if (!focusOverlay.classList.contains('active')) {
-            focusContent.appendChild(diceContainer);
-            focusContent.appendChild(diceResult);
-            focusOverlay.classList.add('active');
-            document.body.classList.add('focus-active');
-        } else {
-            diceCard.appendChild(diceContainer);
-            diceCard.appendChild(diceResult);
-            focusOverlay.classList.remove('active');
-            document.body.classList.remove('focus-active');
-        }
-    }
 
     diceCountInput.addEventListener('input', updateDiceCount);
     document.addEventListener('DOMContentLoaded', updateDiceCount);

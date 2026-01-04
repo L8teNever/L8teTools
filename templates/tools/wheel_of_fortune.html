@@ -16,9 +16,6 @@
         <!-- Wheel Column -->
         <div class="flex flex-col relative items-center justify-center m3-card min-h-[500px] overflow-hidden"
             id="wheelDisplayCard">
-            <button class="fullscreen-btn" onclick="toggleFocusMode()" title="Fokus-Modus">
-                <span class="material-icons-round">fullscreen</span>
-            </button>
             <div id="wheelContainer" class="relative group">
                 <canvas id="wheelCanvas" width="450" height="450"
                     class="max-w-full h-auto drop-shadow-2xl cursor-pointer" onclick="spinWheel()"></canvas>
@@ -66,17 +63,6 @@
             </button>
         </div>
     </div>
-</div>
-
-<div id="focusOverlay" class="focus-overlay">
-    <div class="focus-header">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Glücksrad</h2>
-        <button class="m3-button" onclick="toggleFocusMode()">
-            <span class="material-icons-round">fullscreen_exit</span>
-            Beenden
-        </button>
-    </div>
-    <div class="focus-content" id="focusContent"></div>
 </div>
 
 <script>
@@ -211,26 +197,6 @@
         resultOverlay.classList.add('opacity-0', 'pointer-events-none');
     }
 
-    function toggleFocusMode() {
-        const focusOverlay = document.getElementById('focusOverlay');
-        const focusContent = document.getElementById('focusContent');
-        const wheelCard = document.getElementById('wheelDisplayCard');
-        const wheelContainer = document.getElementById('wheelContainer');
-        const resultOverlay = document.getElementById('resultOverlay');
-
-        if (!focusOverlay.classList.contains('active')) {
-            focusContent.appendChild(wheelContainer);
-            focusContent.appendChild(resultOverlay);
-            focusOverlay.classList.add('active');
-            document.body.classList.add('focus-active');
-        } else {
-            wheelCard.appendChild(wheelContainer);
-            wheelCard.appendChild(resultOverlay);
-            focusOverlay.classList.remove('active');
-            document.body.classList.remove('focus-active');
-        }
-        drawWheel();
-    }
 
     optionsInput.addEventListener('input', drawWheel);
     document.addEventListener('DOMContentLoaded', drawWheel);
