@@ -123,6 +123,11 @@ def create_app():
     def score_tracker():
         return render_template('tools/score_tracker.html', user=current_user)
 
+    @app.route('/tools/color-picker')
+    @login_required
+    def color_picker():
+        return render_template('tools/color_picker.html')
+
     @app.route('/api/convert', methods=['POST'])
     @login_required
     def api_convert():
