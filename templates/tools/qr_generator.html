@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}QR-Code Generator{% endblock %}
+
+{% block content %}
+<div class="max-w-[1000px] mx-auto">
+    <div class="flex items-center gap-4 mb-8">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">QR-Code Generator</h2>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Display Column -->
+        <div class="flex flex-col">
+            <div class="m3-card flex-1 flex flex-col items-center justify-center min-h-[400px]">
+                <div id="qrcode" class="p-4 bg-white rounded-xl shadow-inner mb-6">
+                    <!-- QR Code will be rendered here -->
+                    <div
+                        class="w-48 h-48 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 rounded-lg">
+                        <span class="material-icons-round text-5xl">qr_code_scanner</span>
+                    </div>
+                </div>
+                <button id="downloadBtn" class="m3-button py-3 px-8 hidden" onclick="downloadQR()">
+                    <span class="material-icons-round">download</span>
+                    Herunterladen
+                </button>
+            </div>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="m3-card">
+            <div class="mb-10">
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 px-1">Links oder Text
+                    eingeben</label>
+                <div class="m3-input-group">
+                    <textarea id="qrInput" class="m3-text-input h-32 resize-none" placeholder="https://google.de"
+                        autofocus></textarea>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-10">
+                <p class="text-xs text-gray-500 px-1">Der QR-Code wird automatisch generiert, während du tippst.</p>
+            </div>
+
+            <button class="m3-button m3-button-filled shadow-lg py-5 text-xl" onclick="generateQRManual()">
+                <span class="material-icons-round text-2xl">qr_code</span>
+                Code generieren
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+    let qrcode = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const qrInput = document.getElementById('qrInput');
+        const qrContainer = document.getElementById('qrcode');
+
+        // Setup initial QR
+        qrcode = new QRCode(qrContainer, {
+            text: "L8teTools",
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Update on input
+        qrInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val) {
+                qrcode.clear();
+                qrcode.makeCode(val);
+                document.getElementById('downloadBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('downloadBtn').classList.add('hidden');
+            }
+        });
+    });
+
+    function generateQRManual() {
+        const val = document.getElementById('qrInput').value.trim();
+        if (val) {
+            qrcode.clear();
+            qrcode.makeCode(val);
+            document.getElementById('downloadBtn').classList.remove('hidden');
+        }
+    }
+
+    function downloadQR() {
+        const img = document.querySelector('#qrcode img');
+        if (!img) return;
+
+        const link = document.createElement('a');
+        link.download = 'L8teTools_QR.png';
+        link.href = img.src;
+        link.click();
+    }
+</script>
+{% endblock %}
