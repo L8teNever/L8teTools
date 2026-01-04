@@ -6,7 +6,8 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import tempfile
-from PIL import Image
+import uuid
+from PIL import Image, ExifTags
 import img2pdf
 import fitz  # PyMuPDF
 from pillow_heif import register_heif_opener
@@ -263,6 +264,115 @@ def create_app():
     @login_required
     def word_counter():
         return render_template('tools/word_counter.html')
+
+    @app.route('/tools/exif-remover')
+    @login_required
+    def exif_remover():
+        return render_template('tools/exif_remover.html')
+
+    @app.route('/api/tools/exif/analyze', methods=['POST'])
+    @login_required
+    def api_exif_analyze():
+        if 'file' not in request.files:
+            return jsonify({'error': 'Keine Datei'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Keine Datei ausgewählt'}), 400
+
+        try:
+            # Save temp file
+            ext = os.path.splitext(file.filename)[1]
+            temp_name = f"l8te_exif_{uuid.uuid4()}{ext}"
+            temp_path = os.path.join(tempfile.gettempdir(), temp_name)
+            file.save(temp_path)
+
+            # Analyze EXIF
+            img = Image.open(temp_path)
+            exif_data = {}
+            raw_exif = img.getexif()
+            
+            if raw_exif:
+                for tag_id, value in raw_exif.items():
+                    tag_name = ExifTags.TAGS.get(tag_id, str(tag_id))
+                    # Handle binary data safely
+                    if isinstance(value, bytes):
+                        try:
+                            value = value.decode()
+                        except:
+                            value = '<binary data>'
+                    exif_data[tag_id] = {'name': tag_name, 'value': str(value)}
+
+            return jsonify({
+                'token': temp_name,
+                'exif': exif_data,
+                'has_exif': bool(exif_data)
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/tools/exif/process', methods=['POST'])
+    @login_required
+    def api_exif_process():
+        try:
+            data = request.json
+            token = data.get('token')
+            action = data.get('action') # 'clean' or 'save'
+            updates = data.get('updates', {})
+
+            if not token:
+                return jsonify({'error': 'Token fehlt'}), 400
+
+            temp_path = os.path.join(tempfile.gettempdir(), token)
+            if not os.path.exists(temp_path):
+                return jsonify({'error': 'Datei nicht gefunden (Session abgelaufen)'}), 404
+
+            img = Image.open(temp_path)
+            
+            if action == 'clean':
+                # Remove all EXIF - create new image without it
+                data = list(img.getdata())
+                image_without_exif = Image.new(img.mode, img.size)
+                image_without_exif.putdata(data)
+                
+                output = io.BytesIO()
+                image_without_exif.save(output, format=img.format or 'JPEG')
+                output.seek(0)
+                
+                return send_file(
+                    output,
+                    mimetype=Image.MIME[img.format or 'JPEG'],
+                    as_attachment=True,
+                    download_name=f"clean_{token}"
+                )
+            
+            elif action == 'save':
+                # Update EXIF
+                exif = img.getexif()
+                for tag_id, value in updates.items():
+                    try:
+                        # Try to remove if empty
+                        if value == "":
+                            del exif[int(tag_id)]
+                        else:
+                            exif[int(tag_id)] = value
+                    except:
+                        pass # Ignore errors for now
+                
+                output = io.BytesIO()
+                img.save(output, format=img.format or 'JPEG', exif=exif)
+                output.seek(0)
+                
+                return send_file(
+                    output,
+                    mimetype=Image.MIME[img.format or 'JPEG'],
+                    as_attachment=True,
+                    download_name=f"edited_{token}"
+                )
+
+            return jsonify({'error': 'Ungültige Aktion'}), 400
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required
