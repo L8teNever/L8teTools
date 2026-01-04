@@ -14,24 +14,39 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Account Settings -->
-        <div class="m3-card space-y-6">
-            <h3 class="text-xl font-bold flex items-center gap-2">
-                <span class="material-icons-round text-blue-600">manage_accounts</span>
-                Account Sicherheit
-            </h3>
+        <div class="flex flex-col gap-6">
+            <div class="m3-card space-y-6">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <span class="material-icons-round text-blue-600">manage_accounts</span>
+                    Account Sicherheit
+                </h3>
 
-            <div class="m3-input-group">
-                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Neues Passwort</label>
-                <div class="relative">
-                    <input type="password" id="newPassword" class="m3-text-input pl-10" placeholder="Minimum 4 Zeichen">
-                    <span
-                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Neues Passwort</label>
+                    <div class="relative">
+                        <input type="password" id="newPassword" class="m3-text-input pl-10"
+                            placeholder="Minimum 4 Zeichen">
+                        <span
+                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                    </div>
                 </div>
+
+                <button class="m3-button m3-button-filled w-full py-3" onclick="changePassword()">
+                    Passwort speichern
+                </button>
             </div>
 
-            <button class="m3-button m3-button-filled w-full py-3" onclick="changePassword()">
-                Passwort speichern
-            </button>
+            <!-- Logout Card -->
+            <div class="m3-card space-y-4 !bg-red-50 dark:!bg-red-900/10 border border-red-100 dark:border-red-900/30">
+                <h3 class="text-lg font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
+                    <span class="material-icons-round">logout</span>
+                    Abmelden
+                </h3>
+                <p class="text-xs text-red-600 dark:text-red-400/80">Beende deine aktuelle Sitzung auf diesem Gerät.</p>
+                <a href="{{ url_for('logout') }}" class="m3-button w-full !bg-red-600 !text-white hover:!bg-red-700">
+                    Jetzt abmelden
+                </a>
+            </div>
         </div>
 
         {% if current_user.is_admin %}
@@ -87,6 +102,59 @@
                 Benutzer erstellen
             </button>
         </div>
+        <!-- Admin: User Management -->
+        <div class="m3-card space-y-6 md:col-span-2">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-icons-round text-purple-600">group</span>
+                Admin: Benutzerverwaltung
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr
+                            class="text-xs font-bold text-gray-400 uppercase border-b border-gray-100 dark:border-gray-800">
+                            <th class="px-4 py-3">Benutzername</th>
+                            <th class="px-4 py-3">Rolle</th>
+                            <th class="px-4 py-3 text-right">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 dark:divide-gray-800/50">
+                        {% for user in users %}
+                        <tr class="text-sm">
+                            <td class="px-4 py-4 font-medium">{{ user.username }} {% if user.id == current_user.id
+                                %}<span
+                                    class="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded-full ml-2">Du</span>{%
+                                endif %}</td>
+                            <td class="px-4 py-4">
+                                {% if user.is_admin %}
+                                <span
+                                    class="bg-purple-100 dark:bg-purple-900/30 text-purple-600 px-2 py-1 rounded-lg text-xs font-bold">Admin</span>
+                                {% else %}
+                                <span
+                                    class="bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-lg text-xs font-bold">User</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 text-right space-x-2">
+                                <button onclick="resetUserPassword({{ user.id }}, '{{ user.username }}')"
+                                    class="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                                    title="Passwort zurücksetzen">
+                                    <span class="material-icons-round">key</span>
+                                </button>
+                                {% if user.id != current_user.id %}
+                                <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')"
+                                    class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    title="Benutzer löschen">
+                                    <span class="material-icons-round">delete_outline</span>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
@@ -102,7 +170,7 @@
         const res = await fetch('/api/settings/password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
+            body: JSON.stringify({ password: password })
         });
 
         if (res.ok) {
@@ -120,7 +188,7 @@
         const res = await fetch('/api/settings/domain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ domain })
+            body: JSON.stringify({ domain: domain })
         });
 
         if (res.ok) {
@@ -143,17 +211,50 @@
         const res = await fetch('/api/settings/create-user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, is_admin })
+            body: JSON.stringify({ username: username, password: password, is_admin: is_admin })
         });
 
         if (res.ok) {
             showToast(`Benutzer ${username} wurde erstellt.`);
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newUserPassword').value = '';
-            document.getElementById('isAdmin').checked = false;
+            location.reload();
         } else {
             const data = await res.json();
             showToast(data.error || 'Fehler beim Erstellen');
+        }
+    }
+
+    async function deleteUser(id, name) {
+        if (!confirm(`Möchtest du den Benutzer "${name}" wirklich unwiderruflich löschen?`)) return;
+
+        const res = await fetch(`/api/settings/users/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Benutzer wurde gelöscht.');
+            location.reload();
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Fehler beim Löschen');
+        }
+    }
+
+    async function resetUserPassword(id, name) {
+        const newPass = prompt(`Neues Passwort für "${name}" eingeben:`);
+        if (!newPass) return;
+        if (newPass.length < 4) {
+            showToast('Passwort zu kurz.');
+            return;
+        }
+
+        const res = await fetch(`/api/settings/users/${id}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: newPass })
+        });
+
+        if (res.ok) {
+            showToast(`Passwort für ${name} wurde geändert.`);
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Fehler beim Zurücksetzen');
         }
     }
     {% endif %}

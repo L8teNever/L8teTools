@@ -174,7 +174,10 @@ def create_app():
     @login_required
     def settings():
         domain = SystemConfig.query.filter_by(key='shortener_domain').first().value
-        return render_template('settings.html', domain=domain)
+        all_users = []
+        if current_user.is_admin:
+            all_users = User.query.all()
+        return render_template('settings.html', domain=domain, users=all_users)
 
     @app.route('/api/settings/password', methods=['POST'])
     @login_required
@@ -237,6 +240,37 @@ def create_app():
     @login_required
     def unit_converter():
         return render_template('tools/unit_converter.html')
+
+    @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_user(user_id):
+        if not current_user.is_admin:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+        
+        user = User.query.get_or_404(user_id)
+        if user.id == current_user.id:
+            return jsonify({'error': 'Du kannst dich nicht selbst löschen'}), 400
+        
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'Benutzer gelöscht'})
+
+    @app.route('/api/settings/users/<int:user_id>/reset-password', methods=['POST'])
+    @login_required
+    def api_reset_user_password(user_id):
+        if not current_user.is_admin:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+        
+        user = User.query.get_or_404(user_id)
+        data = request.json
+        new_password = data.get('password')
+        
+        if not new_password or len(new_password) < 4:
+            return jsonify({'error': 'Passwort zu kurz'}), 400
+            
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify({'message': f'Passwort für {user.username} zurückgesetzt'})
 
     @app.route('/api/shortlinks', methods=['POST'])
     @login_required
