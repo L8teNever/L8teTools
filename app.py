@@ -67,6 +67,14 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+
+        # SQLite Migration: Add is_admin column if it doesn't exist
+        try:
+            db.session.execute(db.text('ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+            db.session.commit()
+        except:
+            db.session.rollback()
+
         # Ensure default domain exists
         domain_config = SystemConfig.query.filter_by(key='shortener_domain').first()
         if not domain_config:
