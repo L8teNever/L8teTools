@@ -1,72 +1,80 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Password Generator Logic
-    const lengthRange = document.getElementById('lengthRange');
-    const lengthValue = document.getElementById('lengthValue');
+    const lengthSlider = document.getElementById('lengthSlider');
+    const lengthVal = document.getElementById('lengthVal');
     const passwordOutput = document.getElementById('passwordOutput');
-    const includeUppercase = document.getElementById('includeUppercase');
-    const includeLowercase = document.getElementById('includeLowercase');
+    const includeUpper = document.getElementById('includeUpper');
     const includeNumbers = document.getElementById('includeNumbers');
     const includeSymbols = document.getElementById('includeSymbols');
 
-    if (lengthRange) {
-        lengthRange.addEventListener('input', (e) => {
-            lengthValue.textContent = e.target.value;
+    if (lengthSlider) {
+        lengthSlider.addEventListener('input', (e) => {
+            lengthVal.textContent = e.target.value;
             generatePassword();
         });
 
-        // Add event listeners to all checkboxes
-        [includeUppercase, includeLowercase, includeNumbers, includeSymbols].forEach(el => {
-            el.addEventListener('change', generatePassword);
+        // Add change events to switches
+        [includeUpper, includeNumbers, includeSymbols].forEach(el => {
+            if (el) el.addEventListener('change', generatePassword);
         });
 
         // Initial generation
         generatePassword();
-
-        // Copy to clipboard functionality
-        passwordOutput.addEventListener('click', () => {
-            const text = passwordOutput.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = passwordOutput.textContent;
-                passwordOutput.textContent = 'Kopiert!';
-                passwordOutput.style.backgroundColor = 'var(--md-sys-color-primary-container)';
-                
-                setTimeout(() => {
-                    passwordOutput.textContent = originalText;
-                    passwordOutput.style.backgroundColor = '';
-                }, 1000);
-            });
-        });
     }
 });
 
 function generatePassword() {
-    const length = document.getElementById('lengthRange').value;
-    const useUpper = document.getElementById('includeUppercase').checked;
-    const useLower = document.getElementById('includeLowercase').checked;
+    const output = document.getElementById('passwordOutput');
+    if (!output) return;
+
+    const length = document.getElementById('lengthSlider').value;
+    const useUpper = document.getElementById('includeUpper').checked;
     const useNumbers = document.getElementById('includeNumbers').checked;
     const useSymbols = document.getElementById('includeSymbols').checked;
 
-    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numberChars = '0123456789';
     const symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
-    let allChars = '';
-    if (useUpper) allChars += uppercaseChars;
-    if (useLower) allChars += lowercaseChars;
-    if (useNumbers) allChars += numberChars;
-    if (useSymbols) allChars += symbolChars;
-
-    if (allChars === '') {
-        document.getElementById('passwordOutput').textContent = 'Optionen wählen!';
-        return;
-    }
+    let charSet = lowercaseChars;
+    if (useUpper) charSet += uppercaseChars;
+    if (useNumbers) charSet += numberChars;
+    if (useSymbols) charSet += symbolChars;
 
     let password = '';
     for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * allChars.length);
-        password += allChars[randomIndex];
+        const randomIndex = Math.floor(Math.random() * charSet.length);
+        password += charSet[randomIndex];
     }
 
-    document.getElementById('passwordOutput').textContent = password;
+    output.textContent = password;
+}
+
+function copyToClipboard() {
+    const output = document.getElementById('passwordOutput');
+    if (!output) return;
+
+    const text = output.textContent;
+    if (text.includes("Klicke 'Erstellen'")) return;
+
+    navigator.clipboard.writeText(text).then(() => {
+        showToast();
+
+        // Visual feedback on display
+        const originalBg = output.style.backgroundColor;
+        output.style.backgroundColor = 'var(--m3-primary-container)';
+        setTimeout(() => {
+            output.style.backgroundColor = originalBg;
+        }, 300);
+    });
+}
+
+function showToast() {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500);
 }

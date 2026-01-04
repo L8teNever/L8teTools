@@ -3,24 +3,33 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 2rem;">
-    <h1>Hallo, {{ user.username }}</h1>
-    <p style="color: var(--md-sys-color-on-surface-variant);">Wähle ein Tool aus, um zu beginnen.</p>
+<div class="mb-10">
+    <h1 class="text-4xl font-bold text-gray-900">Hallo, {{ user.username }}</h1>
+    <p class="text-gray-500 mt-2 text-lg">Suche dir ein Tool aus, um loszulegen.</p>
 </div>
 
-<div class="card-grid">
+<div class="dashboard-grid">
     <!-- Password Generator Card -->
-    <a href="{{ url_for('password_generator') }}" class="card">
-        <span class="material-icons-round card-icon">password</span>
-        <h3>Passwort Generator</h3>
-        <p>Erstelle sichere Passwörter mit anpassbaren Kriterien.</p>
+    <a href="{{ url_for('password_generator') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">password</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Passwort Generator</h3>
+            <p class="text-sm opacity-80 mt-1">Erstelle hochsichere Passwörter mit anpassbaren Kriterien.</p>
+        </div>
     </a>
 
     <!-- Placeholder for future tools -->
-    <div class="card" style="opacity: 0.5; cursor: default;">
-        <span class="material-icons-round card-icon">construction</span>
-        <h3>Demnächst</h3>
-        <p>Weitere Tools sind in Entwicklung.</p>
+    <div class="tool-card opacity-60 grayscale cursor-not-allowed">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">construction</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Demnächst</h3>
+            <p class="text-sm opacity-80 mt-1">Weitere Tools befinden sich derzeit in der Entwicklung.</p>
+        </div>
     </div>
 </div>
 {% endblock %}

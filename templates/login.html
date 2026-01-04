@@ -3,18 +3,29 @@
 {% block title %}Anmelden{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <h2 class="auth-title">Willkommen zurück</h2>
-    <form method="POST">
-        <div class="input-group">
-            <label for="username" class="input-label">Benutzername</label>
-            <input type="text" id="username" name="username" class="text-input" required autofocus>
+<div class="flex items-center justify-center min-h-[70vh]">
+    <div class="m3-card max-w-[400px]">
+        <div class="mb-8 text-center">
+            <span class="material-icons-round text-6xl text-blue-600 mb-4">account_circle</span>
+            <h1 class="text-2xl font-bold text-gray-800">Willkommen zurück</h1>
+            <p class="text-gray-500 mt-2">Bitte melde dich an, um fortzufahren.</p>
         </div>
-        <div class="input-group">
-            <label for="password" class="input-label">Passwort</label>
-            <input type="password" id="password" name="password" class="text-input" required>
-        </div>
-        <button type="submit" class="btn-primary">Anmelden</button>
-    </form>
+
+        <form method="POST" class="space-y-6">
+            <div class="m3-input-group">
+                <input type="text" id="username" name="username" class="m3-text-input" placeholder="Benutzername"
+                    required autofocus>
+            </div>
+            <div class="m3-input-group">
+                <input type="password" id="password" name="password" class="m3-text-input" placeholder="Passwort"
+                    required>
+            </div>
+
+            <button type="submit" class="m3-button m3-button-filled mt-4">
+                Anmelden
+                <span class="material-icons-round">login</span>
+            </button>
+        </form>
+    </div>
 </div>
 {% endblock %}

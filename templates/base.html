@@ -1,44 +1,52 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L8teTools - {% block title %}{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Google Sans & Material Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Material+Icons+Round&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS (for layout utilities) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
+
 <body>
 
     {% if current_user.is_authenticated %}
     <header class="top-app-bar">
         <a href="{{ url_for('dashboard') }}" class="brand">
-            <span class="material-icons-round" style="vertical-align: bottom; margin-right: 8px;">grid_view</span>
-            L8teTools
+            <span class="material-icons-round text-blue-700">grid_view</span>
+            <span class="font-medium">L8teTools</span>
         </a>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Abmelden</a>
+        <div class="flex items-center gap-4">
+            <span class="text-sm text-gray-600 hidden sm:block">{{ current_user.username }}</span>
+            <a href="{{ url_for('logout') }}" class="m3-button py-2 px-4 text-sm" style="width: auto;">Abmelden</a>
+        </div>
     </header>
     {% endif %}
 
     <main class="main-content">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flash-messages">
-                    {% for category, message in messages %}
-                        <li class="flash-message">{{ message }}</li>
-                    {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
 
-            {% block content %}{% endblock %}
-        </div>
+        {% block content %}{% endblock %}
     </main>
+
+    <div id="toast" class="toast">In Zwischenablage kopiert</div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>
