@@ -3,17 +3,6 @@
 {% block title %}Glücksrad{% endblock %}
 
 {% block content %}
-<style>
-    .focus-content #wheelContainer {
-        transform: scale(1.4);
-    }
-
-    @media (max-width: 768px) {
-        .focus-content #wheelContainer {
-            transform: scale(0.8);
-        }
-    }
-</style>
 <div class="tool-page-container">
     <div class="page-header">
         <a href="{{ url_for('dashboard') }}"
@@ -59,19 +48,6 @@
             </div>
         </div>
 
-        <!-- Focus Overlay -->
-        <div id="focusOverlay" class="focus-overlay">
-            <div class="focus-header">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Fokus-Modus</h2>
-                <button class="m3-button" onclick="toggleFocusMode()">
-                    <span class="material-icons-round">fullscreen_exit</span>
-                    Beenden
-                </button>
-            </div>
-            <div class="focus-content" id="focusContent">
-                <!-- Content will be moved here -->
-            </div>
-        </div>
 
         <!-- Controls Column -->
         <div class="m3-card flex flex-col min-h-[400px]">
@@ -90,6 +66,17 @@
             </button>
         </div>
     </div>
+</div>
+
+<div id="focusOverlay" class="focus-overlay">
+    <div class="focus-header">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Glücksrad</h2>
+        <button class="m3-button" onclick="toggleFocusMode()">
+            <span class="material-icons-round">fullscreen_exit</span>
+            Beenden
+        </button>
+    </div>
+    <div class="focus-content" id="focusContent"></div>
 </div>
 
 <script>
@@ -232,19 +219,17 @@
         const resultOverlay = document.getElementById('resultOverlay');
 
         if (!focusOverlay.classList.contains('active')) {
-            // Enter Focus Mode
             focusContent.appendChild(wheelContainer);
             focusContent.appendChild(resultOverlay);
             focusOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('focus-active');
         } else {
-            // Exit Focus Mode
             wheelCard.appendChild(wheelContainer);
             wheelCard.appendChild(resultOverlay);
             focusOverlay.classList.remove('active');
-            document.body.style.overflow = '';
+            document.body.classList.remove('focus-active');
         }
-        drawWheel(); // Redraw canvas to ensure perfect sizing
+        drawWheel();
     }
 
     optionsInput.addEventListener('input', drawWheel);

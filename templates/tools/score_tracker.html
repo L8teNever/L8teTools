@@ -4,22 +4,23 @@
 
 {% block content %}
 <style>
-    .focus-content #playerList {
+    .focus-overlay #playerList {
         width: 100%;
-        max-width: 800px;
+        max-width: 900px;
     }
 
-    .focus-content .player-row {
-        padding: 24px;
+    .focus-overlay .player-row {
+        padding: clamp(16px, 3vw, 32px);
     }
 
-    .focus-content .player-score {
-        font-size: 3rem;
-        width: 100px;
+    .focus-overlay .player-score {
+        font-size: clamp(2rem, 8vw, 4rem);
+        width: auto;
+        min-width: 80px;
     }
 
-    .focus-content .material-icons-round {
-        font-size: 2rem;
+    .focus-overlay .material-icons-round {
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
     }
 </style>
 <div class="tool-page-container">
@@ -84,20 +85,18 @@
             </div>
         </div>
 
-        <!-- Focus Overlay -->
-        <div id="focusOverlay" class="focus-overlay">
-            <div class="focus-header">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Fokus-Modus (Punktestand)</h2>
-                <button class="m3-button" onclick="toggleFocusMode()">
-                    <span class="material-icons-round">fullscreen_exit</span>
-                    Beenden
-                </button>
-            </div>
-            <div class="focus-content flex-col" id="focusContent">
-                <!-- Content will be moved here -->
-            </div>
-        </div>
     </div>
+</div>
+
+<div id="focusOverlay" class="focus-overlay">
+    <div class="focus-header">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Punktestand</h2>
+        <button class="m3-button" onclick="toggleFocusMode()">
+            <span class="material-icons-round">fullscreen_exit</span>
+            Beenden
+        </button>
+    </div>
+    <div class="focus-content flex-col" id="focusContent"></div>
 </div>
 
 <template id="playerTemplate">
@@ -246,12 +245,12 @@
             focusContent.appendChild(playerList);
             focusContent.style.overflowY = 'auto';
             focusOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('focus-active');
         } else {
             scoreCard.appendChild(playerList);
             focusContent.style.overflowY = '';
             focusOverlay.classList.remove('active');
-            document.body.style.overflow = '';
+            document.body.classList.remove('focus-active');
         }
     }
 
