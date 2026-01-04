@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Datei Konverter{% endblock %}
+
+{% block content %}
+<div class="max-w-[1000px] mx-auto">
+    <div class="flex items-center gap-4 mb-8">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Datei Konverter</h2>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Upload Column -->
+        <div class="flex flex-col">
+            <div id="dropZone"
+                class="m3-card flex-1 flex flex-col items-center justify-center min-h-[400px] border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+                <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.webp">
+                <span class="material-icons-round text-6xl text-blue-600 dark:text-blue-400 mb-4">upload_file</span>
+                <p class="text-lg font-medium text-gray-700 dark:text-gray-200">Dateien hierher ziehen</p>
+                <p class="text-sm text-gray-500 mt-1">oder klicken zum Auswählen</p>
+                <p class="text-xs text-gray-400 mt-4">PDF, PNG, JPG, WebP unterstützt</p>
+            </div>
+        </div>
+
+        <!-- Settings & List Column -->
+        <div class="flex flex-col gap-6">
+            <!-- Settings Card -->
+            <div class="m3-card">
+                <h3 class="text-lg font-bold mb-6">Konvertierungs-Einstellungen</h3>
+
+                <div class="mb-8">
+                    <label
+                        class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 px-1">Zielformat</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="pdf" class="peer hidden" checked>
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">PDF</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="png" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">PNG</span>
+                            </div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="targetFormat" value="jpg" class="peer hidden">
+                            <div
+                                class="p-3 text-center border-2 border-gray-200 dark:border-gray-700 rounded-xl peer-checked:border-blue-600 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all">
+                                <span class="font-bold">JPG</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="fileList" class="space-y-3 mb-8 hidden">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 px-1">Ausgewählte
+                        Dateien</label>
+                    <div id="fileListContainer" class="max-h-[200px] overflow-y-auto space-y-2 pr-2">
+                        <!-- File items will be added here -->
+                    </div>
+                </div>
+
+                <button id="convertBtn"
+                    class="m3-button m3-button-filled w-full py-5 text-xl opacity-50 cursor-not-allowed" disabled
+                    onclick="processFiles()">
+                    <span class="material-icons-round text-2xl">autorenew</span>
+                    Konvertieren
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const fileListContainer = document.getElementById('fileListContainer');
+    const convertBtn = document.getElementById('convertBtn');
+
+    let selectedFiles = [];
+
+    // Drag & Drop
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-400');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-400');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-400');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        const newFiles = Array.from(files);
+        selectedFiles = [...selectedFiles, ...newFiles];
+        updateUI();
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updateUI();
+    }
+
+    function updateUI() {
+        if (selectedFiles.length > 0) {
+            fileList.classList.remove('hidden');
+            convertBtn.disabled = false;
+            convertBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            fileListContainer.innerHTML = selectedFiles.map((file, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <span class="material-icons-round text-gray-500">description</span>
+                        <span class="text-sm font-medium truncate">${file.name}</span>
+                    </div>
+                    <button onclick="removeFile(${index})" class="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors">
+                        <span class="material-icons-round text-lg">close</span>
+                    </button>
+                </div>
+            `).join('');
+        } else {
+            fileList.classList.add('hidden');
+            convertBtn.disabled = true;
+            convertBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            fileListContainer.innerHTML = '';
+        }
+    }
+
+    async function processFiles() {
+        if (selectedFiles.length === 0) return;
+
+        const targetFormat = document.querySelector('input[name="targetFormat"]:checked').value;
+        const btn = document.getElementById('convertBtn');
+        const originalContent = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons-round animate-spin">autorenew</span> Verarbeite...';
+
+        const formData = new FormData();
+        selectedFiles.forEach(file => formData.append('files', file));
+        formData.append('targetFormat', targetFormat);
+
+        try {
+            const response = await fetch('/api/convert', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `converted_files.${targetFormat === 'pdf' ? 'pdf' : 'zip'}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showToast('Erfolgreich konvertiert!');
+            } else {
+                const data = await response.json();
+                showToast('Fehler: ' + data.error, true);
+            }
+        } catch (err) {
+            showToast('Netzwerkfehler', true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
+    }
+
+    function showToast(msg, isError = false) {
+        // Use existing toast logic if available or simple alert
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-white font-medium shadow-2xl transition-all transform translate-y-20 z-[9999] ${isError ? 'bg-red-600' : 'bg-gray-900'}`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('translate-y-20');
+        }, 100);
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-20');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+</script>
+{% endblock %}

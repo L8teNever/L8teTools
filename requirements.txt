@@ -3,3 +3,6 @@ flask-login
 flask-sqlalchemy
 werkzeug
 gunicorn
+Pillow
+img2pdf
+PyMuPDF

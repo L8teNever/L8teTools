@@ -1,8 +1,13 @@
 import os
-from flask import Flask, render_template, redirect, url_for, request, flash
+import io
+import zipfile
+from flask import Flask, render_template, redirect, url_for, request, flash, send_file, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from PIL import Image
+import img2pdf
+import fitz  # PyMuPDF
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -86,6 +91,89 @@ def create_app():
     @login_required
     def qr_generator():
         return render_template('tools/qr_generator.html')
+
+    @app.route('/tools/file-converter')
+    @login_required
+    def file_converter():
+        return render_template('tools/file_converter.html')
+
+    @app.route('/api/convert', methods=['POST'])
+    @login_required
+    def api_convert():
+        if 'files' not in request.files:
+            return jsonify({'error': 'Keine Dateien hochgeladen'}), 400
+        
+        files = request.files.getlist('files')
+        target_format = request.form.get('targetFormat', 'pdf').lower()
+        
+        if not files:
+            return jsonify({'error': 'Keine Dateien ausgewählt'}), 400
+
+        output = io.BytesIO()
+        
+        try:
+            if target_format == 'pdf':
+                # Convert multiple images/PDFs to one single PDF
+                pdf_bytes = []
+                for file in files:
+                    filename = file.filename.lower()
+                    file_data = file.read()
+                    
+                    if filename.endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                        # Convert Image to PDF bytes
+                        img = Image.open(io.BytesIO(file_data))
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        img_byte_arr = io.BytesIO()
+                        img.save(img_byte_arr, format='JPEG')
+                        pdf_bytes.append(img2pdf.convert(img_byte_arr.getvalue()))
+                    elif filename.endswith('.pdf'):
+                        pdf_bytes.append(file_data)
+                
+                # Combine all PDF bytes into one
+                doc = fitz.open()
+                for pb in pdf_bytes:
+                    temp_doc = fitz.open("pdf", pb)
+                    doc.insert_pdf(temp_doc)
+                    temp_doc.close()
+                
+                output.write(doc.tobytes())
+                doc.close()
+                output.seek(0)
+                return send_file(output, mimetype='application/pdf', as_attachment=True, download_name="converted.pdf")
+
+            elif target_format in ['png', 'jpg']:
+                # Convert files to images, return as ZIP if multiple
+                with zipfile.ZipFile(output, 'w') as zf:
+                    for i, file in enumerate(files):
+                        filename = file.filename.lower()
+                        file_data = file.read()
+                        
+                        if filename.endswith('.pdf'):
+                            # Extract pages from PDF as images
+                            pdf_doc = fitz.open("pdf", file_data)
+                            for page_num in range(len(pdf_doc)):
+                                page = pdf_doc.load_page(page_num)
+                                pix = page.get_pixmap()
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                img_byte_arr = io.BytesIO()
+                                img.save(img_byte_arr, format=target_format.upper())
+                                zf.writestr(f"file_{i}_page_{page_num}.{target_format}", img_byte_arr.getvalue())
+                            pdf_doc.close()
+                        else:
+                            # Convert existing image
+                            img = Image.open(io.BytesIO(file_data))
+                            if target_format == 'jpg' and img.mode != 'RGB':
+                                img = img.convert('RGB')
+                            img_byte_arr = io.BytesIO()
+                            img.save(img_byte_arr, format=target_format.upper())
+                            zf.writestr(f"file_{i}.{target_format}", img_byte_arr.getvalue())
+                
+                output.seek(0)
+                return send_file(output, mimetype='application/zip', as_attachment=True, download_name="converted_images.zip")
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     return app
 
