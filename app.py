@@ -160,6 +160,10 @@ def create_app():
         logout_user()
         return redirect(url_for('login'))
 
+    @app.route('/offline')
+    def offline():
+        return render_template('offline.html')
+
     @app.route('/dashboard')
     @login_required
     def dashboard():

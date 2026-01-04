@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L8teTools - Offline</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Material+Icons+Round&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Google Sans', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen text-center p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-gray-100">
+        <span class="material-icons-round text-6xl text-gray-300 mb-4">wifi_off</span>
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Du bist offline</h1>
+        <p class="text-gray-500 mb-6 font-medium">Keine Internetverbindung. Einige Tools wurden jedoch gespeichert und
+            können offline verwendet werden.</p>
+
+        <div class="flex flex-col gap-3">
+            <a href="/dashboard"
+                class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                Zum Dashboard
+            </a>
+            <button onclick="window.location.reload()"
+                class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">
+                Erneut versuchen
+            </button>
+        </div>
+    </div>
+</body>
+
+</html>
