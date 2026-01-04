@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Word Counter{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Word Counter</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Input Area -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="m3-card !p-0 overflow-hidden">
+                <textarea id="textContent"
+                    class="w-full min-h-[400px] p-6 text-lg border-none focus:ring-0 resize-none bg-transparent dark:text-white"
+                    placeholder="Einfach hier tippen oder Text einfügen..." oninput="calculateStats()"></textarea>
+
+                <div
+                    class="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                    <button onclick="clearText()"
+                        class="text-sm font-bold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider">
+                        Text löschen
+                    </button>
+                    <button onclick="copyText()" class="m3-button m3-button-filled py-2 px-6">
+                        <span class="material-icons-round text-sm mr-2">content_copy</span>
+                        Kopieren
+                    </button>
+                </div>
+            </div>
+
+            <!-- Social Media Limits -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="m3-card !p-4 border-l-4 border-blue-400">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">X (Twitter)</span>
+                        <span id="twitterCount" class="text-sm font-mono font-bold text-blue-600">0 / 280</span>
+                    </div>
+                    <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="twitterProgress" class="bg-blue-500 h-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="m3-card !p-4 border-l-4 border-purple-400">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Instagram Caption</span>
+                        <span id="instaCount" class="text-sm font-mono font-bold text-purple-600">0 / 2200</span>
+                    </div>
+                    <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="instaProgress" class="bg-purple-500 h-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Stats -->
+        <div class="space-y-6">
+            <div class="m3-card space-y-6">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <span class="material-icons-round text-blue-600">analytics</span>
+                    Statistiken
+                </h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div
+                        class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div class="text-2xl font-bold text-blue-600 mb-1" id="wordCount">0</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Wörter</div>
+                    </div>
+                    <div
+                        class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div class="text-2xl font-bold text-blue-600 mb-1" id="charCount">0</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Zeichen</div>
+                    </div>
+                    <div
+                        class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div class="text-2xl font-bold text-blue-600 mb-1" id="sentenceCount">0</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sätze</div>
+                    </div>
+                    <div
+                        class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <div class="text-2xl font-bold text-blue-600 mb-1" id="readingTime">0s</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lesezeit</div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-medium">Ohne Leerzeichen</span>
+                        <span class="font-mono font-bold text-gray-700 dark:text-gray-300" id="charNoSpace">0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-medium">Absätze</span>
+                        <span class="font-mono font-bold text-gray-700 dark:text-gray-300" id="paragraphCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="m3-card !bg-blue-600 text-white p-6 shadow-xl shadow-blue-200 dark:shadow-none">
+                <span class="material-icons-round text-4xl mb-4">info</span>
+                <p class="text-sm leading-relaxed text-blue-50">
+                    Die Lesezeit basiert auf einer durchschnittlichen Geschwindigkeit von 200 Wörtern pro Minute.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateStats() {
+        const text = document.getElementById('textContent').value;
+
+        // Basic Stats
+        const charCount = text.length;
+        const charNoSpace = text.replace(/\s+/g, '').length;
+        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const sentenceCount = text.trim() ? text.split(/[.!?]+\s/).filter(Boolean).length : 0;
+        const paragraphCount = text.trim() ? text.split(/\n\n+/).filter(Boolean).length : 0;
+
+        // Reading Time (Words / 200 * 60 seconds)
+        const readingSeconds = Math.round((wordCount / 200) * 60);
+        let timeStr = readingSeconds + 's';
+        if (readingSeconds >= 60) {
+            const mins = Math.floor(readingSeconds / 60);
+            const secs = readingSeconds % 60;
+            timeStr = mins + 'm ' + secs + 's';
+        }
+
+        // Update UI
+        document.getElementById('charCount').textContent = charCount;
+        document.getElementById('charNoSpace').textContent = charNoSpace;
+        document.getElementById('wordCount').textContent = wordCount;
+        document.getElementById('sentenceCount').textContent = sentenceCount;
+        document.getElementById('paragraphCount').textContent = paragraphCount;
+        document.getElementById('readingTime').textContent = timeStr;
+
+        // Social Progress
+        updateProgress('twitter', charCount, 280);
+        updateProgress('insta', charCount, 2200);
+    }
+
+    function updateProgress(id, current, max) {
+        const countEl = document.getElementById(id + 'Count');
+        const progressEl = document.getElementById(id + 'Progress');
+
+        const percent = Math.min((current / max) * 100, 100);
+        countEl.textContent = `${current} / ${max}`;
+        progressEl.style.width = percent + '%';
+
+        if (current > max) {
+            countEl.classList.remove('text-blue-600', 'text-purple-600');
+            countEl.classList.add('text-red-500');
+            progressEl.classList.add('bg-red-500');
+        } else {
+            countEl.classList.remove('text-red-500');
+            if (id === 'twitter') countEl.classList.add('text-blue-600');
+            if (id === 'insta') countEl.classList.add('text-purple-600');
+            progressEl.classList.remove('bg-red-500');
+        }
+    }
+
+    function clearText() {
+        if (confirm('Soll der gesamte Text gelöscht werden?')) {
+            document.getElementById('textContent').value = '';
+            calculateStats();
+        }
+    }
+
+    function copyText() {
+        const text = document.getElementById('textContent').value;
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        showToast('Text kopiert!');
+    }
+</script>
+{% endblock %}

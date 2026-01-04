@@ -259,6 +259,11 @@ def create_app():
     def case_converter():
         return render_template('tools/case_converter.html')
 
+    @app.route('/tools/word-counter')
+    @login_required
+    def word_counter():
+        return render_template('tools/word_counter.html')
+
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required
     def api_delete_user(user_id):
