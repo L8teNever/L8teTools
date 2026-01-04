@@ -187,5 +187,41 @@
             <p class="text-sm opacity-80 mt-1">Zeige deine aktuelle öffentliche IP-Adresse mit einem Klick.</p>
         </div>
     </a>
+
+    <!-- Whois Lookup Card -->
+    <a href="{{ url_for('whois_lookup') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">domain_verification</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">Whois Domain Check</h3>
+            <p class="text-sm opacity-80 mt-1">Prüfe Inhaber und Ablaufdatum von Domains.</p>
+        </div>
+    </a>
+
+    <!-- MAC Finder Card -->
+    <a href="{{ url_for('mac_lookup') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">lan</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">MAC-Adressen Finder</h3>
+            <p class="text-sm opacity-80 mt-1">Finde den Hersteller deines Geräts über die MAC-Adresse.</p>
+        </div>
+    </a>
+
+    <!-- BMI Calculator Card -->
+    <a href="{{ url_for('bmi_calculator') }}" class="tool-card">
+        <div class="flex justify-between items-start">
+            <span class="material-icons-round text-4xl">monitor_weight</span>
+            <span class="material-icons-round opacity-50">arrow_forward</span>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold">BMI Rechner</h3>
+            <p class="text-sm opacity-80 mt-1">Berechne deinen Body Mass Index unkompliziert.</p>
+        </div>
+    </a>
 </div>
 {% endblock %}

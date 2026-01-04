@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}BMI Rechner{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">BMI Rechner</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <!-- Input Column -->
+        <div class="m3-card !p-8 flex flex-col justify-center">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Größe (cm)</label>
+                    <input type="number" id="height" class="m3-text-input text-4xl font-bold text-center !p-4"
+                        placeholder="180" oninput="calculateBMI()">
+                </div>
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Gewicht (kg)</label>
+                    <input type="number" id="weight" class="m3-text-input text-4xl font-bold text-center !p-4"
+                        placeholder="75" oninput="calculateBMI()">
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="setGender('male')" id="gender-male"
+                    class="gender-btn flex-1 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-95 transition-all group">
+                    <span class="material-icons-round text-4xl text-gray-400 group-hover:text-blue-500">male</span>
+                    <span class="font-bold text-gray-500 group-hover:text-blue-600">Mann</span>
+                </button>
+                <button onclick="setGender('female')" id="gender-female"
+                    class="gender-btn flex-1 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-2xl flex flex-col items-center gap-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 active:scale-95 transition-all group">
+                    <span class="material-icons-round text-4xl text-gray-400 group-hover:text-pink-500">female</span>
+                    <span class="font-bold text-gray-500 group-hover:text-pink-600">Frau</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Column -->
+        <div
+            class="m3-card !p-0 flex flex-col items-center justify-center min-h-[400px] relative overflow-hidden bg-gray-50 dark:bg-gray-800/50">
+            <div id="resultContainer" class="text-center p-8 opacity-50 blur-sm transition-all duration-500">
+                <span class="text-sm font-bold text-gray-500 uppercase tracking-widest block mb-2">Dein BMI</span>
+                <div id="bmiValue" class="text-8xl font-bold text-gray-800 dark:text-white mb-4">--.-</div>
+                <div id="bmiCategory"
+                    class="inline-block px-4 py-2 rounded-full text-lg font-bold bg-gray-200 text-gray-600">
+                    Warte auf Eingabe...
+                </div>
+                <p id="idealWeight" class="mt-6 text-sm text-gray-500 font-medium"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .gender-btn.active-male {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+
+    .gender-btn.active-male span {
+        color: #3b82f6;
+    }
+
+    .gender-btn.active-female {
+        border-color: #ec4899;
+        background-color: #fdf2f8;
+    }
+
+    .gender-btn.active-female span {
+        color: #ec4899;
+    }
+
+    /* Dark mode adjustments would be done via media query or classes if needed specifically, but utility classes handle most */
+</style>
+
+<script>
+    let gender = 'male'; // Default
+    document.getElementById('gender-male').classList.add('active-male');
+
+    function setGender(g) {
+        gender = g;
+        document.querySelectorAll('.gender-btn').forEach(b => {
+            b.classList.remove('active-male', 'active-female');
+            // Reset dark mode hover overrides if needed, but utility classes work fine
+        });
+
+        if (g === 'male') document.getElementById('gender-male').classList.add('active-male');
+        else document.getElementById('gender-female').classList.add('active-female');
+
+        calculateBMI();
+    }
+
+    function calculateBMI() {
+        const h = parseFloat(document.getElementById('height').value);
+        const w = parseFloat(document.getElementById('weight').value);
+        const container = document.getElementById('resultContainer');
+        const bmiVal = document.getElementById('bmiValue');
+        const catLabel = document.getElementById('bmiCategory');
+        const idealText = document.getElementById('idealWeight');
+
+        if (!h || !w || h <= 0 || w <= 0) {
+            container.classList.add('opacity-50', 'blur-sm');
+            bmiVal.innerText = '--.-';
+            return;
+        }
+
+        container.classList.remove('opacity-50', 'blur-sm');
+
+        const heightInMeters = h / 100;
+        const bmi = w / (heightInMeters * heightInMeters);
+
+        bmiVal.innerText = bmi.toFixed(1);
+
+        // Styling based on result
+        let category = '';
+        let colorClass = '';
+        let bgClass = '';
+
+        if (bmi < 18.5) {
+            category = 'Untergewicht';
+            colorClass = 'text-blue-700';
+            bgClass = 'bg-blue-100';
+        } else if (bmi >= 18.5 && bmi < 25) {
+            category = 'Normalgewicht';
+            colorClass = 'text-green-700';
+            bgClass = 'bg-green-100';
+        } else if (bmi >= 25 && bmi < 30) {
+            category = 'Übergewicht';
+            colorClass = 'text-orange-700';
+            bgClass = 'bg-orange-100';
+        } else {
+            category = 'Adipositas';
+            colorClass = 'text-red-700';
+            bgClass = 'bg-red-100';
+        }
+
+        catLabel.className = `inline-block px-4 py-2 rounded-full text-lg font-bold transition-colors duration-300 ${bgClass} ${colorClass}`;
+        catLabel.innerText = category;
+        bmiVal.className = `text-8xl font-bold mb-4 transition-colors duration-300 ${colorClass.replace('700', '600')}`;
+
+        // Simple Broca/Devine or general range for ideal weight
+        // Normal range BMI 18.5 - 24.9
+        const minWeight = (18.5 * heightInMeters * heightInMeters).toFixed(1);
+        const maxWeight = (24.9 * heightInMeters * heightInMeters).toFixed(1);
+        idealText.innerText = `Dein gesundes Normalgewicht liegt zwischen ${minWeight} kg und ${maxWeight} kg.`;
+    }
+</script>
+{% endblock %}

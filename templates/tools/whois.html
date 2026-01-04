@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Whois Lookup{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Whois Lookup</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <div class="m3-card flex flex-col gap-6 h-fit">
+            <div class="m3-input-group">
+                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Domain eingeben</label>
+                <div class="relative">
+                    <input type="text" id="domainInput" class="m3-text-input text-xl !pl-12 !py-4"
+                        placeholder="google.com" oninput="cleanDomain(this)">
+                    <span
+                        class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">language</span>
+                </div>
+            </div>
+
+            <button onclick="lookupWhois()" class="m3-button m3-button-filled py-4 text-lg">
+                <span class="material-icons-round">search</span>
+                Abfragen
+            </button>
+        </div>
+
+        <div class="m3-card !p-0 min-h-[500px] flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-800/50 relative">
+            <div id="loading"
+                class="hidden absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-20 backdrop-blur-sm">
+                <div class="flex flex-col items-center">
+                    <span class="material-icons-round animate-spin text-4xl text-blue-600 mb-2">autorenew</span>
+                    <span class="text-sm font-bold text-blue-600">Frage Registrar ab...</span>
+                </div>
+            </div>
+
+            <div
+                class="p-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-gray-700 dark:text-white">Ergebnis</h3>
+                <button onclick="copyWhois()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors disabled:opacity-50"
+                    id="copyBtn" disabled>
+                    <span class="material-icons-round text-gray-500 text-sm">content_copy</span>
+                </button>
+            </div>
+
+            <div class="flex-1 p-6 overflow-auto font-mono text-sm" id="resultContainer">
+                <div class="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
+                    <span class="material-icons-round text-5xl mb-4">dns</span>
+                    <p>Gib eine Domain ein, um Details zu sehen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cleanDomain(input) {
+        // Simple clean up
+        input.value = input.value.toLowerCase().replace(/https?:\/\//, '').replace(/\/.*$/, '');
+    }
+
+    async function lookupWhois() {
+        const domain = document.getElementById('domainInput').value.trim();
+        if (!domain) return;
+
+        const loading = document.getElementById('loading');
+        const container = document.getElementById('resultContainer');
+        const copyBtn = document.getElementById('copyBtn');
+
+        loading.classList.remove('hidden');
+        copyBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/tools/whois', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain: domain })
+            });
+            const data = await res.json();
+
+            loading.classList.add('hidden');
+
+            if (res.ok) {
+                let html = '<div class="space-y-4">';
+
+                // Prioritize key fields
+                const keys = ['domain_name', 'registrar', 'creation_date', 'expiration_date', 'updated_date', 'status', 'name_servers', 'emails', 'org', 'country'];
+
+                keys.forEach(k => {
+                    if (data[k]) {
+                        html += `
+                            <div class="border-b border-gray-200 dark:border-gray-700/50 pb-2 last:border-0">
+                                <span class="block text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-1">${k.replace(/_/g, ' ')}</span>
+                                <div class="text-gray-800 dark:text-gray-200 break-words">${formatValue(data[k])}</div>
+                            </div>
+                        `;
+                        delete data[k];
+                    }
+                });
+
+                // Show remaining
+                for (const [key, value] of Object.entries(data)) {
+                    if (value) {
+                        html += `
+                            <div class="border-b border-gray-200 dark:border-gray-700/50 pb-2 last:border-0">
+                                <span class="block text-xs font-bold text-gray-400 uppercase mb-1">${key.replace(/_/g, ' ')}</span>
+                                <div class="text-gray-800 dark:text-gray-200 break-words">${formatValue(value)}</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                html += '</div>';
+                container.innerHTML = html;
+                copyBtn.disabled = false;
+            } else {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-red-500">
+                        <span class="material-icons-round text-5xl mb-4">error_outline</span>
+                        <p class="font-bold">Fehler</p>
+                        <p class="text-sm mt-2 max-w-xs text-center">${data.error}</p>
+                    </div>
+                `;
+            }
+
+        } catch (e) {
+            loading.classList.add('hidden');
+            showToast('Verbindungsfehler');
+        }
+    }
+
+    function formatValue(val) {
+        if (Array.isArray(val)) {
+            return val.map(v => `<div>${v}</div>`).join('');
+        }
+        return val;
+    }
+
+    function copyWhois() {
+        const text = document.getElementById('resultContainer').innerText;
+        if (text) {
+            navigator.clipboard.writeText(text);
+            showToast('In die Zwischenablage kopiert');
+        }
+    }
+
+    document.getElementById('domainInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') lookupWhois();
+    });
+</script>
+{% endblock %}

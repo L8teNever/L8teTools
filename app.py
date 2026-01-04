@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import tempfile
 import uuid
+import whois
+import requests
 from PIL import Image, ExifTags
 import img2pdf
 import fitz  # PyMuPDF
@@ -379,6 +381,21 @@ def create_app():
     def my_ip():
         return render_template('tools/my_ip.html')
 
+    @app.route('/tools/whois')
+    @login_required
+    def whois_lookup():
+        return render_template('tools/whois.html')
+
+    @app.route('/tools/mac-lookup')
+    @login_required
+    def mac_lookup():
+        return render_template('tools/mac_lookup.html')
+
+    @app.route('/tools/bmi-calculator')
+    @login_required
+    def bmi_calculator():
+        return render_template('tools/bmi_calculator.html')
+
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
     def api_get_my_ip():
@@ -388,6 +405,56 @@ def create_app():
         else:
             ip = request.remote_addr
         return jsonify({'ip': ip})
+
+    @app.route('/api/tools/whois', methods=['POST'])
+    @login_required
+    def api_whois():
+        domain = request.json.get('domain')
+        if not domain:
+            return jsonify({'error': 'Domain erforderlich'}), 400
+        try:
+            w = whois.whois(domain)
+            # Convert datetime objects to string
+            result = {}
+            for key, value in w.items():
+                if value is None:
+                    continue
+                if isinstance(value, list):
+                    # Handle list of datetimes or strings
+                    new_list = []
+                    for item in value:
+                        if hasattr(item, 'isoformat'):
+                            new_list.append(item.isoformat())
+                        else:
+                            new_list.append(str(item))
+                    result[key] = new_list
+                elif hasattr(value, 'isoformat'):
+                    result[key] = value.isoformat()
+                else:
+                    result[key] = str(value)
+            
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'error': f'Konnte Domain nicht abrufen: {str(e)}'}), 500
+
+    @app.route('/api/tools/mac-lookup', methods=['POST'])
+    @login_required
+    def api_mac_lookup():
+        mac = request.json.get('mac')
+        if not mac:
+            return jsonify({'error': 'MAC-Adresse erforderlich'}), 400
+        
+        try:
+            # Use macvendors.com API
+            res = requests.get(f"https://api.macvendors.com/{mac}")
+            if res.status_code == 200:
+                return jsonify({'vendor': res.text})
+            elif res.status_code == 404:
+                return jsonify({'vendor': 'Hersteller nicht gefunden'})
+            else:
+                return jsonify({'vendor': 'Fehler bei der Abfrage'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required

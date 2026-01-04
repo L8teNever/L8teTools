@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}MAC-Adressen Finder{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">MAC-Adressen Finder</h2>
+    </div>
+
+    <div class="tool-grid gap-8">
+        <div class="m3-card flex flex-col gap-6">
+            <div class="m3-input-group">
+                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">MAC-Adresse eingeben</label>
+                <div class="relative">
+                    <input type="text" id="macInput" class="m3-text-input text-xl font-mono !pl-12 !py-4 uppercase"
+                        placeholder="00:1A:2B:3C:4D:5E" maxlength="17" oninput="formatMAC(this)">
+                    <span class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lan</span>
+                </div>
+                <p class="text-xs text-gray-400 px-1 mt-2">Unterstützt Formate wie AA:BB:CC..., AA-BB-CC... oder
+                    AABBCC...</p>
+            </div>
+
+            <button onclick="lookupMAC()" id="searchBtn" class="m3-button m3-button-filled py-4 text-lg">
+                <span class="material-icons-round">search</span>
+                Hersteller suchen
+            </button>
+        </div>
+
+        <div
+            class="m3-card flex flex-col items-center justify-center min-h-[300px] bg-gray-50 dark:bg-gray-800/50 relative overflow-hidden">
+            <div id="loading"
+                class="hidden absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-10 backdrop-blur-sm">
+                <div class="flex flex-col items-center">
+                    <span class="material-icons-round animate-spin text-4xl text-blue-600 mb-2">autorenew</span>
+                    <span class="text-sm font-bold text-blue-600">Suche...</span>
+                </div>
+            </div>
+
+            <div id="resultContent" class="text-center opacity-50 transition-opacity">
+                <span class="material-icons-round text-6xl text-gray-300 mb-4">business</span>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1" id="vendorName">Noch keine Suche</h3>
+                <p class="text-sm text-gray-500" id="vendorPrefix">Gib eine MAC-Adresse ein</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatMAC(input) {
+        let val = input.value.toUpperCase().replace(/[^A-F0-9]/g, '');
+        // Auto-inject colons basic logic (optional, keep it simple for now or strict format)
+        // Just keeping raw input clean of non-hex is enough, but user asked for "finder".
+        // Let's allow typing and just clean it up silently.
+    }
+
+    async function lookupMAC() {
+        const input = document.getElementById('macInput');
+        let mac = input.value.trim();
+
+        if (mac.length < 6) {
+            showToast('Bitte eine gültige MAC-Adresse eingeben');
+            return;
+        }
+
+        const loading = document.getElementById('loading');
+        const content = document.getElementById('resultContent');
+        const vendorName = document.getElementById('vendorName');
+        const vendorPrefix = document.getElementById('vendorPrefix');
+
+        loading.classList.remove('hidden');
+        content.classList.add('opacity-50');
+
+        try {
+            const res = await fetch('/api/tools/mac-lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mac: mac })
+            });
+            const data = await res.json();
+
+            loading.classList.add('hidden');
+            content.classList.remove('opacity-50');
+
+            if (res.ok) {
+                vendorName.innerText = data.vendor;
+                vendorName.classList.remove('text-red-500');
+                vendorPrefix.innerText = mac;
+
+                // Visual success feedback
+                const icon = content.querySelector('.material-icons-round');
+                icon.innerText = 'check_circle';
+                icon.classList.remove('text-gray-300');
+                icon.classList.add('text-green-500');
+            } else {
+                vendorName.innerText = data.error || data.vendor || 'Nicht gefunden';
+                vendorName.classList.add('text-red-500');
+                vendorPrefix.innerText = 'Fehler';
+
+                const icon = content.querySelector('.material-icons-round');
+                icon.innerText = 'error_outline';
+                icon.classList.remove('text-gray-300', 'text-green-500');
+                icon.classList.add('text-red-300');
+            }
+        } catch (e) {
+            loading.classList.add('hidden');
+            showToast('Verbindungsfehler');
+        }
+    }
+
+    // Trigger search on Enter
+    document.getElementById('macInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') lookupMAC();
+    });
+</script>
+{% endblock %}
