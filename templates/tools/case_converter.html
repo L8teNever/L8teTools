@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Case Converter{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Case Converter</h2>
+    </div>
+
+    <div class="tool-grid">
+        <div class="m3-card flex flex-col gap-6 md:col-span-2">
+            <div class="relative">
+                <textarea id="inputText" class="m3-text-input min-h-[300px] p-6 text-lg leading-relaxed resize-none"
+                    placeholder="Füge hier deinen Text ein..." oninput="updateCounts()"></textarea>
+                <div class="absolute bottom-4 right-4 flex gap-2">
+                    <div
+                        class="bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                        <span id="charCount">0</span> Zeichen
+                    </div>
+                    <div
+                        class="bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                        <span id="wordCount">0</span> Wörter
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <button onclick="transform('upper')"
+                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">UPPERCASE</button>
+                <button onclick="transform('lower')"
+                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">lowercase</button>
+                <button onclick="transform('title')"
+                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">Title Case</button>
+                <button onclick="transform('camel')"
+                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">camelCase</button>
+                <button onclick="transform('pascal')"
+                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">PascalCase</button>
+                <button onclick="transform('snake')"
+                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">snake_case</button>
+                <button onclick="transform('constant')"
+                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">CONSTANT_CASE</button>
+                <button onclick="transform('sentence')"
+                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">Sentence case</button>
+            </div>
+
+            <div class="flex gap-4 border-t border-gray-100 dark:border-gray-800 pt-6">
+                <button onclick="copyResult()" class="m3-button m3-button-filled flex-1 py-4 text-lg !bg-green-600">
+                    <span class="material-icons-round mr-2">content_copy</span>
+                    Text kopieren
+                </button>
+                <button onclick="clearAll()" class="m3-button m3-button-outline px-8">
+                    <span class="material-icons-round">delete_outline</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Info/Quick Stats -->
+        <div class="flex flex-col gap-6">
+            <div class="m3-card !bg-blue-600 text-white flex flex-col gap-4 shadow-blue-200 dark:shadow-none">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <span class="material-icons-round">auto_fix_high</span>
+                    Tipp
+                </h3>
+                <p class="text-white/80 text-sm leading-relaxed">
+                    Nutze CamelCase oder Snake-case besonders für die Programmierung und Datenbanken. Title Case eignet
+                    sich perfekt für Überschriften!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCounts() {
+        const text = document.getElementById('inputText').value;
+        document.getElementById('charCount').textContent = text.length;
+        document.getElementById('wordCount').textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+    }
+
+    function transform(type) {
+        const textarea = document.getElementById('inputText');
+        let text = textarea.value;
+        if (!text) return;
+
+        switch (type) {
+            case 'upper':
+                text = text.toUpperCase();
+                break;
+            case 'lower':
+                text = text.toLowerCase();
+                break;
+            case 'title':
+                text = text.toLowerCase().split(' ').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
+                break;
+            case 'sentence':
+                text = text.toLowerCase().replace(/(^\s*\w|[\.\!\?]\s*\w)/g, c => c.toUpperCase());
+                break;
+            case 'camel':
+                text = text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+                break;
+            case 'pascal':
+                text = text.toLowerCase().replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => word.toUpperCase()).replace(/\s+/g, '');
+                break;
+            case 'snake':
+                text = text.match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+                    .map(x => x.toLowerCase())
+                    .join('_');
+                break;
+            case 'constant':
+                text = text.match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+                    .map(x => x.toUpperCase())
+                    .join('_');
+                break;
+        }
+
+        textarea.value = text;
+        updateCounts();
+        showToast('Text angepasst!');
+    }
+
+    function copyResult() {
+        const text = document.getElementById('inputText').value;
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        showToast('In die Zwischenablage kopiert!');
+    }
+
+    function clearAll() {
+        document.getElementById('inputText').value = '';
+        updateCounts();
+    }
+</script>
+{% endblock %}

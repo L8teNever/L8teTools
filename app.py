@@ -254,6 +254,11 @@ def create_app():
     def diff_checker():
         return render_template('tools/diff_checker.html')
 
+    @app.route('/tools/case-converter')
+    @login_required
+    def case_converter():
+        return render_template('tools/case_converter.html')
+
     @app.route('/api/settings/users/<int:user_id>', methods=['DELETE'])
     @login_required
     def api_delete_user(user_id):
