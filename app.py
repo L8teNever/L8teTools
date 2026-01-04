@@ -118,6 +118,11 @@ def create_app():
     def dice_roller():
         return render_template('tools/dice_roller.html')
 
+    @app.route('/tools/score-tracker')
+    @login_required
+    def score_tracker():
+        return render_template('tools/score_tracker.html', user=current_user)
+
     @app.route('/api/convert', methods=['POST'])
     @login_required
     def api_convert():

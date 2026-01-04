@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Punktezähler{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Punktezähler</h2>
+    </div>
+
+    <div class="tool-grid">
+        <!-- New Player Column -->
+        <div class="flex flex-col gap-6">
+            <div class="m3-card">
+                <h3 class="text-lg font-bold mb-6">Spieler hinzufügen</h3>
+                <div class="m3-input-group">
+                    <input type="text" id="playerName" class="m3-text-input" placeholder="Name eingeben..."
+                        autocomplete="off">
+                </div>
+                <button class="m3-button m3-button-filled w-full py-4 text-lg" onclick="addPlayer()">
+                    <span class="material-icons-round">person_add</span>
+                    Hinzufügen
+                </button>
+            </div>
+
+            <div class="m3-card">
+                <h3 class="text-lg font-bold mb-6">Einstellungen</h3>
+                <div class="flex flex-col gap-3">
+                    <button class="m3-button w-full py-3 border-2 border-gray-200 dark:border-gray-700"
+                        onclick="resetAllScores()">
+                        <span class="material-icons-round">restart_alt</span>
+                        Punkte zurücksetzen
+                    </button>
+                    <button
+                        class="m3-button w-full py-3 text-red-600 dark:text-red-400 border-2 border-red-100 dark:border-red-900/30"
+                        onclick="clearAllPlayers()">
+                        <span class="material-icons-round">delete_sweep</span>
+                        Alle löschen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score List Column -->
+        <div class="m3-card flex flex-col min-h-[500px]">
+            <h3 class="text-lg font-bold mb-6">Punktestand</h3>
+            <div id="playerList" class="space-y-4 flex-1">
+                <!-- Players will be injected here -->
+                <div class="flex flex-col items-center justify-center h-full text-gray-400 py-20" id="emptyState">
+                    <span class="material-icons-round text-6xl mb-4">groups</span>
+                    <p>Noch keine Spieler hinzugefügt.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="playerTemplate">
+    <div
+        class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 transition-all player-row">
+        <div class="flex items-center gap-4">
+            <div
+                class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <span class="material-icons-round">person</span>
+            </div>
+            <div>
+                <div class="font-bold text-gray-800 dark:text-white player-name-display text-lg"></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div
+                class="flex items-center bg-white dark:bg-gray-900 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700">
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onclick="updateScore(this, -1)">
+                    <span class="material-icons-round text-gray-600 dark:text-gray-400">remove</span>
+                </button>
+                <div class="w-16 text-center font-bold text-2xl player-score">0</div>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onclick="updateScore(this, 1)">
+                    <span class="material-icons-round text-blue-600 dark:text-blue-400">add</span>
+                </button>
+            </div>
+            <button class="p-2 text-gray-400 hover:text-red-500 transition-colors" onclick="removePlayer(this)">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+    const playerList = document.getElementById('playerList');
+    const emptyState = document.getElementById('emptyState');
+    const playerNameInput = document.getElementById('playerName');
+    const playerTemplate = document.getElementById('playerTemplate');
+
+    let players = JSON.parse(localStorage.getItem('scoreboard_players') || '[]');
+
+    function savePlayers() {
+        localStorage.setItem('scoreboard_players', JSON.stringify(players));
+    }
+
+    function renderPlayers() {
+        // Clear current list
+        const rows = playerList.querySelectorAll('.player-row');
+        rows.forEach(row => row.remove());
+
+        if (players.length === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+            players.forEach((player, index) => {
+                const clone = playerTemplate.content.cloneNode(true);
+                clone.querySelector('.player-name-display').textContent = player.name;
+                clone.querySelector('.player-score').textContent = player.score;
+
+                // Add index for easy reference
+                const row = clone.querySelector('.player-row');
+                row.dataset.index = index;
+
+                playerList.appendChild(clone);
+            });
+        }
+    }
+
+    function addPlayer() {
+        const name = playerNameInput.value.trim();
+        if (!name) return;
+
+        players.push({ name: name, score: 0 });
+        playerNameInput.value = '';
+        savePlayers();
+        renderPlayers();
+    }
+
+    function updateScore(btn, delta) {
+        const row = btn.closest('.player-row');
+        const index = parseInt(row.dataset.index);
+        players[index].score += delta;
+
+        row.querySelector('.player-score').textContent = players[index].score;
+        savePlayers();
+    }
+
+    function removePlayer(btn) {
+        const row = btn.closest('.player-row');
+        const index = parseInt(row.dataset.index);
+        players.splice(index, 1);
+        savePlayers();
+        renderPlayers();
+    }
+
+    function resetAllScores() {
+        players.forEach(p => p.score = 0);
+        savePlayers();
+        renderPlayers();
+    }
+
+    function clearAllPlayers() {
+        if (confirm('Möchtest du wirklich alle Spieler löschen?')) {
+            players = [];
+            savePlayers();
+            renderPlayers();
+        }
+    }
+
+    // Handle Enter key
+    playerNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addPlayer();
+    });
+
+    document.addEventListener('DOMContentLoaded', renderPlayers);
+</script>
+{% endblock %}
