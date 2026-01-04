@@ -105,8 +105,11 @@ def create_app():
     def file_converter():
         return render_template('tools/file_converter.html')
 
-    @app.route('/api/convert', methods=['POST'])
+    @app.route('/tools/wheel-of-fortune')
     @login_required
+    def wheel_of_fortune():
+        return render_template('tools/wheel_of_fortune.html')
+
     @app.route('/api/convert', methods=['POST'])
     @login_required
     def api_convert():

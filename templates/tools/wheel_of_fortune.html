@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Glücksrad{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Glücksrad</h2>
+    </div>
+
+    <div class="tool-grid">
+        <!-- Wheel Column -->
+        <div class="flex flex-col relative items-center justify-center m3-card min-h-[500px] overflow-hidden">
+            <div id="wheelContainer" class="relative group">
+                <canvas id="wheelCanvas" width="450" height="450" class="max-w-full h-auto drop-shadow-2xl"></canvas>
+                <!-- Arrow/Pointer -->
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
+                    <span class="material-icons-round text-5xl text-blue-600 drop-shadow-md">arrow_drop_down</span>
+                </div>
+            </div>
+
+            <!-- Result Overlay -->
+            <div id="resultOverlay"
+                class="absolute inset-0 bg-white/90 dark:bg-gray-900/95 flex flex-col items-center justify-center p-8 opacity-0 pointer-events-none transition-opacity duration-300 z-20">
+                <div class="text-blue-600 dark:text-blue-400 mb-2 font-medium">Gewonnen hat:</div>
+                <div id="winnerName" class="text-4xl font-bold text-center mb-10 text-gray-800 dark:text-white"></div>
+
+                <div class="flex flex-col w-full max-w-xs gap-4">
+                    <button class="m3-button m3-button-filled py-4" onclick="removeWinnerAndSpin()">
+                        <span class="material-icons-round">delete_forever</span>
+                        Entfernen & Neu drehen
+                    </button>
+                    <button class="m3-button py-4 border-2 border-gray-200 dark:border-gray-700"
+                        onclick="closeOverlay()">
+                        <span class="material-icons-round">close</span>
+                        Schließen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="m3-card flex flex-col min-h-[400px]">
+            <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 px-1">
+                Optionen (Eine pro Zeile)
+            </label>
+            <div class="m3-input-group flex-1 flex flex-col">
+                <textarea id="wheelOptions" class="m3-text-input flex-1 w-full p-6 text-lg resize-none"
+                    placeholder="Option 1&#10;Option 2&#10;Option 3"
+                    autofocus>Ja&#10;Nein&#10;Vielleicht&#10;Morgen</textarea>
+            </div>
+
+            <button id="spinBtn" class="m3-button m3-button-filled shadow-lg py-5 text-xl mt-6" onclick="spinWheel()">
+                <span class="material-icons-round text-2xl">refresh</span>
+                Rad drehen
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const optionsInput = document.getElementById('wheelOptions');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const winnerDisplay = document.getElementById('winnerName');
+
+    let options = [];
+    let startAngle = 0;
+    let arc = 0;
+    let spinTimeout = null;
+    let spinAngleStart = 10;
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+    let isSpinning = false;
+
+    const colors = [
+        "#4285F4", "#34A853", "#FBBC05", "#EA4335",
+        "#1A73E8", "#0F9D58", "#F4B400", "#DB4437",
+        "#673AB7", "#3F51B5", "#2196F3", "#00BCD4",
+        "#009688", "#4CAF50", "#8BC34A", "#CDDC39"
+    ];
+
+    function getOptions() {
+        return optionsInput.value.split('\n').map(opt => opt.trim()).filter(opt => opt.length > 0);
+    }
+
+    function drawWheel() {
+        options = getOptions();
+        if (options.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+
+        arc = Math.PI * 2 / options.length;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        options.forEach((text, i) => {
+            const angle = startAngle + i * arc;
+            ctx.fillStyle = colors[i % colors.length];
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, canvas.height / 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 200, angle, angle + arc, false);
+            ctx.lineTo(canvas.width / 2, canvas.height / 2);
+            ctx.fill();
+
+            // Divider line
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.translate(canvas.width / 2 + Math.cos(angle + arc / 2) * 120,
+                canvas.height / 2 + Math.sin(angle + arc / 2) * 120);
+            ctx.rotate(angle + arc / 2 + Math.PI / 2);
+            ctx.font = 'bold 16px "Google Sans"';
+            const displaySafeText = text.length > 15 ? text.substring(0, 12) + "..." : text;
+            ctx.fillText(displaySafeText, -ctx.measureText(displaySafeText).width / 2, 0);
+            ctx.restore();
+        });
+
+        // Center circle
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, Math.PI * 2, false);
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    function rotateWheel() {
+        spinTime += 30;
+        if (spinTime >= spinTimeTotal) {
+            stopRotateWheel();
+            return;
+        }
+        const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+        startAngle += (spinAngle * Math.PI / 180);
+        drawWheel();
+        spinTimeout = setTimeout(rotateWheel, 30);
+    }
+
+    function stopRotateWheel() {
+        clearTimeout(spinTimeout);
+        const degrees = startAngle * 180 / Math.PI + 90; // Pointer is at top
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - degrees % 360) % 360 / arcd);
+
+        const winner = options[index];
+        winnerDisplay.textContent = winner;
+        resultOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        isSpinning = false;
+    }
+
+    function easeOut(t, b, c, d) {
+        const ts = (t /= d) * t;
+        const tc = ts * t;
+        return b + c * (tc + -3 * ts + 3 * t);
+    }
+
+    function spinWheel() {
+        if (isSpinning) return;
+        options = getOptions();
+        if (options.length < 2) return;
+
+        closeOverlay();
+        isSpinning = true;
+        spinAngleStart = Math.random() * 10 + 10;
+        spinTime = 0;
+        spinTimeTotal = Math.random() * 3000 + 4000;
+        rotateWheel();
+    }
+
+    function removeWinnerAndSpin() {
+        const winner = winnerDisplay.textContent;
+        let currentOptions = getOptions();
+        const index = currentOptions.indexOf(winner);
+        if (index > -1) {
+            currentOptions.splice(index, 1);
+            optionsInput.value = currentOptions.join('\n');
+            drawWheel();
+        }
+        spinWheel();
+    }
+
+    function closeOverlay() {
+        resultOverlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    optionsInput.addEventListener('input', drawWheel);
+    document.addEventListener('DOMContentLoaded', drawWheel);
+</script>
+{% endblock %}
