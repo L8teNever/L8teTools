@@ -34,12 +34,14 @@
     --m3-secondary-container: #3b4858;
     --m3-on-secondary-container: #d7e3f7;
     --m3-surface: #1a1c1e;
-    --m3-on-surface: #e2e2e6;
+    --m3-on-surface: #ffffff;
+    /* Brighter white for better visibility */
     --m3-surface-variant: #44474e;
     --m3-on-surface-variant: #c4c6d0;
     --m3-outline: #8e9099;
     --m3-background: #1a1c1e;
-    --m3-on-background: #e2e2e6;
+    --m3-on-background: #ffffff;
+    /* Brighter white for better visibility */
     --m3-error: #ffb4ab;
     --m3-on-error: #690005;
     --m3-inverse-surface: #e2e2e6;
