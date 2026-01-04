@@ -50,6 +50,11 @@
                 <h3 class="text-lg font-bold mb-6">Einstellungen</h3>
                 <div class="flex flex-col gap-3">
                     <button class="m3-button w-full py-3 border-2 border-gray-200 dark:border-gray-700"
+                        onclick="toggleEditMode()" id="editModeBtn">
+                        <span class="material-icons-round">edit</span>
+                        Bearbeitungsmodus: AUS
+                    </button>
+                    <button class="m3-button w-full py-3 border-2 border-gray-200 dark:border-gray-700"
                         onclick="resetAllScores()">
                         <span class="material-icons-round">restart_alt</span>
                         Punkte zurücksetzen
@@ -122,7 +127,8 @@
                     <span class="material-icons-round text-blue-600 dark:text-blue-400">add</span>
                 </button>
             </div>
-            <button class="p-2 text-gray-400 hover:text-red-500 transition-colors" onclick="removePlayer(this)">
+            <button class="p-2 text-gray-400 hover:text-red-500 transition-colors delete-btn hidden"
+                onclick="removePlayer(this)">
                 <span class="material-icons-round">close</span>
             </button>
         </div>
@@ -134,11 +140,32 @@
     const emptyState = document.getElementById('emptyState');
     const playerNameInput = document.getElementById('playerName');
     const playerTemplate = document.getElementById('playerTemplate');
+    const editModeBtn = document.getElementById('editModeBtn');
 
     let players = JSON.parse(localStorage.getItem('scoreboard_players') || '[]');
+    let isEditMode = false;
 
     function savePlayers() {
         localStorage.setItem('scoreboard_players', JSON.stringify(players));
+    }
+
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        const deleteBtns = document.querySelectorAll('.delete-btn');
+        deleteBtns.forEach(btn => {
+            if (isEditMode) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        });
+
+        editModeBtn.innerHTML = isEditMode ?
+            `<span class="material-icons-round">edit_off</span> Bearbeitungsmodus: AN` :
+            `<span class="material-icons-round">edit</span> Bearbeitungsmodus: AUS`;
+
+        if (isEditMode) {
+            editModeBtn.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-700');
+        } else {
+            editModeBtn.classList.remove('bg-blue-50', 'border-blue-200', 'text-blue-700');
+        }
     }
 
     function renderPlayers() {
@@ -158,6 +185,10 @@
                 // Add index for easy reference
                 const row = clone.querySelector('.player-row');
                 row.dataset.index = index;
+
+                if (isEditMode) {
+                    row.querySelector('.delete-btn').classList.remove('hidden');
+                }
 
                 playerList.appendChild(clone);
             });
