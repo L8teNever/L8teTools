@@ -25,7 +25,33 @@
             <span class="material-icons-round text-blue-700">grid_view</span>
             <span class="font-medium">L8teTools</span>
         </a>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 relative">
+            <!-- Search Container -->
+            <div class="relative flex items-center">
+                <div id="searchWrapper"
+                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 shadow-xl rounded-full border border-gray-200 dark:border-gray-700 flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
+                    <span class="material-icons-round px-3 text-gray-400">search</span>
+                    <input type="text" id="globalSearch" class="bg-transparent outline-none py-2 pr-4 w-full text-sm"
+                        placeholder="Suche Tools (z.B. 'cm' oder 'pw')..." oninput="performSearch(this.value)"
+                        onblur="closeSearchWithDelay()">
+                    <button onclick="toggleSearch()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+                        <span class="material-icons-round text-sm">close</span>
+                    </button>
+                </div>
+
+                <!-- Search Results Dropdown -->
+                <div id="searchResults"
+                    class="hidden absolute top-12 right-0 w-80 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
+                    <!-- Results injected via JS -->
+                </div>
+
+                <button onclick="toggleSearch()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors relative z-40"
+                    title="Suche">
+                    <span class="material-icons-round">search</span>
+                </button>
+            </div>
+
             <span class="text-sm text-gray-600 hidden sm:block">{{ current_user.username }}</span>
             <a href="{{ url_for('settings') }}"
                 class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
@@ -35,6 +61,141 @@
         </div>
     </header>
     {% endif %}
+
+    <script>
+        const toolsData = [
+            { name: "Passwort Generator", url: "{{ url_for('password_generator') }}", icon: "password", keywords: ["sicherheit", "crypto", "pw", "login", "key", "safe", "secure", "passwort"] },
+            { name: "QR-Code Generator", url: "{{ url_for('qr_generator') }}", icon: "qr_code_2", keywords: ["scan", "link", "url", "2d code", "share", "quick", "response"] },
+            { name: "Datei Konverter", url: "{{ url_for('file_converter') }}", icon: "transform", keywords: ["bild", "pdf", "jpg", "png", "umwandeln", "format", "konvertieren", "convert", "image"] },
+            { name: "Glücksrad", url: "{{ url_for('wheel_of_fortune') }}", icon: "autorenew", keywords: ["random", "zufall", "entscheidung", "spiel", "rad", "wheel", "luck"] },
+            { name: "Würfel", url: "{{ url_for('dice_roller') }}", icon: "casino", keywords: ["dice", "spiel", "zahl", "zufall", "board", "game", "würfeln"] },
+            { name: "Punktezähler", url: "{{ url_for('score_tracker') }}", icon: "scoreboard", keywords: ["score", "spiel", "track", "punkte", "zählen", "sport", "game"] },
+            { name: "Farbwähler", url: "{{ url_for('color_picker') }}", icon: "palette", keywords: ["hex", "rgb", "hsl", "color", "design", "css", "farbe", "picker", "web"] },
+            { name: "URL Shortener", url: "{{ url_for('shortlinks') }}", icon: "link", keywords: ["link", "kürzen", "short", "bitly", "tiny", "url", "adresse"] },
+            { name: "HTML/CSS Playground", url: "{{ url_for('playground') }}", icon: "code", keywords: ["code", "html", "css", "test", "web", "entwicklung", "dev", "editor"] },
+            { name: "Einheiten-Umrechner", url: "{{ url_for('unit_converter') }}", icon: "straighten", keywords: ["cm", "m", "kg", "celsius", "fahrenheit", "umrechnen", "maße", "zoll", "feet", "inch"] },
+            { name: "Diff-Checker", url: "{{ url_for('diff_checker') }}", icon: "difference", keywords: ["vergleich", "unterschied", "text", "git", "diff", "compare", "code"] },
+            { name: "Case Converter", url: "{{ url_for('case_converter') }}", icon: "text_fields", keywords: ["gross", "klein", "camelcase", "text", "upper", "lower", "snake", "kebab"] },
+            { name: "Word Counter", url: "{{ url_for('word_counter') }}", icon: "segment", keywords: ["wörter", "zählen", "zeichen", "länge", "count", "text", "analyse"] },
+            { name: "Exif-Daten Entferner", url: "{{ url_for('exif_remover') }}", icon: "perm_camera_mic", keywords: ["meta", "daten", "foto", "privatsphäre", "gps", "remove", "clean", "exif", "image"] },
+            { name: "IP Info", url: "{{ url_for('my_ip') }}", icon: "public", keywords: ["adresse", "netzwerk", "internet", "wifi", "ip", "public", "location"] },
+            { name: "Whois Lookup", url: "{{ url_for('whois_lookup') }}", icon: "domain_verification", keywords: ["domain", "besitzer", "dns", "lookup", "whois", "registar"] },
+            { name: "MAC Finder", url: "{{ url_for('mac_lookup') }}", icon: "lan", keywords: ["vendor", "hersteller", "hardware", "mac", "address", "network"] },
+            { name: "BMI Rechner", url: "{{ url_for('bmi_calculator') }}", icon: "monitor_weight", keywords: ["gesundheit", "gewicht", "größe", "körper", "bmi", "index", "mass"] },
+            { name: "Text Sorter", url: "{{ url_for('text_sorter') }}", icon: "sort_by_alpha", keywords: ["liste", "alphabet", "sortieren", "ordnen", "a-z", "unique", "duplikate"] },
+            { name: "Regex Replacer", url: "{{ url_for('regex_replacer') }}", icon: "find_replace", keywords: ["suchen", "ersetzen", "pattern", "code", "regex", "regular", "expression"] },
+            { name: "Listen Vergleicher", url: "{{ url_for('list_comparator') }}", icon: "compare_arrows", keywords: ["vergleich", "unterschied", "listen", "diff", "common", "unique"] },
+            { name: "Morsecode", url: "{{ url_for('morse_code') }}", icon: "graphic_eq", keywords: ["code", "übersetzung", "funk", "sos", "morse", "sound", "signal"] },
+            { name: "Arbeitstage", url: "{{ url_for('workday_calculator') }}", icon: "event_available", keywords: ["urlaub", "tage", "datum", "arbeit", "wochenende", "feiertage", "calc"] },
+            { name: "Prefix/Suffix", url: "{{ url_for('prefix_suffix') }}", icon: "format_quote", keywords: ["programmieren", "text", "zeilen", "edit", "prefix", "suffix", "add"] },
+            { name: "Notizen", url: "{{ url_for('notes_tool') }}", icon: "edit_note", keywords: ["schreiben", "text", "gedanken", "speichern", "notiz", "notes", "memo"] },
+            { name: "Wiki", url: "{{ url_for('wiki_tool') }}", icon: "library_books", keywords: ["wissen", "linux", "befehle", "help", "cheat", "sheet", "wiki", "docs"] },
+        ];
+
+        function toggleSearch() {
+            const wrapper = document.getElementById('searchWrapper');
+            const input = document.getElementById('globalSearch');
+
+            if (wrapper.classList.contains('hidden')) {
+                wrapper.classList.remove('hidden');
+                // Trigger reflow
+                void wrapper.offsetWidth;
+                wrapper.classList.remove('w-0', 'opacity-0');
+                wrapper.classList.add('w-[300px]', 'opacity-100');
+                input.focus();
+            } else {
+                wrapper.classList.remove('w-[300px]', 'opacity-100');
+                wrapper.classList.add('w-0', 'opacity-0');
+                setTimeout(() => {
+                    wrapper.classList.add('hidden');
+                    document.getElementById('searchResults').classList.add('hidden');
+                    input.value = '';
+                }, 300);
+            }
+        }
+
+        function closeSearchWithDelay() {
+            setTimeout(() => {
+                // Check if focus moved to results
+                if (!document.activeElement.closest('#searchResults')) {
+                    toggleSearch();
+                }
+            }, 200);
+        }
+
+        function performSearch(query) {
+            const resultsDiv = document.getElementById('searchResults');
+            const q = query.toLowerCase().trim();
+
+            if (q.length < 2) {
+                resultsDiv.classList.add('hidden');
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            const scored = toolsData.map(tool => {
+                let score = 0;
+
+                // Exact title match priority
+                if (tool.name.toLowerCase() === q) score += 100;
+                else if (tool.name.toLowerCase().startsWith(q)) score += 80;
+                else if (tool.name.toLowerCase().includes(q)) score += 60;
+
+                // Keyword matching
+                tool.keywords.forEach(k => {
+                    if (k === q) score += 50;
+                    else if (k.startsWith(q)) score += 30;
+                    else if (k.includes(q)) score += 10;
+
+                    // Simple typo tolerance (levenshtein-ish for shorts)
+                    if (q.length > 3 && Math.abs(k.length - q.length) <= 1) {
+                        if (getEditDistance(q, k) <= 1) score += 20;
+                    }
+                });
+
+                return { ...tool, score };
+            });
+
+            const results = scored.filter(tool => tool.score > 0).sort((a, b) => b.score - a.score);
+
+            if (results.length > 0) {
+                resultsDiv.innerHTML = results.slice(0, 5).map(tool => `
+                    <a href="${tool.url}" class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
+                        <span class="material-icons-round text-gray-500 bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">${tool.icon}</span>
+                        <div>
+                            <div class="font-bold text-sm text-gray-800 dark:text-gray-200">${tool.name}</div>
+                            <div class="text-xs text-gray-400">Match: ${tool.score > 80 ? 'Volltreffer' : 'Relevantes Tool'}</div>
+                        </div>
+                    </a>
+                `).join('');
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.innerHTML = `<div class="p-4 text-center text-gray-400 text-sm">Kein passendes Tool gefunden.</div>`;
+                resultsDiv.classList.remove('hidden');
+            }
+        }
+
+        // Simple Levenshtein distance for typos
+        function getEditDistance(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+    </script>
 
     <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
