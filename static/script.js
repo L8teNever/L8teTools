@@ -48,12 +48,14 @@ function generatePassword() {
     }
 
     // Dynamic font resizing for stability
-    if (length > 32) {
-        output.style.fontSize = '1.1rem';
-    } else if (length > 20) {
-        output.style.fontSize = '1.3rem';
+    if (length > 48) {
+        output.style.fontSize = '1.0rem';
+    } else if (length > 32) {
+        output.style.fontSize = '1.2rem';
+    } else if (length > 16) {
+        output.style.fontSize = '1.4rem';
     } else {
-        output.style.fontSize = '1.6rem';
+        output.style.fontSize = '1.8rem';
     }
 
     output.textContent = password;
