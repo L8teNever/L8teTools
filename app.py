@@ -177,7 +177,15 @@ def create_app():
         all_users = []
         if current_user.is_admin:
             all_users = User.query.all()
-        return render_template('settings.html', domain=domain, users=all_users)
+        
+        version = "v.0.0.0"
+        try:
+            with open('version.txt', 'r') as f:
+                version = f.read().strip()
+        except:
+            pass
+            
+        return render_template('settings.html', domain=domain, users=all_users, version=version)
 
     @app.route('/api/settings/password', methods=['POST'])
     @login_required
