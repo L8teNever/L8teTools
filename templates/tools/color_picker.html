@@ -41,13 +41,70 @@
                     </div>
                 </div>
             </div>
+
+            <!-- CMYK Inputs -->
+            <div class="w-full space-y-3">
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-xs font-bold text-gray-500 uppercase">CMYK (%)</span>
+                    <button class="text-blue-600 dark:text-blue-400 text-xs font-bold"
+                        onclick="copyFormat('cmyk')">Kopieren</button>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-cyan-500">C</span>
+                        <input type="number" id="cmykC" min="0" max="100" class="m3-text-input p-2 text-center text-sm"
+                            value="0">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-magenta-500">M</span>
+                        <input type="number" id="cmykM" min="0" max="100" class="m3-text-input p-2 text-center text-sm"
+                            value="0">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-yellow-500">Y</span>
+                        <input type="number" id="cmykY" min="0" max="100" class="m3-text-input p-2 text-center text-sm"
+                            value="0">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-gray-900 dark:text-gray-100">K</span>
+                        <input type="number" id="cmykK" min="0" max="100" class="m3-text-input p-2 text-center text-sm"
+                            value="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lab Inputs -->
+            <div class="w-full space-y-3">
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Lab</span>
+                    <button class="text-blue-600 dark:text-blue-400 text-xs font-bold"
+                        onclick="copyFormat('lab')">Kopieren</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold">L*</span>
+                        <input type="number" id="labL" min="0" max="100" class="m3-text-input p-2 text-center text-sm"
+                            value="0">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-green-500">a*</span>
+                        <input type="number" id="labA" min="-128" max="127"
+                            class="m3-text-input p-2 text-center text-sm" value="0">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] text-center font-bold text-blue-500">b*</span>
+                        <input type="number" id="labB" min="-128" max="127"
+                            class="m3-text-input p-2 text-center text-sm" value="0">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Conversions & Sliders Column -->
         <div class="m3-card space-y-8">
-            <h3 class="text-lg font-bold mb-4">Werte & Formate</h3>
+            <h3 class="text-lg font-bold mb-4">Schieberegler</h3>
 
-            <!-- RGB Values -->
+            <!-- RGB Sliders -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center px-1">
                     <span class="text-sm font-medium text-gray-600 dark:text-gray-400">RGB</span>
@@ -72,19 +129,34 @@
 
             <hr class="border-gray-100 dark:border-gray-800">
 
-            <!-- HSL Values -->
+            <!-- HSL Sliders -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center px-1">
                     <span class="text-sm font-medium text-gray-600 dark:text-gray-400">HSL</span>
                     <button class="text-blue-600 dark:text-blue-400 text-sm font-bold" id="hslDisplay"
                         onclick="copyText(this.textContent)">hsl(217, 89%, 61%)</button>
                 </div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-4">
+                        <span class="w-4 font-bold opacity-70">H</span>
+                        <input type="range" min="0" max="360" value="217" class="m3-slider flex-1" id="hueRange">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="w-4 font-bold opacity-70">S</span>
+                        <input type="range" min="0" max="100" value="89" class="m3-slider flex-1" id="satRange">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="w-4 font-bold opacity-70">L</span>
+                        <input type="range" min="0" max="100" value="61" class="m3-slider flex-1" id="lightRange">
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl text-xs text-gray-500 flex items-start gap-3">
-                <span class="material-icons-round text-sm mt-0.5">info</span>
-                <p>Nutze den Farbwähler oben oder gib direkt einen HEX-Code ein. Die RGB-Schieberegler aktualisieren
-                    sich automatisch.</p>
+            <div
+                class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl text-xs text-blue-700 dark:text-blue-300 flex items-start gap-3 border border-blue-100 dark:border-blue-900/30">
+                <span class="material-icons-round text-sm mt-0.5">auto_awesome</span>
+                <p>Alle Felder sind miteinander verknüpft. Gib Werte in einem beliebigen Format ein und beobachte, wie
+                    der Rest automatisch umgewandelt wird.</p>
             </div>
         </div>
     </div>
@@ -97,46 +169,133 @@
     const redRange = document.getElementById('redRange');
     const greenRange = document.getElementById('greenRange');
     const blueRange = document.getElementById('blueRange');
+    const hueRange = document.getElementById('hueRange');
+    const satRange = document.getElementById('satRange');
+    const lightRange = document.getElementById('lightRange');
     const rgbDisplay = document.getElementById('rgbDisplay');
     const hslDisplay = document.getElementById('hslDisplay');
 
-    function updateFromHex(hex) {
-        if (!/^#[0-9A-F]{6}$/i.test(hex)) return;
+    // CMYK Inputs
+    const cmykC = document.getElementById('cmykC');
+    const cmykM = document.getElementById('cmykM');
+    const cmykY = document.getElementById('cmykY');
+    const cmykK = document.getElementById('cmykK');
 
+    // Lab Inputs
+    const labL = document.getElementById('labL');
+    const labA = document.getElementById('labA');
+    const labB = document.getElementById('labB');
+
+    let currentRGB = { r: 66, g: 133, b: 244 };
+
+    function syncAll(source) {
+        const { r, g, b } = currentRGB;
+        const hex = rgbToHex(r, g, b);
+        const hsl = rgbToHsl(r, g, b);
+        const cmyk = rgbToCmyk(r, g, b);
+        const lab = rgbToLab(r, g, b);
+
+        // Update UI elements that are NOT the source
+        if (source !== 'picker') mainPicker.value = hex;
+        if (source !== 'hex') hexInput.value = hex.toUpperCase();
+
+        colorDisplay.style.backgroundColor = hex;
+
+        if (source !== 'rgb') {
+            redRange.value = r;
+            greenRange.value = g;
+            blueRange.value = b;
+        }
+        rgbDisplay.textContent = `rgb(${r}, ${g}, ${b})`;
+
+        if (source !== 'hsl') {
+            hueRange.value = hsl.h;
+            satRange.value = hsl.s;
+            lightRange.value = hsl.l;
+        }
+        hslDisplay.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+        if (source !== 'cmyk') {
+            cmykC.value = cmyk.c;
+            cmykM.value = cmyk.m;
+            cmykY.value = cmyk.y;
+            cmykK.value = cmyk.k;
+        }
+
+        if (source !== 'lab') {
+            labL.value = Math.round(lab.l);
+            labA.value = Math.round(lab.a);
+            labB.value = Math.round(lab.b);
+        }
+    }
+
+    // Input handlers
+    mainPicker.addEventListener('input', () => {
+        const hex = mainPicker.value;
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
+        currentRGB = { r, g, b };
+        syncAll('picker');
+    });
 
-        redRange.value = r;
-        greenRange.value = g;
-        blueRange.value = b;
+    hexInput.addEventListener('input', (e) => {
+        let hex = e.target.value;
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (/^#[0-9A-F]{6}$/i.test(hex)) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            currentRGB = { r, g, b };
+            syncAll('hex');
+        }
+    });
 
-        syncAll(hex, r, g, b);
+    function handleRGB() {
+        currentRGB = {
+            r: parseInt(redRange.value),
+            g: parseInt(greenRange.value),
+            b: parseInt(blueRange.value)
+        };
+        syncAll('rgb');
     }
+    redRange.addEventListener('input', handleRGB);
+    greenRange.addEventListener('input', handleRGB);
+    blueRange.addEventListener('input', handleRGB);
 
-    function updateFromRGB() {
-        const r = parseInt(redRange.value);
-        const g = parseInt(greenRange.value);
-        const b = parseInt(blueRange.value);
-        const hex = rgbToHex(r, g, b);
-
-        syncAll(hex, r, g, b);
+    function handleHSL() {
+        const h = parseInt(hueRange.value);
+        const s = parseInt(satRange.value);
+        const l = parseInt(lightRange.value);
+        currentRGB = hslToRgb(h, s, l);
+        syncAll('hsl');
     }
+    hueRange.addEventListener('input', handleHSL);
+    satRange.addEventListener('input', handleHSL);
+    lightRange.addEventListener('input', handleHSL);
 
-    function updateFromPicker() {
-        updateFromHex(mainPicker.value);
+    function handleCMYK() {
+        currentRGB = cmykToRgb(
+            parseInt(cmykC.value) || 0,
+            parseInt(cmykM.value) || 0,
+            parseInt(cmykY.value) || 0,
+            parseInt(cmykK.value) || 0
+        );
+        syncAll('cmyk');
     }
+    [cmykC, cmykM, cmykY, cmykK].forEach(el => el.addEventListener('input', handleCMYK));
 
-    function syncAll(hex, r, g, b) {
-        colorDisplay.style.backgroundColor = hex;
-        mainPicker.value = hex;
-        hexInput.value = hex.toUpperCase();
-        rgbDisplay.textContent = `rgb(${r}, ${g}, ${b})`;
-
-        const hsl = rgbToHsl(r, g, b);
-        hslDisplay.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+    function handleLab() {
+        currentRGB = labToRgb(
+            parseFloat(labL.value) || 0,
+            parseFloat(labA.value) || 0,
+            parseFloat(labB.value) || 0
+        );
+        syncAll('lab');
     }
+    [labL, labA, labB].forEach(el => el.addEventListener('input', handleLab));
 
+    // Conversion Utilities
     function rgbToHex(r, g, b) {
         return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
@@ -145,7 +304,6 @@
         r /= 255; g /= 255; b /= 255;
         const max = Math.max(r, g, b), min = Math.min(r, g, b);
         let h, s, l = (max + min) / 2;
-
         if (max === min) {
             h = s = 0;
         } else {
@@ -158,17 +316,106 @@
             }
             h /= 6;
         }
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
 
+    function hslToRgb(h, s, l) {
+        h /= 360; s /= 100; l /= 100;
+        let r, g, b;
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hueToRgb(p, q, h + 1 / 3);
+            g = hueToRgb(p, q, h);
+            b = hueToRgb(p, q, h - 1 / 3);
+        }
+        return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+    }
+
+    function hueToRgb(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    }
+
+    function rgbToCmyk(r, g, b) {
+        let c = 1 - (r / 255);
+        let m = 1 - (g / 255);
+        let y = 1 - (b / 255);
+        let k = Math.min(c, m, y);
+        if (k === 1) return { c: 0, m: 0, y: 0, k: 100 };
+        c = Math.round((c - k) / (1 - k) * 100);
+        m = Math.round((m - k) / (1 - k) * 100);
+        y = Math.round((y - k) / (1 - k) * 100);
+        k = Math.round(k * 100);
+        return { c, m, y, k };
+    }
+
+    function cmykToRgb(c, m, y, k) {
+        c /= 100; m /= 100; y /= 100; k /= 100;
+        const r = 255 * (1 - c) * (1 - k);
+        const g = 255 * (1 - m) * (1 - k);
+        const b = 255 * (1 - y) * (1 - k);
+        return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
+    }
+
+    // Simple RGB to Lab conversion
+    function rgbToLab(r, g, b) {
+        r /= 255; g /= 255; b /= 255;
+        r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+        g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+        b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+        r *= 100; g *= 100; b *= 100;
+        const x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+        const y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+        const z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+        return xyzToLab(x, y, z);
+    }
+
+    function xyzToLab(x, y, z) {
+        x /= 95.047; y /= 100; z /= 108.883;
+        x = x > 0.008856 ? Math.pow(x, 1 / 3) : (7.787 * x) + (16 / 116);
+        y = y > 0.008856 ? Math.pow(y, 1 / 3) : (7.787 * y) + (16 / 116);
+        z = z > 0.008856 ? Math.pow(z, 1 / 3) : (7.787 * z) + (16 / 116);
+        return { l: (116 * y) - 16, a: 500 * (x - y), b: 200 * (y - z) };
+    }
+
+    function labToRgb(l, a, b) {
+        let y = (l + 16) / 116;
+        let x = a / 500 + y;
+        let z = y - b / 200;
+        x = Math.pow(x, 3) > 0.008856 ? Math.pow(x, 3) : (x - 16 / 116) / 7.787;
+        y = Math.pow(y, 3) > 0.008856 ? Math.pow(y, 3) : (y - 16 / 116) / 7.787;
+        z = Math.pow(z, 3) > 0.008856 ? Math.pow(z, 3) : (z - 16 / 116) / 7.787;
+        x *= 95.047; y *= 100; z *= 108.883;
+        let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+        let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+        let b_val = x * 0.0557 + y * -0.2040 + z * 1.0570;
+        r /= 100; g /= 100; b_val /= 100;
+        r = r > 0.0031308 ? 1.055 * Math.pow(r, 1 / 2.4) - 0.055 : 12.92 * r;
+        g = g > 0.0031308 ? 1.055 * Math.pow(g, 1 / 2.4) - 0.055 : 12.92 * g;
+        b_val = b_val > 0.0031308 ? 1.055 * Math.pow(b_val, 1 / 2.4) - 0.055 : 12.92 * b_val;
         return {
-            h: Math.round(h * 360),
-            s: Math.round(s * 100),
-            l: Math.round(l * 100)
+            r: Math.max(0, Math.min(255, Math.round(r * 255))),
+            g: Math.max(0, Math.min(255, Math.round(g * 255))),
+            b: Math.max(0, Math.min(255, Math.round(b_val * 255)))
         };
     }
 
     function copyValue(id) {
-        const input = document.getElementById(id);
-        copyText(input.value);
+        copyText(document.getElementById(id).value);
+    }
+
+    function copyFormat(type) {
+        let text = '';
+        if (type === 'cmyk') text = `cmyk(${cmykC.value}%, ${cmykM.value}%, ${cmykY.value}%, ${cmykK.value}%)`;
+        if (type === 'lab') text = `lab(${labL.value}, ${labA.value}, ${labB.value})`;
+        copyText(text);
     }
 
     function copyText(text) {
@@ -177,13 +424,7 @@
         });
     }
 
-    mainPicker.addEventListener('input', updateFromPicker);
-    hexInput.addEventListener('input', (e) => updateFromHex(e.target.value));
-    redRange.addEventListener('input', updateFromRGB);
-    greenRange.addEventListener('input', updateFromRGB);
-    blueRange.addEventListener('input', updateFromRGB);
-
     // Initial sync
-    updateFromHex(mainPicker.value);
+    syncAll('hex');
 </script>
 {% endblock %}
