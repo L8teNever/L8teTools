@@ -143,6 +143,11 @@ def create_app():
         user_links = Shortlink.query.filter_by(user_id=current_user.id).order_by(Shortlink.created_at.desc()).all()
         return render_template('tools/shortlinks.html', links=user_links)
 
+    @app.route('/tools/playground')
+    @login_required
+    def playground():
+        return render_template('tools/playground.html')
+
     @app.route('/api/shortlinks', methods=['POST'])
     @login_required
     def api_add_shortlink():
