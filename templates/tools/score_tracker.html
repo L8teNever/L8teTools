@@ -3,6 +3,25 @@
 {% block title %}Punktezähler{% endblock %}
 
 {% block content %}
+<style>
+    .focus-content #playerList {
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .focus-content .player-row {
+        padding: 24px;
+    }
+
+    .focus-content .player-score {
+        font-size: 3rem;
+        width: 100px;
+    }
+
+    .focus-content .material-icons-round {
+        font-size: 2rem;
+    }
+</style>
 <div class="tool-page-container">
     <div class="page-header">
         <a href="{{ url_for('dashboard') }}"
@@ -46,7 +65,10 @@
         </div>
 
         <!-- Score List Column -->
-        <div class="m3-card flex flex-col min-h-[500px]">
+        <div class="m3-card flex flex-col min-h-[500px] relative overflow-hidden" id="scoreDisplayCard">
+            <button class="fullscreen-btn" onclick="toggleFocusMode()" title="Fokus-Modus">
+                <span class="material-icons-round">fullscreen</span>
+            </button>
             <h3 class="text-lg font-bold mb-6">Punktestand</h3>
             <div id="playerList" class="space-y-4 flex-1">
                 <!-- Players will be injected here -->
@@ -54,6 +76,20 @@
                     <span class="material-icons-round text-6xl mb-4">groups</span>
                     <p>Noch keine Spieler hinzugefügt.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Focus Overlay -->
+        <div id="focusOverlay" class="focus-overlay">
+            <div class="focus-header">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Fokus-Modus (Punktestand)</h2>
+                <button class="m3-button" onclick="toggleFocusMode()">
+                    <span class="material-icons-round">fullscreen_exit</span>
+                    Beenden
+                </button>
+            </div>
+            <div class="focus-content flex-col" id="focusContent">
+                <!-- Content will be moved here -->
             </div>
         </div>
     </div>
@@ -166,6 +202,25 @@
             players = [];
             savePlayers();
             renderPlayers();
+        }
+    }
+
+    function toggleFocusMode() {
+        const focusOverlay = document.getElementById('focusOverlay');
+        const focusContent = document.getElementById('focusContent');
+        const scoreCard = document.getElementById('scoreDisplayCard');
+        const playerList = document.getElementById('playerList');
+
+        if (!focusOverlay.classList.contains('active')) {
+            focusContent.appendChild(playerList);
+            focusContent.style.overflowY = 'auto';
+            focusOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            scoreCard.appendChild(playerList);
+            focusContent.style.overflowY = '';
+            focusOverlay.classList.remove('active');
+            document.body.style.overflow = '';
         }
     }
 

@@ -3,6 +3,17 @@
 {% block title %}Glücksrad{% endblock %}
 
 {% block content %}
+<style>
+    .focus-content #wheelContainer {
+        transform: scale(1.4);
+    }
+
+    @media (max-width: 768px) {
+        .focus-content #wheelContainer {
+            transform: scale(0.8);
+        }
+    }
+</style>
 <div class="tool-page-container">
     <div class="page-header">
         <a href="{{ url_for('dashboard') }}"
@@ -14,7 +25,11 @@
 
     <div class="tool-grid">
         <!-- Wheel Column -->
-        <div class="flex flex-col relative items-center justify-center m3-card min-h-[500px] overflow-hidden">
+        <div class="flex flex-col relative items-center justify-center m3-card min-h-[500px] overflow-hidden"
+            id="wheelDisplayCard">
+            <button class="fullscreen-btn" onclick="toggleFocusMode()" title="Fokus-Modus">
+                <span class="material-icons-round">fullscreen</span>
+            </button>
             <div id="wheelContainer" class="relative group">
                 <canvas id="wheelCanvas" width="450" height="450"
                     class="max-w-full h-auto drop-shadow-2xl cursor-pointer" onclick="spinWheel()"></canvas>
@@ -41,6 +56,20 @@
                         Schließen
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Focus Overlay -->
+        <div id="focusOverlay" class="focus-overlay">
+            <div class="focus-header">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Fokus-Modus</h2>
+                <button class="m3-button" onclick="toggleFocusMode()">
+                    <span class="material-icons-round">fullscreen_exit</span>
+                    Beenden
+                </button>
+            </div>
+            <div class="focus-content" id="focusContent">
+                <!-- Content will be moved here -->
             </div>
         </div>
 
@@ -193,6 +222,29 @@
 
     function closeOverlay() {
         resultOverlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function toggleFocusMode() {
+        const focusOverlay = document.getElementById('focusOverlay');
+        const focusContent = document.getElementById('focusContent');
+        const wheelCard = document.getElementById('wheelDisplayCard');
+        const wheelContainer = document.getElementById('wheelContainer');
+        const resultOverlay = document.getElementById('resultOverlay');
+
+        if (!focusOverlay.classList.contains('active')) {
+            // Enter Focus Mode
+            focusContent.appendChild(wheelContainer);
+            focusContent.appendChild(resultOverlay);
+            focusOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Exit Focus Mode
+            wheelCard.appendChild(wheelContainer);
+            wheelCard.appendChild(resultOverlay);
+            focusOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        drawWheel(); // Redraw canvas to ensure perfect sizing
     }
 
     optionsInput.addEventListener('input', drawWheel);
