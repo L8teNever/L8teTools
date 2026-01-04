@@ -56,7 +56,8 @@ body {
   padding: 24px;
   text-align: center;
   word-break: break-all;
-  min-height: 100px;
+  min-height: 120px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,8 +66,9 @@ body {
   margin-bottom: 24px;
   position: relative;
   cursor: pointer;
-  border: 2px dashed transparent;
+  border: 2px solid transparent;
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .m3-display:active {

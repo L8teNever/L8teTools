@@ -47,6 +47,15 @@ function generatePassword() {
         password += charSet[randomIndex];
     }
 
+    // Dynamic font resizing for stability
+    if (length > 32) {
+        output.style.fontSize = '1.1rem';
+    } else if (length > 20) {
+        output.style.fontSize = '1.3rem';
+    } else {
+        output.style.fontSize = '1.6rem';
+    }
+
     output.textContent = password;
 }
 
