@@ -202,6 +202,22 @@
         }
     }
 
+    async function updateRetention() {
+        const minutes = document.getElementById('retentionSelect').value;
+        const res = await fetch('/api/settings/retention', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ minutes: minutes })
+        });
+
+        if (res.ok) {
+            showToast('Aufbewahrungszeitraum aktualisiert!');
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Fehler beim Speichern');
+        }
+    }
+
     async function createUser() {
         const username = document.getElementById('newUsername').value.trim();
         const password = document.getElementById('newUserPassword').value;

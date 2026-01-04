@@ -114,6 +114,13 @@ def create_app():
                 first_user.is_admin = True
                 db.session.commit()
 
+        # Ensure retention config exists
+        retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
+        if not retention_config:
+            # Default: 1440 minutes = 24 hours
+            db.session.add(SystemConfig(key='file_retention_minutes', value='1440'))
+            db.session.commit()
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
@@ -199,7 +206,12 @@ def create_app():
     @app.route('/settings')
     @login_required
     def settings():
-        domain = SystemConfig.query.filter_by(key='shortener_domain').first().value
+        domain_conf = SystemConfig.query.filter_by(key='shortener_domain').first()
+        domain = domain_conf.value if domain_conf else "tools.l8tenever.de"
+        
+        retention_conf = SystemConfig.query.filter_by(key='file_retention_minutes').first()
+        retention_minutes = int(retention_conf.value) if retention_conf else 1440
+
         all_users = []
         if current_user.is_admin:
             all_users = User.query.all()
@@ -211,7 +223,31 @@ def create_app():
         except:
             pass
             
-        return render_template('settings.html', domain=domain, users=all_users, version=version)
+        return render_template('settings.html', domain=domain, retention_minutes=retention_minutes, users=all_users, version=version)
+
+    @app.route('/api/settings/retention', methods=['POST'])
+    @login_required
+    def api_update_retention():
+        if not current_user.is_admin:
+            return jsonify({'error': 'Nur Admins können dies ändern'}), 403
+            
+        data = request.json
+        try:
+            minutes = int(data.get('minutes', 1440))
+            if minutes < 0: 
+                return jsonify({'error': 'Ungültiger Wert'}), 400
+            
+            config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
+            if not config:
+                config = SystemConfig(key='file_retention_minutes', value=str(minutes))
+                db.session.add(config)
+            else:
+                config.value = str(minutes)
+                
+            db.session.commit()
+            return jsonify({'message': 'Aufbewahrungszeitraum aktualisiert'})
+        except ValueError:
+            return jsonify({'error': 'Muss eine Zahl sein'}), 400
 
     @app.route('/api/settings/password', methods=['POST'])
     @login_required
