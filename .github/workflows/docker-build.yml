@@ -32,7 +32,7 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/l8teTools:latest
-          ${{ secrets.DOCKER_USERNAME }}/l8teTools:${{ steps.version.outputs.VERSION }}
+          ${{ secrets.DOCKER_USERNAME }}/l8tetools:latest
+          ${{ secrets.DOCKER_USERNAME }}/l8tetools:${{ steps.version.outputs.VERSION }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
