@@ -63,11 +63,19 @@ body {
 .m3-card {
   background-color: var(--m3-surface-variant);
   border-radius: 28px;
-  padding: 32px;
+  padding: 16px;
+  /* Smaller padding on mobile */
   box-shadow: var(--shadow-2);
   width: 100%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid transparent;
+}
+
+@media (min-width: 768px) {
+  .m3-card {
+    padding: 32px;
+    /* Original padding on desktop */
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -84,15 +92,17 @@ body {
 .m3-display {
   background-color: var(--m3-surface-variant);
   border-radius: 24px;
-  padding: 40px 32px;
+  padding: 24px 16px;
+  /* Optimized padding */
   text-align: center;
   word-break: break-all;
-  min-height: 180px;
+  min-height: 140px;
+  /* Responsive minimum height */
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 500;
   margin-bottom: 24px;
   position: relative;
@@ -100,6 +110,14 @@ body {
   border: 2px solid transparent;
   transition: all 0.2s ease;
   overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .m3-display {
+    padding: 40px 32px;
+    min-height: 180px;
+    font-size: 1.75rem;
+  }
 }
 
 .m3-display:active {
