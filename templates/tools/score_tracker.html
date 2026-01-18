@@ -52,7 +52,13 @@
 
         <!-- Score List Column -->
         <div class="m3-card flex flex-col min-h-[500px] relative overflow-hidden" id="scoreDisplayCard">
-            <h3 class="text-lg font-bold mb-6">Punktestand</h3>
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold">Punktestand</h3>
+                <button onclick="toggleFullscreen()"
+                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all" title="Vollbild">
+                    <span class="material-icons-round" id="fsIcon">fullscreen</span>
+                </button>
+            </div>
             <div id="playerList" class="space-y-4 flex-1">
                 <!-- Players will be injected here -->
                 <div class="flex flex-col items-center justify-center h-full text-gray-400 py-20" id="emptyState">
@@ -99,6 +105,64 @@
         </div>
     </div>
 </template>
+
+<style>
+    .fullscreen-mode {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        overflow-y: auto !important;
+    }
+
+    .dark .fullscreen-mode {
+        background: #1a1c1e !important;
+    }
+
+    .fullscreen-mode #playerList {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        align-content: start;
+    }
+
+    .fullscreen-mode .player-row {
+        padding: 2.5rem;
+    }
+
+    .fullscreen-mode .player-name-display {
+        font-size: 2.5rem;
+    }
+
+    .fullscreen-mode .player-score {
+        font-size: 4rem;
+        width: 120px;
+    }
+
+    .fullscreen-mode .player-row button {
+        width: 80px;
+        height: 80px;
+    }
+
+    .fullscreen-mode .player-row .material-icons-round {
+        font-size: 3rem;
+    }
+
+    .fullscreen-mode h3 {
+        padding: 2rem 2rem 0 2rem;
+        font-size: 2rem;
+    }
+
+    .fullscreen-mode #fsIcon {
+        font-size: 2rem;
+    }
+</style>
 
 <script>
     const playerList = document.getElementById('playerList');
@@ -207,6 +271,29 @@
         if (e.key === 'Enter') addPlayer();
     });
 
-    document.addEventListener('DOMContentLoaded', renderPlayers);
+    function toggleFullscreen() {
+        const card = document.getElementById('scoreDisplayCard');
+        const icon = document.getElementById('fsIcon');
+        card.classList.toggle('fullscreen-mode');
+
+        if (card.classList.contains('fullscreen-mode')) {
+            icon.textContent = 'fullscreen_exit';
+            showToast('Drücke ESC zum Beenden');
+        } else {
+            icon.textContent = 'fullscreen';
+        }
+    }
+
+    // Handle ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const card = document.getElementById('scoreDisplayCard');
+            if (card.classList.contains('fullscreen-mode')) {
+                toggleFullscreen();
+            }
+        }
+    });
+
+    renderPlayers(); // Init immediately for SPA
 </script>
 {% endblock %}

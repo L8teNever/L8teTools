@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Umfragen & Abstimmungen{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round">arrow_back</span>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold">Umfragen</h1>
+            <p class="text-gray-500 text-sm">Erstelle Abstimmungen und teile sie mit anderen.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Create Poll Form -->
+        <div class="lg:col-span-1">
+            <div class="m3-card">
+                <h2 class="text-lg font-bold mb-4">Neue Umfrage erstellen</h2>
+                <div class="space-y-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-medium text-blue-600 px-1">Titel</label>
+                        <input type="text" id="pollTitle" class="m3-text-input" placeholder="z.B. Team-Abend">
+                    </div>
+                    <div class="m3-input-group">
+                        <label class="text-xs font-medium text-blue-600 px-1">Frage</label>
+                        <textarea id="pollQuestion" class="m3-text-input min-h-[80px]"
+                            placeholder="Was sollen wir essen?"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-blue-600 px-1">Optionen</label>
+                        <div id="optionsContainer" class="space-y-2">
+                            <input type="text" class="m3-text-input poll-option" placeholder="Option 1">
+                            <input type="text" class="m3-text-input poll-option" placeholder="Option 2">
+                        </div>
+                        <button onclick="addOptionField()"
+                            class="text-sm text-blue-600 flex items-center gap-1 hover:underline mt-2">
+                            <span class="material-icons-round text-sm">add</span> Option hinzufügen
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-blue-600 px-1">Einstellungen</label>
+                        <div class="m3-switch-container !py-2">
+                            <span class="text-sm">Eigene Vorschläge erlauben</span>
+                            <label class="switch">
+                                <input type="checkbox" id="allowSuggestions">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="m3-switch-container !py-2">
+                            <span class="text-sm">Anonyme Abstimmung</span>
+                            <label class="switch">
+                                <input type="checkbox" id="anonymousVoting">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <button onclick="createPoll()" class="m3-button m3-button-filled mt-6">
+                        Erstellen
+                        <span class="material-icons-round">analytics</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Polls List -->
+        <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-bold mb-2">Deine Umfragen</h2>
+            {% if polls %}
+            {% for poll in polls %}
+            <div class="m3-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg">{{ poll.title }}</h3>
+                    <p class="text-gray-500 text-sm mb-2">{{ poll.question }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+                            {{ poll.options|length }} Optionen
+                        </span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                            Erstellt: {{ poll.created_at.strftime('%d.%m.%Y') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="copyPollLink('{{ poll.slug }}')"
+                        class="flex-1 md:flex-none p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-600 flex items-center justify-center gap-2 transition-colors"
+                        title="Link kopieren">
+                        <span class="material-icons-round text-sm">content_copy</span>
+                        <span class="text-sm font-medium">Link</span>
+                    </button>
+                    <a href="{{ url_for('view_poll', slug=poll.slug) }}" target="_blank"
+                        class="flex-1 md:flex-none p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 flex items-center justify-center gap-2 transition-colors"
+                        title="Vorschau">
+                        <span class="material-icons-round text-sm">open_in_new</span>
+                    </a>
+                    <button onclick="deletePoll('{{ poll.id }}')"
+                        class="flex-1 md:flex-none p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 flex items-center justify-center transition-colors"
+                        title="Löschen">
+                        <span class="material-icons-round">delete</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="m3-card text-center py-12">
+                <span class="material-icons-round text-6xl text-gray-300 mb-4">ballot</span>
+                <p class="text-gray-500">Du hast noch keine Umfragen erstellt.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function addOptionField() {
+        const container = document.getElementById('optionsContainer');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'm3-text-input poll-option';
+        input.placeholder = `Option ${container.children.length + 1}`;
+        container.appendChild(input);
+    }
+
+    async function createPoll() {
+        const title = document.getElementById('pollTitle').value;
+        const question = document.getElementById('pollQuestion').value;
+        const allow_suggestions = document.getElementById('allowSuggestions').checked;
+        const anonymous_voting = document.getElementById('anonymousVoting').checked;
+
+        const optionInputs = document.querySelectorAll('.poll-option');
+        const options = Array.from(optionInputs).map(i => i.value).filter(v => v.trim() !== '');
+
+        if (!title || !question || (options.length < 2 && !allow_suggestions)) {
+            showToast('Bitte fülle alle Felder aus (min. 2 Optionen oder Vorschläge aktivieren)');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/polls', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: title,
+                    question: question,
+                    options: options,
+                    allow_suggestions: allow_suggestions,
+                    anonymous_voting: anonymous_voting
+                })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                location.reload();
+            } else {
+                showToast(result.error);
+            }
+        } catch (e) {
+            showToast('Fehler beim Erstellen');
+        }
+    }
+
+    async function deletePoll(id) {
+        if (!confirm('Diese Umfrage wirklich löschen?')) return;
+        try {
+            const response = await fetch(`/api/polls/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                location.reload();
+            } else {
+                const res = await response.json();
+                showToast(res.error);
+            }
+        } catch (e) {
+            showToast('Fehler beim Löschen');
+        }
+    }
+
+    function copyPollLink(slug) {
+        const link = window.location.origin + '/poll/' + slug;
+        navigator.clipboard.writeText(link);
+        showToast('Link kopiert!');
+    }
+</script>
+{% endblock %}

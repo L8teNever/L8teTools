@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Word Clouds{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <span class="material-icons-round">arrow_back</span>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold">Word Clouds</h1>
+            <p class="text-gray-500 text-sm">Erstelle interaktive Wortwolken für Feedback oder Ideen.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Create Word Cloud Form -->
+        <div class="lg:col-span-1">
+            <div class="m3-card">
+                <h2 class="text-lg font-bold mb-4">Neue Word Cloud erstellen</h2>
+                <div class="space-y-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-medium text-blue-600 px-1">Titel</label>
+                        <input type="text" id="cloudTitle" class="m3-text-input" placeholder="z.B. Feedback Meeting">
+                    </div>
+                    <div class="m3-input-group">
+                        <label class="text-xs font-medium text-blue-600 px-1">Beschreibung (optional)</label>
+                        <textarea id="cloudDescription" class="m3-text-input min-h-[80px]"
+                            placeholder="Worum geht es?"></textarea>
+                    </div>
+                    <button onclick="createWordCloud()" class="m3-button m3-button-filled mt-6">
+                        Erstellen
+                        <span class="material-icons-round">cloud_queue</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clouds List -->
+        <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-bold mb-2">Deine Wortwolken</h2>
+            {% if clouds %}
+            {% for cloud in clouds %}
+            <div class="m3-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg">{{ cloud.title }}</h3>
+                    <p class="text-gray-500 text-sm mb-2">{{ cloud.description or 'Keine Beschreibung' }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+                            {{ cloud.entries|length }} Einträge
+                        </span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                            {{ cloud.created_at.strftime('%d.%m.%Y') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="copyCloudLink('{{ cloud.slug }}')"
+                        class="flex-1 md:flex-none p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-600 flex items-center justify-center gap-2 transition-colors"
+                        title="Link kopieren">
+                        <span class="material-icons-round text-sm">content_copy</span>
+                        <span class="text-sm font-medium">Link</span>
+                    </button>
+                    <a href="{{ url_for('view_word_cloud', slug=cloud.slug) }}" target="_blank"
+                        class="flex-1 md:flex-none p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 flex items-center justify-center gap-2 transition-colors"
+                        title="Vorschau">
+                        <span class="material-icons-round text-sm">open_in_new</span>
+                    </a>
+                    <button onclick="deleteCloud('{{ cloud.id }}')"
+                        class="flex-1 md:flex-none p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 flex items-center justify-center transition-colors"
+                        title="Löschen">
+                        <span class="material-icons-round">delete</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="m3-card text-center py-12">
+                <span class="material-icons-round text-6xl text-gray-300 mb-4">cloud_off</span>
+                <p class="text-gray-500">Du hast noch keine Wortwolken erstellt.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    async function createWordCloud() {
+        const title = document.getElementById('cloudTitle').value;
+        const description = document.getElementById('cloudDescription').value;
+
+        if (!title) {
+            showToast('Titel ist erforderlich');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/word-clouds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, description: description })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                location.reload();
+            } else {
+                showToast(result.error);
+            }
+        } catch (e) {
+            showToast('Fehler beim Erstellen');
+        }
+    }
+
+    async function deleteCloud(id) {
+        if (!confirm('Diese Word Cloud wirklich löschen?')) return;
+        try {
+            const response = await fetch(`/api/word-clouds/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                location.reload();
+            } else {
+                const res = await response.json();
+                showToast(res.error);
+            }
+        } catch (e) {
+            showToast('Fehler beim Löschen');
+        }
+    }
+
+    function copyCloudLink(slug) {
+        const link = window.location.origin + '/wordcloud/' + slug;
+        navigator.clipboard.writeText(link);
+        showToast('Link kopiert!');
+    }
+</script>
+{% endblock %}

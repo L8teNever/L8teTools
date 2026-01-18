@@ -138,19 +138,28 @@
     }
 
     function updateList() {
+        const input = document.getElementById('inputText');
+        const output = document.getElementById('outputText');
+        const count = document.getElementById('count');
+        if (!input || !output) return;
+
         const lines = getLines();
         const processed = processList(lines);
 
-        document.getElementById('outputText').value = processed.join('\n');
-        document.getElementById('count').innerText = processed.length;
+        output.value = processed.join('\n');
+        if (count) count.innerText = processed.length;
     }
 
     function copyOutput() {
-        const text = document.getElementById('outputText').value;
+        const outputText = document.getElementById('outputText');
+        const text = outputText ? outputText.value : '';
         if (text) {
             navigator.clipboard.writeText(text);
             showToast('Liste kopiert!');
         }
     }
+
+    // Init
+    updateList();
 </script>
 {% endblock %}

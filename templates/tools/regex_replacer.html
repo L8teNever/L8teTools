@@ -101,23 +101,35 @@
     function updateFlagUI() {
         ['g', 'i', 'm'].forEach(f => {
             const btn = document.getElementById(`flag-${f}`);
-            if (flags[f]) btn.classList.add('flag-active');
-            else btn.classList.remove('flag-active');
+            if (btn) {
+                if (flags[f]) btn.classList.add('flag-active');
+                else btn.classList.remove('flag-active');
+            }
         });
     }
 
+    // Set defaults & Init
+    updateFlagUI();
+    updatePreview();
+
     function updatePreview() {
-        const text = document.getElementById('inputText').value;
-        const find = document.getElementById('findInput').value;
-        const replace = document.getElementById('replaceInput').value;
+        const inputText = document.getElementById('inputText');
+        const findInput = document.getElementById('findInput');
+        const replaceInput = document.getElementById('replaceInput');
+
+        if (!inputText || !findInput) return;
+
+        const text = inputText.value;
+        const find = findInput.value;
+        const replace = replaceInput.value;
         const output = document.getElementById('outputText');
         const stats = document.getElementById('stats');
         const resultCard = document.getElementById('resultCard');
 
         if (!text || !find) {
-            output.value = text;
-            stats.innerText = '';
-            resultCard.classList.remove('border-blue-500');
+            if (output) output.value = text;
+            if (stats) stats.innerText = '';
+            if (resultCard) resultCard.classList.remove('border-blue-500');
             return;
         }
 
@@ -132,28 +144,31 @@
             // Count matches
             const matches = text.match(regex);
             const count = matches ? matches.length : 0;
-            stats.innerText = `${count} Treffer gefunden`;
+            if (stats) stats.innerText = `${count} Treffer gefunden`;
 
             // Replace
             const result = text.replace(regex, replace);
-            output.value = result;
+            if (output) output.value = result;
 
             // Visual feedback
-            resultCard.classList.remove('border-red-500');
-            if (count > 0) {
-                resultCard.classList.add('border-blue-500');
-            } else {
-                resultCard.classList.remove('border-blue-500');
+            if (resultCard) {
+                resultCard.classList.remove('border-red-500');
+                if (count > 0) {
+                    resultCard.classList.add('border-blue-500');
+                } else {
+                    resultCard.classList.remove('border-blue-500');
+                }
             }
 
         } catch (e) {
-            stats.innerText = 'Ungültiger Regex';
-            resultCard.classList.add('border-red-500');
+            if (stats) stats.innerText = 'Ungültiger Regex';
+            if (resultCard) resultCard.classList.add('border-red-500');
         }
     }
 
     function copyResult() {
-        const text = document.getElementById('outputText').value;
+        const outputText = document.getElementById('outputText');
+        const text = outputText ? outputText.value : '';
         if (text) {
             navigator.clipboard.writeText(text);
             showToast('Ergebnis kopiert!');

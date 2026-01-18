@@ -34,7 +34,8 @@
     </script>
 </head>
 
-<body>
+<body onload="initSPA()">
+    <div id="loadingBar" class="loading-bar"></div>
 
     {% if current_user.is_authenticated %}
     <header class="top-app-bar">
@@ -92,6 +93,7 @@
         {% block content %}{% endblock %}
     </main>
 
+    <div id="toast" class="toast"></div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

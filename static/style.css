@@ -57,6 +57,27 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+}
+
+.main-content {
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+}
+
+.page-transitioning {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--m3-primary);
+  z-index: 10000;
+  transition: width 0.3s ease;
+  width: 0%;
 }
 
 /* Material Components */

@@ -17,6 +17,14 @@
         <!-- Dice Display Column -->
         <div class="m3-card flex flex-col items-center justify-center min-h-[400px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-blue-900/20 relative overflow-hidden"
             id="diceDisplayCard">
+
+            <!-- Fullscreen Toggle -->
+            <button onclick="toggleFullscreen()"
+                class="absolute top-4 right-4 p-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-full hover:bg-white dark:hover:bg-gray-700 transition-all z-10"
+                title="Vollbild">
+                <span class="material-icons-round" id="fsIcon">fullscreen</span>
+            </button>
+
             <div id="diceContainer" class="flex flex-wrap items-center justify-center gap-8 w-full cursor-pointer"
                 onclick="rollDice()">
                 <!-- Single default die -->
@@ -72,6 +80,25 @@
         gap: clamp(20px, 5vw, 40px);
     }
 
+
+    .fullscreen-mode {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+
+    .fullscreen-mode .dice-wrapper span {
+        font-size: clamp(8rem, 25vw, 16rem);
+    }
+
+    .fullscreen-mode #diceContainer {
+        gap: clamp(2rem, 8vw, 6rem);
+    }
 
     @keyframes diceRoll {
         0% {
@@ -153,7 +180,30 @@
     }
 
 
+    function toggleFullscreen() {
+        const card = document.getElementById('diceDisplayCard');
+        const icon = document.getElementById('fsIcon');
+        card.classList.toggle('fullscreen-mode');
+
+        if (card.classList.contains('fullscreen-mode')) {
+            icon.textContent = 'fullscreen_exit';
+            showToast('Drücke ESC zum Beenden');
+        } else {
+            icon.textContent = 'fullscreen';
+        }
+    }
+
+    // Handle ESC key to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const card = document.getElementById('diceDisplayCard');
+            if (card.classList.contains('fullscreen-mode')) {
+                toggleFullscreen();
+            }
+        }
+    });
+
     diceCountInput.addEventListener('input', updateDiceCount);
-    document.addEventListener('DOMContentLoaded', updateDiceCount);
+    updateDiceCount(); // Init immediately for SPA
 </script>
 {% endblock %}

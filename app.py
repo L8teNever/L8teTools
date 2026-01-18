@@ -1,7 +1,7 @@
 import os
 import io
 import zipfile
-from flask import Flask, render_template, redirect, url_for, request, flash, send_file, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, send_file, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -38,6 +38,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-this'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///users.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Security improvements
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
+    SESSION_PROTECTION = 'strong'
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Models
 class User(UserMixin, db.Model):
@@ -87,13 +94,64 @@ class SystemConfig(db.Model):
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.String(255))
 
+class Poll(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    slug = db.Column(db.String(50), unique=True, nullable=False)
+    allow_suggestions = db.Column(db.Boolean, default=False)
+    anonymous_voting = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref=db.backref('polls', lazy=True))
+    options = db.relationship('PollOption', backref='poll', cascade="all, delete-orphan", lazy=True)
+
+class PollOption(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    poll_id = db.Column(db.Integer, db.ForeignKey('poll.id'), nullable=False)
+    text = db.Column(db.String(200), nullable=False)
+    
+    votes = db.relationship('PollVote', backref='option', cascade="all, delete-orphan", lazy=True)
+
+class PollVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    poll_option_id = db.Column(db.Integer, db.ForeignKey('poll_option.id'), nullable=False)
+    voter_name = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+class WordCloud(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    slug = db.Column(db.String(50), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    is_active = db.Column(db.Boolean, default=True)
+
+    user = db.relationship('User', backref=db.backref('word_clouds', lazy=True))
+    entries = db.relationship('WordCloudEntry', backref='word_cloud', cascade="all, delete-orphan", lazy=True)
+
+class WordCloudEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word_cloud_id = db.Column(db.Integer, db.ForeignKey('word_cloud.id'), nullable=False)
+    word = db.Column(db.String(100), nullable=False)
+    voter_name = db.Column(db.String(100), default='Anonym')
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    if app.config['SECRET_KEY'] == 'dev-secret-key-change-this':
+        import logging
+        logging.warning("SECURITY WARNING: Using default SECRET_KEY. Please change this in your environment variables for better security.")
+
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
+    login_manager.session_protection = "strong"
 
     with app.app_context():
         db.create_all()
@@ -101,6 +159,13 @@ def create_app():
         # SQLite Migration: Add is_admin column if it doesn't exist
         try:
             db.session.execute(db.text('ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+            db.session.commit()
+        except:
+            db.session.rollback()
+
+        try:
+            db.session.execute(db.text('ALTER TABLE poll ADD COLUMN allow_suggestions BOOLEAN DEFAULT 0'))
+            db.session.execute(db.text('ALTER TABLE poll ADD COLUMN anonymous_voting BOOLEAN DEFAULT 0'))
             db.session.commit()
         except:
             db.session.rollback()
@@ -147,7 +212,9 @@ def create_app():
             user = User.query.filter_by(username=username).first()
 
             if user and user.check_password(password):
-                login_user(user)
+                remember = True if request.form.get('remember') else False
+                session.permanent = remember
+                login_user(user, remember=remember)
                 return redirect(url_for('dashboard'))
             else:
                 flash('Ungültiger Benutzername oder Passwort', 'error')
@@ -203,6 +270,18 @@ def create_app():
     @login_required
     def color_picker():
         return render_template('tools/color_picker.html')
+
+    @app.route('/tools/polls')
+    @login_required
+    def polls_tool():
+        user_polls = Poll.query.filter_by(user_id=current_user.id).order_by(Poll.created_at.desc()).all()
+        return render_template('tools/polls.html', polls=user_polls)
+
+    @app.route('/tools/word-clouds')
+    @login_required
+    def word_clouds_tool():
+        clouds = WordCloud.query.filter_by(user_id=current_user.id).order_by(WordCloud.created_at.desc()).all()
+        return render_template('tools/word_clouds.html', clouds=clouds)
 
     @app.route('/tools/shortlinks')
     @login_required
@@ -800,6 +879,219 @@ def create_app():
         db.session.add(new_link)
         db.session.commit()
         return jsonify({'message': 'Shortlink erstellt'})
+
+    # Polls API
+    @app.route('/api/polls', methods=['POST'])
+    @login_required
+    def api_create_poll():
+        data = request.json
+        title = data.get('title', '').strip()
+        question = data.get('question', '').strip()
+        options_text = data.get('options', [])
+        allow_suggestions = data.get('allow_suggestions', False)
+        anonymous_voting = data.get('anonymous_voting', False)
+
+        if not title or not question or not options_text:
+            return jsonify({'error': 'Titel, Frage und Optionen sind erforderlich'}), 400
+        
+        if len(options_text) < 2 and not allow_suggestions:
+            return jsonify({'error': 'Mindestens zwei Optionen sind erforderlich (oder Vorschläge erlauben)'}), 400
+
+        # Generate unique slug
+        import string
+        import random
+        poll_slug = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        while Poll.query.filter_by(slug=poll_slug).first():
+            poll_slug = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+
+        poll = Poll(
+            title=title, 
+            question=question, 
+            user_id=current_user.id, 
+            slug=poll_slug,
+            allow_suggestions=allow_suggestions,
+            anonymous_voting=anonymous_voting
+        )
+        db.session.add(poll)
+        db.session.flush() # Get poll ID
+
+        for opt_text in options_text:
+            if opt_text.strip():
+                opt = PollOption(poll_id=poll.id, text=opt_text.strip())
+                db.session.add(opt)
+        
+        db.session.commit()
+        return jsonify({'message': 'Umfrage erstellt', 'slug': poll_slug})
+
+    @app.route('/api/polls/<int:poll_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_poll(poll_id):
+        poll = Poll.query.get_or_404(poll_id)
+        if poll.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+        
+        db.session.delete(poll)
+        db.session.commit()
+        return jsonify({'message': 'Umfrage gelöscht'})
+
+    @app.route('/poll/<slug>')
+    def view_poll(slug):
+        poll = Poll.query.filter_by(slug=slug).first_or_404()
+        return render_template('tools/poll_view.html', poll=poll)
+
+    @app.route('/api/poll/<slug>/vote', methods=['POST'])
+    def api_poll_vote(slug):
+        poll = Poll.query.filter_by(slug=slug).first_or_404()
+        if not poll.is_active:
+            return jsonify({'error': 'Diese Umfrage ist nicht mehr aktiv'}), 400
+            
+        data = request.json
+        option_id = data.get('option_id')
+        voter_name = data.get('name', '').strip()
+
+        if not option_id or not voter_name:
+            return jsonify({'error': 'Name und Option sind erforderlich'}), 400
+
+        option = PollOption.query.filter_by(id=option_id, poll_id=poll.id).first()
+        if not option:
+            return jsonify({'error': 'Ungültige Option'}), 400
+
+        vote = PollVote(poll_option_id=option.id, voter_name=voter_name)
+        db.session.add(vote)
+        db.session.commit()
+
+        return jsonify({'message': 'Stimme abgegeben'})
+
+    @app.route('/api/poll/<slug>/results')
+    def api_poll_results(slug):
+        poll = Poll.query.filter_by(slug=slug).first_or_404()
+        
+        results = []
+        for opt in poll.options:
+            results.append({
+                'id': opt.id,
+                'text': opt.text,
+                'votes': len(opt.votes)
+            })
+        
+        return jsonify({
+            'title': poll.title,
+            'question': poll.question,
+            'results': results,
+            'total_votes': sum(r['votes'] for r in results)
+        })
+
+    @app.route('/api/poll/<slug>/suggest', methods=['POST'])
+    def api_poll_suggest(slug):
+        poll = Poll.query.filter_by(slug=slug).first_or_404()
+        if not poll.is_active:
+            return jsonify({'error': 'Diese Umfrage ist nicht mehr aktiv'}), 400
+        if not poll.allow_suggestions:
+            return jsonify({'error': 'Vorschläge sind für diese Umfrage nicht erlaubt'}), 403
+            
+        data = request.json
+        suggestion_text = data.get('suggestion', '').strip()
+        voter_name = data.get('name', '').strip()
+
+        if not suggestion_text:
+            return jsonify({'error': 'Vorschlag darf nicht leer sein'}), 400
+        
+        if not poll.anonymous_voting and not voter_name:
+            return jsonify({'error': 'Name ist erforderlich'}), 400
+
+        # Check if option already exists
+        existing = PollOption.query.filter_by(poll_id=poll.id, text=suggestion_text).first()
+        if existing:
+            return jsonify({'error': 'Dieser Vorschlag existiert bereits'}), 400
+
+        # Create new option
+        new_opt = PollOption(poll_id=poll.id, text=suggestion_text)
+        db.session.add(new_opt)
+        db.session.flush()
+
+        # Add initial vote 
+        vote = PollVote(poll_option_id=new_opt.id, voter_name=voter_name or 'Anonym')
+        db.session.add(vote)
+        db.session.commit()
+
+        return jsonify({'message': 'Vorschlag hinzugefügt', 'option_id': new_opt.id})
+
+    # Word Cloud API
+    @app.route('/api/word-clouds', methods=['POST'])
+    @login_required
+    def api_create_word_cloud():
+        data = request.json
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
+
+        if not title:
+            return jsonify({'error': 'Titel ist erforderlich'}), 400
+
+        # Generate unique slug
+        import string
+        import random
+        slug = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        while WordCloud.query.filter_by(slug=slug).first():
+            slug = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+
+        cloud = WordCloud(title=title, description=description, user_id=current_user.id, slug=slug)
+        db.session.add(cloud)
+        db.session.commit()
+        return jsonify({'message': 'Word Cloud erstellt', 'slug': slug})
+
+    @app.route('/api/word-clouds/<int:cloud_id>', methods=['DELETE'])
+    @login_required
+    def api_delete_word_cloud(cloud_id):
+        cloud = WordCloud.query.get_or_404(cloud_id)
+        if cloud.user_id != current_user.id:
+            return jsonify({'error': 'Nicht autorisiert'}), 403
+        
+        db.session.delete(cloud)
+        db.session.commit()
+        return jsonify({'message': 'Word Cloud gelöscht'})
+
+    @app.route('/wordcloud/<slug>')
+    def view_word_cloud(slug):
+        cloud = WordCloud.query.filter_by(slug=slug).first_or_404()
+        return render_template('tools/word_cloud_view.html', cloud=cloud)
+
+    @app.route('/api/wordcloud/<slug>/submit', methods=['POST'])
+    def api_word_cloud_submit(slug):
+        cloud = WordCloud.query.filter_by(slug=slug).first_or_404()
+        if not cloud.is_active:
+            return jsonify({'error': 'Diese Word Cloud ist nicht mehr aktiv'}), 400
+            
+        data = request.json
+        word = data.get('word', '').strip().lower()
+        name = data.get('name', 'Anonym').strip()
+
+        if not word:
+            return jsonify({'error': 'Wort darf nicht leer sein'}), 400
+        
+        if len(word) > 30:
+            return jsonify({'error': 'Wort ist zu lang'}), 400
+
+        entry = WordCloudEntry(word_cloud_id=cloud.id, word=word, voter_name=name)
+        db.session.add(entry)
+        db.session.commit()
+
+        return jsonify({'message': 'Wort hinzugefügt'})
+
+    @app.route('/api/wordcloud/<slug>/data')
+    def api_word_cloud_data(slug):
+        cloud = WordCloud.query.filter_by(slug=slug).first_or_404()
+        
+        from sqlalchemy import func
+        entries = db.session.query(
+            WordCloudEntry.word, 
+            func.count(WordCloudEntry.id).label('count')
+        ).filter(WordCloudEntry.word_cloud_id == cloud.id).group_by(WordCloudEntry.word).all()
+        
+        return jsonify({
+            'title': cloud.title,
+            'description': cloud.description,
+            'words': [{'text': e.word, 'size': e.count} for e in entries]
+        })
 
     @app.route('/api/shortlinks/<int:link_id>', methods=['DELETE'])
     @login_required
