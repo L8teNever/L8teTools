@@ -25,6 +25,8 @@ const toolsData = [
     { name: "Prefix/Suffix", url: "/tools/prefix-suffix", icon: "format_quote", category: "dev", keywords: ["programmieren", "text", "zeilen", "edit", "prefix", "suffix", "add"] },
     { name: "Notizen", url: "/tools/notes", icon: "edit_note", category: "text", keywords: ["schreiben", "text", "gedanken", "speichern", "notiz", "notes", "memo"] },
     { name: "Wiki", url: "/tools/wiki", icon: "library_books", category: "dev", keywords: ["wissen", "linux", "befehle", "help", "cheat", "sheet", "wiki", "docs"] },
+    { name: "Umfragen", url: "/tools/polls", icon: "ballot", category: "games", keywords: ["abstimmung", "votum", "umfrage", "feedback", "poll", "vote"] },
+    { name: "Word Cloud", url: "/tools/word_clouds", icon: "cloud_queue", category: "games", keywords: ["wortwolke", "wörter", "begriffe", "visualisierung", "cloud"] },
 ];
 
 function toggleSearch() {
@@ -40,10 +42,10 @@ function toggleSearch() {
         // Trigger reflow
         void wrapper.offsetWidth;
         wrapper.classList.remove('w-0', 'opacity-0');
-        wrapper.classList.add('w-[300px]', 'opacity-100');
+        wrapper.classList.add('w-10/12', 'md:w-[300px]', 'opacity-100');
         input.focus();
     } else {
-        wrapper.classList.remove('w-[300px]', 'opacity-100');
+        wrapper.classList.remove('w-10/12', 'md:w-[300px]', 'opacity-100');
         wrapper.classList.add('w-0', 'opacity-0');
         setTimeout(() => {
             wrapper.classList.add('hidden');
@@ -64,85 +66,61 @@ function closeSearchWithDelay() {
 
 function performSearch(query) {
     const resultsDiv = document.getElementById('searchResults');
-    const dashboardGrid = document.getElementById('dashboard-grid');
     const q = query.toLowerCase().trim();
+    const cards = Array.from(document.querySelectorAll('.tool-card'));
 
     // --- DASHBOARD MODE ---
-    if (dashboardGrid) {
-        // Hide dropdown if it was somehow shown
+    if (document.querySelector('.dashboard-grid')) {
         if (!resultsDiv.classList.contains('hidden')) {
             resultsDiv.classList.add('hidden');
         }
 
-        const cards = Array.from(dashboardGrid.children);
-
-        // Reset if empty query
         if (q.length === 0) {
             cards.forEach(card => {
                 card.classList.remove('hidden');
-                card.style.order = 'initial';
+                card.closest('section')?.classList.remove('hidden');
                 card.style.opacity = '1';
                 card.style.transform = 'scale(1)';
             });
             return;
         }
 
-        let hasMatches = false;
+        let visibleSections = new Set();
 
         cards.forEach(card => {
             const href = card.getAttribute('href');
-            // Remove potential query params
             const toolUrl = href ? href.split('?')[0] : '';
+            const tool = toolsData.find(t => t.url === toolUrl) || { name: card.innerText, keywords: [] };
 
-            // Find tool data
-            const tool = toolsData.find(t => t.url === toolUrl) || { name: "", keywords: [] };
+            const isMatch = tool.name.toLowerCase().includes(q) ||
+                tool.keywords.some(k => k.includes(q)) ||
+                card.innerText.toLowerCase().includes(q);
 
-            // Fallback: search in text content if no tool data found (robustness)
-            const textContent = card.innerText.toLowerCase();
-
-            let score = 0;
-
-            // 1. Data-based scoring
-            if (tool.name) {
-                if (tool.name.toLowerCase() === q) score += 100;
-                else if (tool.name.toLowerCase().startsWith(q)) score += 80;
-                else if (tool.name.toLowerCase().includes(q)) score += 60;
-
-                tool.keywords.forEach(k => {
-                    if (k === q) score += 50;
-                    else if (k.startsWith(q)) score += 30;
-                    else if (k.includes(q)) score += 10;
-
-                    if (q.length > 3 && Math.abs(k.length - q.length) <= 1) {
-                        if (getEditDistance(q, k) <= 1) score += 20;
-                    }
-                });
-            }
-
-            // 2. Text-content fallback (if tool data might be missing or generic search)
-            if (textContent.includes(q)) score += 5;
-
-            if (score > 0) {
+            if (isMatch) {
                 card.classList.remove('hidden');
-                // Invert score for order (smaller order = first)
-                // Max score around maybe 500? 
-                // We use a large negative offset to ensure sorted order
-                card.style.order = -score;
                 card.style.opacity = '1';
                 card.style.transform = 'scale(1)';
-                hasMatches = true;
+                visibleSections.add(card.closest('section'));
             } else {
                 card.classList.add('hidden');
-                card.style.order = '9999';
                 card.style.opacity = '0';
                 card.style.transform = 'scale(0.95)';
+            }
+        });
+
+        // Hide empty sections
+        document.querySelectorAll('section').forEach(section => {
+            if (visibleSections.has(section)) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
             }
         });
 
         return;
     }
 
-    // --- GLOBAL DROPDOWN MODE (Non-Dashboard) ---
+    // --- DROPDOWN MODE (Non-Dashboard) ---
     if (q.length < 2) {
         resultsDiv.classList.add('hidden');
         resultsDiv.innerHTML = '';
@@ -151,22 +129,14 @@ function performSearch(query) {
 
     const scored = toolsData.map(tool => {
         let score = 0;
-
-        // Exact title match priority
         if (tool.name.toLowerCase() === q) score += 100;
         else if (tool.name.toLowerCase().startsWith(q)) score += 80;
         else if (tool.name.toLowerCase().includes(q)) score += 60;
 
-        // Keyword matching
         tool.keywords.forEach(k => {
             if (k === q) score += 50;
             else if (k.startsWith(q)) score += 30;
             else if (k.includes(q)) score += 10;
-
-            // Simple typo tolerance (levenshtein-ish for shorts)
-            if (q.length > 3 && Math.abs(k.length - q.length) <= 1) {
-                if (getEditDistance(q, k) <= 1) score += 20;
-            }
         });
 
         return { ...tool, score };
@@ -176,11 +146,11 @@ function performSearch(query) {
 
     if (results.length > 0) {
         resultsDiv.innerHTML = results.slice(0, 5).map(tool => `
-            <a href="${tool.url}" class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
+            <a href="${tool.url}" class="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
                 <span class="material-icons-round text-gray-500 bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">${tool.icon}</span>
                 <div>
-                    <div class="font-bold text-sm text-gray-800 dark:text-gray-200">${tool.name}</div>
-                    <div class="text-xs text-gray-400">Match: ${tool.score > 80 ? 'Volltreffer' : 'Relevantes Tool'}</div>
+                    <div class="font-bold text-sm">${tool.name}</div>
+                    <div class="text-xs text-gray-400">Match</div>
                 </div>
             </a>
         `).join('');
@@ -191,49 +161,32 @@ function performSearch(query) {
     }
 }
 
-// Simple Levenshtein distance for typos
 function getEditDistance(a, b) {
     if (a.length === 0) return b.length;
     if (b.length === 0) return a.length;
-
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
     for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-
     for (let i = 1; i <= b.length; i++) {
         for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
-            }
+            if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
+            else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
         }
     }
     return matrix[b.length][a.length];
 }
 
-// --- RELATED TOOLS FEATURE ---
-
 function toggleRelatedTools() {
     const wrapper = document.getElementById('relatedToolsWrapper');
     const btn = document.getElementById('relatedToolsBtn');
+    if (!wrapper || !btn) return;
 
     if (wrapper.classList.contains('hidden')) {
         wrapper.classList.remove('hidden');
-        // Small delay to allow transition
-        setTimeout(() => {
-            wrapper.style.maxHeight = '500px';
-            wrapper.style.opacity = '1';
-        }, 10);
-        btn.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-700');
+        setTimeout(() => { wrapper.style.maxHeight = '500px'; wrapper.style.opacity = '1'; }, 10);
     } else {
         wrapper.style.maxHeight = '0px';
         wrapper.style.opacity = '0';
-        btn.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-700');
-        setTimeout(() => {
-            wrapper.classList.add('hidden');
-        }, 300);
+        setTimeout(() => { wrapper.classList.add('hidden'); }, 300);
     }
 }
-
-document.addEventListener('DOMContentLoaded', initRelatedTools);

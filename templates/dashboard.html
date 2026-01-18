@@ -3,343 +3,390 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="page-header flex-col !items-start !gap-1">
-    <h1 class="text-4xl font-bold text-[var(--m3-on-background)]">Hallo, {{ user.username }}</h1>
-    <p class="text-[var(--m3-on-surface-variant)] text-lg">Suche dir ein Tool aus, um loszulegen.</p>
-</div>
-
-<div id="dashboard-grid" class="dashboard-grid">
-    <!-- Password Generator Card -->
-    <a href="{{ url_for('password_generator') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">password</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
+<div class="tool-page-container">
+    <!-- Hero / Welcome Section -->
+    <div class="page-header animate-fade-in flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-            <h3 class="text-xl font-bold">Passwort Generator</h3>
-            <p class="text-sm opacity-80 mt-1">Erstelle hochsichere Passwörter mit anpassbaren Kriterien.</p>
+            <span class="text-sm font-bold text-[var(--m3-primary)] uppercase tracking-widest mb-2 block">Willkommen
+                zurück</span>
+            <h1 class="text-5xl font-extrabold text-[var(--m3-on-background)] tracking-tight">Hallo, {{ user.username }}
+            </h1>
+            <p class="text-[var(--m3-on-surface-variant)] text-lg mt-2">Womit möchtest du heute arbeiten?</p>
         </div>
-    </a>
-    <!-- QR Code Generator Card -->
-    <a href="{{ url_for('qr_generator') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">qr_code_2</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">QR-Code Generator</h3>
-            <p class="text-sm opacity-80 mt-1">Erstelle QR-Codes aus Texten oder Links blitzschnell.</p>
-        </div>
-    </a>
-
-    <!-- File Converter Card -->
-    <a href="{{ url_for('file_converter') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">transform</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Datei Konverter</h3>
-            <p class="text-sm opacity-80 mt-1">Konvertiere Bilder und PDFs schnell in andere Formate.</p>
-        </div>
-    </a>
-
-    <!-- Wheel of Fortune Card -->
-    <a href="{{ url_for('wheel_of_fortune') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">autorenew</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Glücksrad</h3>
-            <p class="text-sm opacity-80 mt-1">Erstelle ein Rad mit eigenen Optionen und lass das Glück entscheiden.</p>
-        </div>
-    </a>
-
-    <!-- Dice Roller Card -->
-    <a href="{{ url_for('dice_roller') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">casino</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Würfel</h3>
-            <p class="text-sm opacity-80 mt-1">Würfle mit einem oder mehreren Würfeln gleichzeitig.</p>
-        </div>
-    </a>
-
-    <!-- Score Tracker Card -->
-    <a href="{{ url_for('score_tracker') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">scoreboard</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Punktezähler</h3>
-            <p class="text-sm opacity-80 mt-1">Tracke die Punkte für dich und deine Freunde ganz unkompliziert.</p>
-        </div>
-    </a>
-
-    <!-- Color Picker Card -->
-    <a href="{{ url_for('color_picker') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">palette</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Farbwähler</h3>
-            <p class="text-sm opacity-80 mt-1">Finde perfekte Farben und konvertiere Hex, RGB und HSL.</p>
-        </div>
-    </a>
-
-    <!-- URL Shortener Card -->
-    <a href="{{ url_for('shortlinks') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">link</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">URL Shortener</h3>
-            <p class="text-sm opacity-80 mt-1">Erstelle Kurzlinks mit deiner eigenen Domain tools.l8tenever.de.</p>
-        </div>
-    </a>
-
-    <!-- HTML/CSS Playground Card -->
-    <a href="{{ url_for('playground') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">code</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">HTML/CSS Playground</h3>
-            <p class="text-sm opacity-80 mt-1">Schreibe Code und sieh dir die Vorschau in Echtzeit an.</p>
-        </div>
-    </a>
-
-    <!-- Unit Converter Card -->
-    <a href="{{ url_for('unit_converter') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">straighten</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Einheiten-Umrechner</h3>
-            <p class="text-sm opacity-80 mt-1">Rechne Längen, Gewichte, Temperaturen und mehr um.</p>
-        </div>
-    </a>
-
-    <!-- Diff-Checker Card -->
-    <a href="{{ url_for('diff_checker') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">difference</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Diff-Checker</h3>
-            <p class="text-sm opacity-80 mt-1">Vergleiche zwei Texte und finde alle Unterschiede.</p>
-        </div>
-    </a>
-
-    <!-- Case Converter Card -->
-    <a href="{{ url_for('case_converter') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">text_fields</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Case Converter</h3>
-            <p class="text-sm opacity-80 mt-1">Wandle Texte blitzschnell in UPPERCASE, camelCase und mehr um.</p>
-        </div>
-    </a>
-
-    <!-- Word Counter Card -->
-    <a href="{{ url_for('word_counter') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">segment</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Word Counter</h3>
-            <p class="text-sm opacity-80 mt-1">Zähle Wörter, Zeichen und Sätze für Social Media Posts.</p>
-        </div>
-    </a>
-
-    <!-- Exif Remover Card -->
-    <a href="{{ url_for('exif_remover') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">perm_camera_mic</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Exif-Daten Entferner</h3>
-            <p class="text-sm opacity-80 mt-1">Entferne oder bearbeite versteckte Metadaten aus deinen Fotos.</p>
-        </div>
-    </a>
-
-    <!-- My IP Card -->
-    <a href="{{ url_for('my_ip') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">public</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Was ist meine IP?</h3>
-            <p class="text-sm opacity-80 mt-1">Zeige deine aktuelle öffentliche IP-Adresse mit einem Klick.</p>
-        </div>
-    </a>
-
-    <!-- Whois Lookup Card -->
-    <a href="{{ url_for('whois_lookup') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">domain_verification</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Whois Domain Check</h3>
-            <p class="text-sm opacity-80 mt-1">Prüfe Inhaber und Ablaufdatum von Domains.</p>
-        </div>
-    </a>
-
-    <!-- MAC Finder Card -->
-    <a href="{{ url_for('mac_lookup') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">lan</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">MAC-Adressen Finder</h3>
-            <p class="text-sm opacity-80 mt-1">Finde den Hersteller deines Geräts über die MAC-Adresse.</p>
-        </div>
-    </a>
-
-    <!-- BMI Calculator Card -->
-    <a href="{{ url_for('bmi_calculator') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">monitor_weight</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">BMI Rechner</h3>
-            <p class="text-sm opacity-80 mt-1">Berechne deinen Body Mass Index unkompliziert.</p>
-        </div>
-    </a>
-
-    <!-- Text Sorter Card -->
-    <a href="{{ url_for('text_sorter') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">sort_by_alpha</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Text Sorter</h3>
-            <p class="text-sm opacity-80 mt-1">Sortiere Listen alphabetisch oder entferne Duplikate.</p>
-        </div>
-    </a>
-
-    <!-- Regex Replacer Card -->
-    <a href="{{ url_for('regex_replacer') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">find_replace</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Regex Suchen & Ersetzen</h3>
-            <p class="text-sm opacity-80 mt-1">Suchen und Ersetzen mit mächtigen RegEx-Mustern.</p>
-        </div>
-    </a>
-
-    <!-- List Comparator Card -->
-    <a href="{{ url_for('list_comparator') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">compare_arrows</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Listen Vergleicher</h3>
-            <p class="text-sm opacity-80 mt-1">Finde gemeinsame oder fehlende Einträge in zwei Listen.</p>
-        </div>
-    </a>
-
-    <!-- Morse Code Card -->
-    <a href="{{ url_for('morse_code') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">graphic_eq</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Morsecode Übersetzer</h3>
-            <p class="text-sm opacity-80 mt-1">Übersetze Text in Morsecode und zurück, inkl. Sound.</p>
-        </div>
-    </a>
-
-    <!-- Workday Calculator Card -->
-    <a href="{{ url_for('workday_calculator') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">event_available</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Arbeitstage Rechner</h3>
-            <p class="text-sm opacity-80 mt-1">Berechne Werktage zwischen zwei Daten (ohne Feiertage/Wochenenden).</p>
-        </div>
-    </a>
-
-    <!-- Prefix/Suffix Adder Card -->
-    <a href="{{ url_for('prefix_suffix') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">format_quote</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Prefix/Suffix Adder</h3>
-            <p class="text-sm opacity-80 mt-1">Füge automatisch Text am Anfang oder Ende jeder Zeile hinzu.</p>
-        </div>
-    </a>
-
-    <!-- Notes Card -->
-    <a href="{{ url_for('notes_tool') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">edit_note</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Notizen</h3>
-            <p class="text-sm opacity-80 mt-1">Speichere deine Gedanken und Snippets direkt in deinem Account.</p>
-        </div>
-    </a>
-
-    <!-- Wiki Card -->
-    <a href="{{ url_for('wiki_tool') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">library_books</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Wiki & Cheatsheets</h3>
-            <p class="text-sm opacity-80 mt-1">Dein eigenes Wiki für Linux-Befehle, Snippets und Wissen.</p>
-        </div>
-    </a>
-
-    <!-- Polls Card -->
-    <a href="{{ url_for('polls_tool') }}" class="tool-card">
-        <div class="flex justify-between items-start">
-            <span class="material-icons-round text-4xl">ballot</span>
-            <span class="material-icons-round opacity-50">arrow_forward</span>
-        </div>
-        <div>
-            <h3 class="text-xl font-bold">Umfragen</h3>
-            <p class="text-sm opacity-80 mt-1">Erstelle Abstimmungen und teile sie mit anderen via Link.</p>
-        </div>
-        <!-- Word Cloud Card -->
-        <a href="{{ url_for('word_clouds_tool') }}" class="tool-card">
-            <div class="flex justify-between items-start">
-                <span class="material-icons-round text-4xl">cloud_queue</span>
-                <span class="material-icons-round opacity-50">arrow_forward</span>
+        <div class="hidden md:block">
+            <div
+                class="m3-card !py-3 !px-6 flex items-center gap-3 bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] border-none">
+                <span class="material-icons-round">bolt</span>
+                <span class="font-bold">28 Tools bereit</span>
             </div>
-            <div>
-                <h3 class="text-xl font-bold">Word Cloud</h3>
-                <p class="text-sm opacity-80 mt-1">Sammle Begriffe und erstelle dynamische Wortwolken in Echtzeit.</p>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="space-y-16">
+
+        <!-- Section: Interaktion & Spiele -->
+        <section>
+            <div class="flex items-center gap-4 mb-6 px-2">
+                <span
+                    class="material-icons-round text-[var(--m3-tertiary)] bg-[var(--m3-tertiary-container)] p-2 rounded-xl">videogame_asset</span>
+                <h2 class="text-2xl font-bold">Interaktion & Spiele</h2>
             </div>
-        </a>
+            <div class="dashboard-grid">
+                <a href="{{ url_for('polls_tool') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">ballot</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Umfragen</h3>
+                        <p class="text-xs opacity-70 mt-1">Interaktive Votings erstellen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('word_clouds_tool') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">cloud_queue</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Word Cloud</h3>
+                        <p class="text-xs opacity-70 mt-1">Begriffe sammeln und visualisieren.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('wheel_of_fortune') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">autorenew</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Glücksrad</h3>
+                        <p class="text-xs opacity-70 mt-1">Zufallsentscheidungen treffen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('dice_roller') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">casino</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Würfel</h3>
+                        <p class="text-xs opacity-70 mt-1">Digitale Würfel für Spiele.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('score_tracker') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">scoreboard</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Punktezähler</h3>
+                        <p class="text-xs opacity-70 mt-1">Scores live mitverfolgen.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section: Sicherheit & Netzwerk -->
+        <section>
+            <div class="flex items-center gap-4 mb-6 px-2">
+                <span
+                    class="material-icons-round text-[var(--m3-primary)] bg-[var(--m3-primary-container)] p-2 rounded-xl">security</span>
+                <h2 class="text-2xl font-bold">Sicherheit & Netzwerk</h2>
+            </div>
+            <div class="dashboard-grid">
+                <a href="{{ url_for('password_generator') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">password</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Passwort Generator</h3>
+                        <p class="text-xs opacity-70 mt-1">Sichere Keys blitzschnell erzeugt.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('shortlinks') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">link</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">URL Shortener</h3>
+                        <p class="text-xs opacity-70 mt-1">Eigene Kurz-Links verwalten.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('qr_generator') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">qr_code_2</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">QR Generator</h3>
+                        <p class="text-xs opacity-70 mt-1">Codes für Links und Texte.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('my_ip') }}" class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">public</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">IP Info</h3>
+                        <p class="text-xs opacity-70 mt-1">Öffentliche IP anzeigen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('whois_lookup') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">domain_verification</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Whois Check</h3>
+                        <p class="text-xs opacity-70 mt-1">Domain-Inhaber abfragen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('mac_lookup') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">lan</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">MAC Finder</h3>
+                        <p class="text-xs opacity-70 mt-1">Hersteller über MAC finden.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section: Text & Content -->
+        <section>
+            <div class="flex items-center gap-4 mb-6 px-2">
+                <span
+                    class="material-icons-round text-[var(--m3-secondary)] bg-[var(--m3-secondary-container)] p-2 rounded-xl">article</span>
+                <h2 class="text-2xl font-bold">Textwerkzeuge</h2>
+            </div>
+            <div class="dashboard-grid">
+                <a href="{{ url_for('word_counter') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">segment</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Word Counter</h3>
+                        <p class="text-xs opacity-70 mt-1">Wörter und Zeichen zählen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('case_converter') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">text_fields</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Case Converter</h3>
+                        <p class="text-xs opacity-70 mt-1">Groß-/Kleinschreibung ändern.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('text_sorter') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">sort_by_alpha</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Text Sorter</h3>
+                        <p class="text-xs opacity-70 mt-1">Listen ordnen & bereinigen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('diff_checker') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">difference</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Diff-Checker</h3>
+                        <p class="text-xs opacity-70 mt-1">Zwei Texte vergleichen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('morse_code') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">graphic_eq</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Morsecode</h3>
+                        <p class="text-xs opacity-70 mt-1">Übersetzen und Abspielen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('list_comparator') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">compare_arrows</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Listen Vergleicher</h3>
+                        <p class="text-xs opacity-70 mt-1">Gemeinsame Einträge finden.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('notes_tool') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">edit_note</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Notizen</h3>
+                        <p class="text-xs opacity-70 mt-1">Schnelle Notizen speichern.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section: Entwicklung & Design -->
+        <section>
+            <div class="flex items-center gap-4 mb-6 px-2">
+                <span
+                    class="material-icons-round text-[var(--m3-primary)] bg-[var(--m3-primary-container)] p-2 rounded-xl">developer_mode</span>
+                <h2 class="text-2xl font-bold">Entwicklung & Design</h2>
+            </div>
+            <div class="dashboard-grid">
+                <a href="{{ url_for('playground') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">code</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Code Playground</h3>
+                        <p class="text-xs opacity-70 mt-1">HTML/CSS live testen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('color_picker') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">palette</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Farbwähler</h3>
+                        <p class="text-xs opacity-70 mt-1">Codes & Paletten finden.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('regex_replacer') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">find_replace</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Regex Replacer</h3>
+                        <p class="text-xs opacity-70 mt-1">Suchen & Ersetzen Pro.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('prefix_suffix') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">format_quote</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Prefix/Suffix</h3>
+                        <p class="text-xs opacity-70 mt-1">Listen massenhaft editieren.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('wiki_tool') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">library_books</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Wiki</h3>
+                        <p class="text-xs opacity-70 mt-1">Cheat Sheets und Wissen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('file_converter') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">transform</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Datei Konverter</h3>
+                        <p class="text-xs opacity-70 mt-1">Bilder & PDFs umwandeln.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('exif_remover') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">perm_camera_mic</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Exif Remover</h3>
+                        <p class="text-xs opacity-70 mt-1">Metadaten bereinigen.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section: Rechner & Hilfsmittel -->
+        <section>
+            <div class="flex items-center gap-4 mb-6 px-2">
+                <span
+                    class="material-icons-round text-[var(--m3-on-surface)] bg-[var(--m3-surface-variant)] p-2 rounded-xl">calculate</span>
+                <h2 class="text-2xl font-bold">Rechner & Hilfsmittel</h2>
+            </div>
+            <div class="dashboard-grid">
+                <a href="{{ url_for('unit_converter') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">straighten</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Einheiten</h3>
+                        <p class="text-xs opacity-70 mt-1">Maße und Gewichte rechnen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('bmi_calculator') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">monitor_weight</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">BMI Rechner</h3>
+                        <p class="text-xs opacity-70 mt-1">Körperindex berechnen.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('workday_calculator') }}"
+                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
+                    <div class="flex justify-between items-start">
+                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">event_available</span>
+                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Arbeitstage</h3>
+                        <p class="text-xs opacity-70 mt-1">Werktage zwischen Daten.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </div>
 </div>
 {% endblock %}

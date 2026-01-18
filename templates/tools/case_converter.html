@@ -12,48 +12,42 @@
         <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Case Converter</h2>
     </div>
 
-    <div class="tool-grid gap-8">
-        <div class="m3-card flex flex-col gap-6 md:col-span-2">
+    <div class="tool-grid">
+        <div class="m3-card flex flex-col gap-6">
             <div class="relative">
-                <textarea id="inputText" class="m3-text-input min-h-[300px] p-6 text-lg leading-relaxed resize-none"
+                <textarea id="inputText"
+                    class="m3-text-input min-h-[300px] p-6 text-lg leading-relaxed resize-none focus:ring-0"
                     placeholder="Füge hier deinen Text ein..." oninput="updateCounts()"></textarea>
-                <div class="absolute bottom-4 right-4 flex gap-2">
+                <div class="absolute bottom-6 right-6 flex gap-3 pointer-events-none">
                     <div
-                        class="bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                        class="bg-[var(--m3-surface)] px-4 py-2 rounded-xl text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest border border-[var(--m3-outline-variant)] shadow-sm">
                         <span id="charCount">0</span> Zeichen
                     </div>
                     <div
-                        class="bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                        class="bg-[var(--m3-surface)] px-4 py-2 rounded-xl text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest border border-[var(--m3-outline-variant)] shadow-sm">
                         <span id="wordCount">0</span> Wörter
                     </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <button onclick="transform('upper')"
-                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">UPPERCASE</button>
-                <button onclick="transform('lower')"
-                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">lowercase</button>
-                <button onclick="transform('title')"
-                    class="m3-button m3-button-filled py-4 font-bold tracking-tight">Title Case</button>
-                <button onclick="transform('camel')"
-                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">camelCase</button>
-                <button onclick="transform('pascal')"
-                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">PascalCase</button>
-                <button onclick="transform('snake')"
-                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">snake_case</button>
-                <button onclick="transform('constant')"
-                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">CONSTANT_CASE</button>
-                <button onclick="transform('sentence')"
-                    class="m3-button m3-button-outline py-4 font-bold tracking-tight">Sentence case</button>
+                <button onclick="transform('upper')" class="m3-button m3-button-filled">UPPER</button>
+                <button onclick="transform('lower')" class="m3-button m3-button-filled">lower</button>
+                <button onclick="transform('title')" class="m3-button m3-button-filled">Title</button>
+                <button onclick="transform('camel')" class="m3-button m3-button-tonal">camel</button>
+                <button onclick="transform('pascal')" class="m3-button m3-button-tonal">Pascal</button>
+                <button onclick="transform('snake')" class="m3-button m3-button-tonal">snake</button>
+                <button onclick="transform('constant')" class="m3-button m3-button-tonal">CONSTANT</button>
+                <button onclick="transform('sentence')" class="m3-button m3-button-tonal">Sentence</button>
             </div>
 
-            <div class="flex gap-4 border-t border-gray-100 dark:border-gray-800 pt-6">
-                <button onclick="copyResult()" class="m3-button m3-button-filled flex-1 py-4 text-lg !bg-green-600">
-                    <span class="material-icons-round mr-2">content_copy</span>
-                    Text kopieren
+            <div class="flex gap-4 border-t border-[var(--m3-outline-variant)] pt-6">
+                <button onclick="copyResult()" class="m3-button m3-button-filled flex-1 py-4 text-base">
+                    <span class="material-icons-round text-xl">content_copy</span>
+                    Kopieren
                 </button>
-                <button onclick="clearAll()" class="m3-button m3-button-outline px-8">
+                <button onclick="clearAll()"
+                    class="m3-button m3-button-outline !text-red-500 !border-red-200 hover:!bg-red-50 px-8">
                     <span class="material-icons-round">delete_outline</span>
                 </button>
             </div>

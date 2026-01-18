@@ -105,41 +105,46 @@
             return;
         }
 
+        // Keep current content if it matches to avoid flickering (simple check)
+        const currentData = container.getAttribute('data-last-sync');
+        const newData = JSON.stringify(words.map(w => ({ t: w.text, s: w.size })));
+        if (currentData === newData) return;
+        container.setAttribute('data-last-sync', newData);
+
         container.innerHTML = '';
 
-        // Find max size for normalization
         const maxCount = Math.max(...words.map(w => w.size));
         const minCount = Math.min(...words.map(w => w.size));
 
         const colors = [
-            '#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c',
-            '#ca8a04', '#16a34a', '#0891b2', '#4f46e5', '#9333ea'
+            '#6750A4', '#9333ea', '#db2777', '#dc2626', '#ea580c',
+            '#0284c7', '#16a34a', '#0891b2', '#4f46e5', '#7d5260'
         ];
 
-        // Sort words slightly randomly but keep important ones central? 
-        // Just sort alphabetically then shuffle a bit.
-        words.sort(() => Math.random() - 0.5);
+        // Stable sort to prevent jumping
+        words.sort((a, b) => a.text.localeCompare(b.text));
 
         words.forEach(word => {
-            // Calculate font size (range 0.8rem to 4rem)
             let fontSize = 1;
             if (maxCount === minCount) {
                 fontSize = 1.5;
             } else {
-                fontSize = 1 + (word.size - minCount) / (maxCount - minCount) * 3;
+                fontSize = 1 + (word.size - minCount) / (maxCount - minCount) * 2.5;
             }
 
             const span = document.createElement('span');
-            span.className = 'cloud-word font-bold';
+            span.className = 'cloud-word font-bold animate-fade-in';
             span.textContent = word.text;
             span.style.fontSize = fontSize + 'rem';
-            span.style.color = colors[Math.floor(Math.random() * colors.length)];
 
-            // Random slight rotation
-            const rotate = (Math.random() - 0.5) * 20;
+            // Deterministic color based on word string
+            let hash = 0;
+            for (let i = 0; i < word.text.length; i++) hash = word.text.charCodeAt(i) + ((hash << 5) - hash);
+            span.style.color = colors[Math.abs(hash) % colors.length];
+
+            // Deterministic rotation
+            const rotate = (Math.abs(hash % 20) - 10);
             span.style.transform = `rotate(${rotate}deg)`;
-
-            // Tooltip or small indicator for count
             span.title = `${word.size}x genannt`;
 
             container.appendChild(span);
@@ -148,7 +153,7 @@
 
     // Initial load
     loadCloudData();
-    // Auto refresh every 30 seconds
-    setInterval(loadCloudData, 30000);
+    // Live Auto Refresh every 3 seconds
+    setInterval(loadCloudData, 3000);
 </script>
 {% endblock %}

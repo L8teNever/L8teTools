@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L8teTools - {% block title %}{% endblock %}</title>
 
-    <!-- Google Sans & Material Icons -->
+    <!-- Outfit & Material Icons -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Material+Icons+Round&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap"
         rel="stylesheet">
 
     <!-- Tailwind CSS (for layout utilities) -->
@@ -40,42 +40,45 @@
     {% if current_user.is_authenticated %}
     <header class="top-app-bar">
         <a href="{{ url_for('dashboard') }}" class="brand">
-            <span class="material-icons-round text-blue-700">grid_view</span>
-            <span class="font-medium">L8teTools</span>
+            <span class="material-icons-round">interests</span>
+            <span>L8teTools</span>
         </a>
-        <div class="flex items-center gap-2 relative">
+        <div class="flex items-center gap-4">
             <!-- Search Container -->
             <div class="relative flex items-center">
                 <div id="searchWrapper"
-                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 shadow-xl rounded-full border border-gray-200 dark:border-gray-700 flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
-                    <span class="material-icons-round px-3 text-gray-400">search</span>
-                    <input type="text" id="globalSearch" class="bg-transparent outline-none py-2 pr-4 w-full text-sm"
-                        placeholder="Suche Tools (z.B. 'cm' oder 'pw')..." oninput="performSearch(this.value)"
+                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-[var(--m3-surface)] shadow-2xl rounded-2xl border border-[var(--m3-outline-variant)] flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
+                    <span class="material-icons-round px-4 text-[var(--m3-primary)]">search</span>
+                    <input type="text" id="globalSearch"
+                        class="bg-transparent outline-none py-3 pr-4 w-full text-sm font-medium"
+                        placeholder="Wonach suchst du?" oninput="performSearch(this.value)"
                         onblur="closeSearchWithDelay()">
-                    <button onclick="toggleSearch()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
-                        <span class="material-icons-round text-sm">close</span>
-                    </button>
                 </div>
 
-                <!-- Search Results Dropdown -->
                 <div id="searchResults"
-                    class="hidden absolute top-12 right-0 w-80 bg-white dark:bg-gray-800 shadow-2xl rounded-xl border border-gray-200 dark:border-gray-700 z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
+                    class="hidden absolute top-12 right-0 w-80 bg-[var(--m3-surface)] shadow-2xl rounded-2xl border border-[var(--m3-outline-variant)] z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
                     <!-- Results injected via JS -->
                 </div>
 
                 <button onclick="toggleSearch()"
-                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors relative z-40"
+                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)]"
                     title="Suche">
                     <span class="material-icons-round">search</span>
                 </button>
             </div>
 
-            <span class="text-sm text-gray-600 hidden sm:block">{{ current_user.username }}</span>
-            <a href="{{ url_for('settings') }}"
-                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                title="Einstellungen">
-                <span class="material-icons-round">settings</span>
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ url_for('dashboard') }}"
+                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)]"
+                    title="Dashboard">
+                    <span class="material-icons-round">grid_view</span>
+                </a>
+                <a href="{{ url_for('logout') }}"
+                    class="p-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all text-red-500"
+                    title="Abmelden">
+                    <span class="material-icons-round">logout</span>
+                </a>
+            </div>
         </div>
     </header>
     {% endif %}
