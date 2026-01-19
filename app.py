@@ -1,6 +1,8 @@
 import os
 import io
 import zipfile
+import yt_dlp
+import imageio_ffmpeg
 from flask import Flask, render_template, redirect, url_for, request, flash, send_file, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_sqlalchemy import SQLAlchemy
@@ -289,6 +291,75 @@ def create_app():
         user_links = Shortlink.query.filter_by(user_id=current_user.id).order_by(Shortlink.created_at.desc()).all()
         domain = SystemConfig.query.filter_by(key='shortener_domain').first().value
         return render_template('tools/shortlinks.html', links=user_links, domain=domain)
+
+    @app.route('/tools/video-downloader')
+    @login_required
+    def video_downloader():
+        return render_template('tools/video_downloader.html')
+
+    @app.route('/api/tools/video-downloader/download', methods=['POST'])
+    @login_required
+    def api_video_download():
+        data = request.json
+        url = data.get('url')
+        format_type = data.get('format', 'mp4') # 'mp4' or 'mp3'
+
+        if not url:
+            return jsonify({'error': 'URL erforderlich'}), 400
+
+        try:
+            download_dir = os.path.join(tempfile.gettempdir(), 'l8te_downloads')
+            if not os.path.exists(download_dir):
+                os.makedirs(download_dir)
+
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+            
+            ydl_opts = {
+                'outtmpl': os.path.join(download_dir, '%(title)s.%(ext)s'),
+                'ffmpeg_location': ffmpeg_path,
+                'quiet': True,
+                'no_warnings': True,
+            }
+
+            if format_type == 'mp3':
+                ydl_opts.update({
+                    'format': 'bestaudio/best',
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }],
+                })
+            else:
+                ydl_opts.update({
+                    'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                })
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                file_path = ydl.prepare_filename(info)
+                
+                # If mp3, the extension might have changed
+                if format_type == 'mp3':
+                    file_path = os.path.splitext(file_path)[0] + '.mp3'
+
+                if not os.path.exists(file_path):
+                    # Fallback check if filename preparation didn't match actual output
+                    basename = os.path.splitext(os.path.basename(file_path))[0]
+                    matches = glob.glob(os.path.join(download_dir, f"{basename}*"))
+                    if matches:
+                        file_path = matches[0]
+                    else:
+                        return jsonify({'error': 'Datei nach Download nicht gefunden'}), 500
+
+                return send_file(
+                    file_path,
+                    as_attachment=True,
+                    download_name=os.path.basename(file_path)
+                )
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/settings')
     @login_required
@@ -1307,6 +1378,17 @@ def cleanup_job():
                 except:
                     pass
             
+            # Also clean local downloads dir
+            download_dir = os.path.join(tempfile.gettempdir(), 'l8te_downloads')
+            if os.path.exists(download_dir):
+                for f in glob.glob(os.path.join(download_dir, "*")):
+                    try:
+                        if os.path.getmtime(f) < cutoff_time:
+                            os.remove(f)
+                            count += 1
+                    except:
+                        pass
+
             if count > 0:
                 print(f"[Cleanup] Removed {count} old temporary files.")
                 

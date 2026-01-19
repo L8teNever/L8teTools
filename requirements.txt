@@ -18,3 +18,5 @@ python-whois
 requests
 holidays
 APScheduler
+yt-dlp
+imageio-ffmpeg
