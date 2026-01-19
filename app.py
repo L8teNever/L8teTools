@@ -297,6 +297,32 @@ def create_app():
     def video_downloader():
         return render_template('tools/video_downloader.html')
 
+    @app.route('/api/tools/video-downloader/info', methods=['POST'])
+    @login_required
+    def api_video_info():
+        data = request.json
+        url = data.get('url')
+        if not url:
+            return jsonify({'error': 'URL erforderlich'}), 400
+        
+        try:
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'skip_download': True,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                return jsonify({
+                    'title': info.get('title'),
+                    'thumbnail': info.get('thumbnail'),
+                    'duration': info.get('duration'),
+                    'uploader': info.get('uploader'),
+                    'description': info.get('description', '')[:200] + '...' if info.get('description') else ''
+                })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
     @app.route('/api/tools/video-downloader/download', methods=['POST'])
     @login_required
     def api_video_download():
