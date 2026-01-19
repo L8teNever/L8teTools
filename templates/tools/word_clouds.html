@@ -20,18 +20,19 @@
         <div class="lg:col-span-1">
             <div class="m3-card">
                 <h2 class="text-lg font-bold mb-4">Neue Word Cloud erstellen</h2>
-                <div class="space-y-4">
+                <div class="space-y-6">
                     <div class="m3-input-group">
-                        <label class="text-xs font-medium text-blue-600 px-1">Titel</label>
+                        <label class="text-xs font-bold text-[var(--m3-primary)] uppercase px-1">Titel</label>
                         <input type="text" id="cloudTitle" class="m3-text-input" placeholder="z.B. Feedback Meeting">
                     </div>
                     <div class="m3-input-group">
-                        <label class="text-xs font-medium text-blue-600 px-1">Beschreibung (optional)</label>
-                        <textarea id="cloudDescription" class="m3-text-input min-h-[80px]"
+                        <label class="text-xs font-bold text-[var(--m3-primary)] uppercase px-1">Beschreibung
+                            (optional)</label>
+                        <textarea id="cloudDescription" class="m3-text-input min-h-[100px]"
                             placeholder="Worum geht es?"></textarea>
                     </div>
-                    <button onclick="createWordCloud()" class="m3-button m3-button-filled mt-6">
-                        Erstellen
+                    <button onclick="createWordCloud()" class="m3-button m3-button-filled w-full py-4">
+                        Word Cloud erstellen
                         <span class="material-icons-round">cloud_queue</span>
                     </button>
                 </div>

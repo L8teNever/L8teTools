@@ -4,60 +4,51 @@
 
 {% block content %}
 <div class="flex flex-col items-center min-h-[80vh] gap-8">
-    <div class="m3-card max-w-[600px] w-full">
+    <div class="m3-card max-w-[500px] w-full">
         <div class="text-center mb-6">
-            <span class="material-icons-round text-6xl text-blue-600 mb-4">cloud_queue</span>
-            <h1 class="text-2xl font-bold text-gray-800">{{ cloud.title }}</h1>
-            <p class="text-gray-500 mt-2">{{ cloud.description or "Schreibe Begriffe auf, die dir dazu einfallen!" }}
-            </p>
+            <span class="material-icons-round text-6xl text-[var(--m3-primary)] mb-4">cloud_queue</span>
+            <h2 class="text-2xl font-bold">{{ cloud.title }}</h2>
+            <p class="text-sm opacity-70 mt-2">{{ cloud.description or "Schreibe Begriffe auf, die dir dazu einfallen!"
+                }}</p>
         </div>
 
-        <div class="space-y-4">
-            <div class="m3-input-group !mb-2">
-                <input type="text" id="wordInput" class="m3-text-input" placeholder="Dein Begriff..." maxlength="30">
-            </div>
-            <div class="flex gap-2">
-                <input type="text" id="voterName" class="m3-text-input !mb-0 !py-2 text-sm"
-                    placeholder="Dein Name (optional)">
-                <button onclick="submitWord()" id="submitBtn" class="m3-button m3-button-filled !w-auto !px-6">
-                    Senden
-                    <span class="material-icons-round">send</span>
-                </button>
-            </div>
+        <div class="flex gap-2">
+            <input type="text" id="wordInput" class="m3-text-input !py-3" placeholder="Dein Begriff..." maxlength="30">
+            <button onclick="submitWord()" id="submitBtn" class="m3-button m3-button-filled !w-auto !px-6">
+                <span class="material-icons-round">send</span>
+            </button>
         </div>
     </div>
 
     <!-- Word Cloud Display -->
-    <div class="m3-card !bg-white dark:!bg-gray-800 min-h-[400px] flex items-center justify-center relative overflow-hidden p-8"
+    <div class="m3-card !bg-[var(--m3-surface)] min-h-[500px] w-full max-w-5xl flex items-center justify-center relative overflow-hidden"
         id="cloudContainer">
-        <div id="wordCloud" class="flex flex-wrap items-center justify-center gap-4 max-w-4xl">
-            <!-- Words injected here -->
-            <p class="text-gray-400 animate-pulse">Lade Wortwolke...</p>
+        <div id="wordCloud" class="relative w-full h-[500px]">
+            <!-- Words injected here as absolute elements -->
+            <div class="absolute inset-0 flex items-center justify-center">
+                <p class="text-[var(--m3-outline)] animate-pulse">Lade Wortwolke...</p>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
     .cloud-word {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: default;
-        display: inline-block;
-        line-height: 1;
-        padding: 2px 4px;
+        position: absolute;
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        white-space: nowrap;
+        transform-origin: center center;
     }
 
     .cloud-word:hover {
-        transform: scale(1.1) !important;
+        z-index: 100 !important;
         filter: brightness(1.2);
-        z-index: 10;
     }
 </style>
 
 <script>
     async function submitWord() {
         const word = document.getElementById('wordInput').value.trim();
-        const name = document.getElementById('voterName').value.trim() || 'Anonym';
-
         if (!word) {
             showToast('Wort eingeben!');
             return;
@@ -70,7 +61,7 @@
             const response = await fetch('/api/wordcloud/{{ cloud.slug }}/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ word: word, name: name })
+                body: JSON.stringify({ word: word, name: 'Anonym' })
             });
 
             if (response.ok) {
@@ -101,15 +92,13 @@
     function renderCloud(words) {
         const container = document.getElementById('wordCloud');
         if (!words || words.length === 0) {
-            container.innerHTML = '<p class="text-gray-400">Noch keine Wörter vorhanden. Sei der Erste!</p>';
+            container.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-[var(--m3-outline)]">Noch keine Wörter vorhanden.</div>';
             return;
         }
 
-        // Keep current content if it matches to avoid flickering (simple check)
-        const currentData = container.getAttribute('data-last-sync');
-        const newData = JSON.stringify(words.map(w => ({ t: w.text, s: w.size })));
-        if (currentData === newData) return;
-        container.setAttribute('data-last-sync', newData);
+        const syncId = JSON.stringify(words.map(w => ({ t: w.text, s: w.size })));
+        if (container.getAttribute('data-sync') === syncId) return;
+        container.setAttribute('data-sync', syncId);
 
         container.innerHTML = '';
 
@@ -121,15 +110,18 @@
             '#0284c7', '#16a34a', '#0891b2', '#4f46e5', '#7d5260'
         ];
 
-        // Stable sort to prevent jumping
-        words.sort((a, b) => a.text.localeCompare(b.text));
+        // Sort by size descending to place larger words more central
+        words.sort((a, b) => b.size - a.size);
 
-        words.forEach(word => {
+        const centerX = container.offsetWidth / 2;
+        const centerY = container.offsetHeight / 2;
+
+        words.forEach((word, index) => {
             let fontSize = 1;
             if (maxCount === minCount) {
-                fontSize = 1.5;
+                fontSize = 1.6;
             } else {
-                fontSize = 1 + (word.size - minCount) / (maxCount - minCount) * 2.5;
+                fontSize = 1.1 + (word.size - minCount) / (maxCount - minCount) * 2.8;
             }
 
             const span = document.createElement('span');
@@ -137,23 +129,42 @@
             span.textContent = word.text;
             span.style.fontSize = fontSize + 'rem';
 
-            // Deterministic color based on word string
+            // Deterministic hash for color/rotation
             let hash = 0;
             for (let i = 0; i < word.text.length; i++) hash = word.text.charCodeAt(i) + ((hash << 5) - hash);
             span.style.color = colors[Math.abs(hash) % colors.length];
 
-            // Deterministic rotation
+            // Radial distribution algorithm
+            // We use the index to spiral outwards
+            const angle = index * 2.4; // Golden angle-ish
+            const radius = index === 0 ? 0 : 35 + (index * 15);
+
+            // Add some "organic" jitter based on the hash
+            const jitterX = (Math.abs(hash % 40) - 20);
+            const jitterY = (Math.abs((hash >> 3) % 40) - 20);
+
+            const x = centerX + (Math.cos(angle) * radius) + jitterX;
+            const y = centerY + (Math.sin(angle) * radius) + jitterY;
+
+            // Rotation also deterministic
             const rotate = (Math.abs(hash % 20) - 10);
+
+            span.style.left = `calc(${x}px - 2rem)`; // Rough offset for centering the text block
+            span.style.top = `calc(${y}px - 1rem)`;
             span.style.transform = `rotate(${rotate}deg)`;
+            span.style.zIndex = words.length - index;
             span.title = `${word.size}x genannt`;
 
             container.appendChild(span);
         });
     }
 
-    // Initial load
+    // Handle Enter
+    document.getElementById('wordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') submitWord();
+    });
+
     loadCloudData();
-    // Live Auto Refresh every 3 seconds
     setInterval(loadCloudData, 3000);
 </script>
 {% endblock %}

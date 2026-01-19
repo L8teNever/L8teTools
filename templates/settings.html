@@ -21,17 +21,18 @@
         <div class="flex flex-col gap-6">
             <div class="m3-card space-y-6">
                 <h3 class="text-xl font-bold flex items-center gap-2">
-                    <span class="material-icons-round text-blue-600">manage_accounts</span>
+                    <span class="material-icons-round text-[var(--m3-primary)]">manage_accounts</span>
                     Account Sicherheit
                 </h3>
 
                 <div class="m3-input-group">
-                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Neues Passwort</label>
+                    <label class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase px-1 mb-2 block">Neues
+                        Passwort</label>
                     <div class="relative">
                         <input type="password" id="newPassword" class="m3-text-input pl-10"
                             placeholder="Minimum 4 Zeichen">
                         <span
-                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-[var(--m3-outline)]">lock</span>
                     </div>
                 </div>
 
@@ -41,13 +42,15 @@
             </div>
 
             <!-- Logout Card -->
-            <div class="m3-card space-y-4 !bg-red-50 dark:!bg-red-900/10 border border-red-100 dark:border-red-900/30">
-                <h3 class="text-lg font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
+            <div class="m3-card space-y-4 !bg-[var(--m3-error-container)]/10 border border-[var(--m3-error)]/20">
+                <h3 class="text-lg font-bold text-[var(--m3-error)] flex items-center gap-2">
                     <span class="material-icons-round">logout</span>
                     Abmelden
                 </h3>
-                <p class="text-xs text-red-600 dark:text-red-400/80">Beende deine aktuelle Sitzung auf diesem Gerät.</p>
-                <a href="{{ url_for('logout') }}" class="m3-button w-full !bg-red-600 !text-white hover:!bg-red-700">
+                <p class="text-xs text-[var(--m3-on-surface-variant)]">Beende deine aktuelle Sitzung auf diesem Gerät.
+                </p>
+                <a href="{{ url_for('logout') }}"
+                    class="m3-button w-full !bg-[var(--m3-error)] !text-white hover:opacity-90">
                     Jetzt abmelden
                 </a>
             </div>
@@ -55,48 +58,53 @@
 
         {% if current_user.is_admin %}
         <!-- Admin: Domain Settings -->
-        <div class="m3-card space-y-6 border-2 border-blue-100 dark:border-blue-900/30">
-            <h3 class="text-xl font-bold flex items-center gap-2 text-blue-700 dark:text-blue-400">
+        <div class="m3-card space-y-6 border-2 border-[var(--m3-primary-container)]">
+            <h3 class="text-xl font-bold flex items-center gap-2 text-[var(--m3-primary)]">
                 <span class="material-icons-round">language</span>
                 Admin: Shortener Domain
             </h3>
 
             <div class="m3-input-group">
-                <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Aktive Domain</label>
+                <label class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase px-1 mb-2 block">Aktive
+                    Domain</label>
                 <div class="relative">
                     <input type="text" id="shortenerDomain" class="m3-text-input pl-10" value="{{ domain }}">
-                    <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">dns</span>
+                    <span
+                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-[var(--m3-outline)]">dns</span>
                 </div>
             </div>
 
-            <button class="m3-button m3-button-filled w-full py-3 !bg-blue-600" onclick="updateDomain()">
+            <button class="m3-button m3-button-filled w-full py-3" onclick="updateDomain()">
                 Domain aktualisieren
             </button>
-            <p class="text-[10px] text-gray-400">Diese Einstellung ändert nur die Anzeige in der App. Die tatsächliche
+            <p class="text-[10px] text-[var(--m3-on-surface-variant)]">Diese Einstellung ändert nur die Anzeige in der
+                App. Die tatsächliche
                 Domain muss im Webserver/DNS konfiguriert sein.</p>
         </div>
 
         <!-- Admin: Create User -->
         <div class="m3-card space-y-6 md:col-span-2">
             <h3 class="text-xl font-bold flex items-center gap-2">
-                <span class="material-icons-round text-green-600">person_add</span>
+                <span class="material-icons-round text-[var(--m3-tertiary)]">person_add</span>
                 Admin: Neuen Account erstellen
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="m3-input-group">
-                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Benutzername</label>
+                    <label
+                        class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase px-1 mb-2 block">Benutzername</label>
                     <input type="text" id="newUsername" class="m3-text-input" placeholder="Name">
                 </div>
                 <div class="m3-input-group">
-                    <label class="text-xs font-bold text-gray-500 uppercase px-1 mb-2 block">Passwort</label>
+                    <label
+                        class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase px-1 mb-2 block">Passwort</label>
                     <input type="password" id="newUserPassword" class="m3-text-input" placeholder="Passwort">
                 </div>
                 <div class="flex items-end pb-1">
                     <label
-                        class="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 w-full">
+                        class="flex items-center gap-2 cursor-pointer p-4 bg-[var(--m3-surface-variant)] rounded-2xl border border-[var(--m3-outline-variant)] w-full">
                         <input type="checkbox" id="isAdmin"
-                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            class="w-5 h-5 rounded border-[var(--m3-outline)] text-[var(--m3-primary)] focus:ring-[var(--m3-primary)]">
                         <span class="text-sm font-medium">Administrator Rechte</span>
                     </label>
                 </div>
@@ -109,7 +117,7 @@
         <!-- Admin: User Management -->
         <div class="m3-card space-y-6 md:col-span-2">
             <h3 class="text-xl font-bold flex items-center gap-2">
-                <span class="material-icons-round text-purple-600">group</span>
+                <span class="material-icons-round text-[var(--m3-secondary)]">group</span>
                 Admin: Benutzerverwaltung
             </h3>
 
@@ -117,37 +125,37 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr
-                            class="text-xs font-bold text-gray-400 uppercase border-b border-gray-100 dark:border-gray-800">
+                            class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase border-b border-[var(--m3-outline-variant)] opacity-60">
                             <th class="px-4 py-3">Benutzername</th>
                             <th class="px-4 py-3">Rolle</th>
                             <th class="px-4 py-3 text-right">Aktionen</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50 dark:divide-gray-800/50">
+                    <tbody class="divide-y divide-[var(--m3-outline-variant)]/20">
                         {% for user in users %}
                         <tr class="text-sm">
                             <td class="px-4 py-4 font-medium">{{ user.username }} {% if user.id == current_user.id
                                 %}<span
-                                    class="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded-full ml-2">Du</span>{%
+                                    class="text-[10px] bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] px-2 py-0.5 rounded-full ml-2">Du</span>{%
                                 endif %}</td>
                             <td class="px-4 py-4">
                                 {% if user.is_admin %}
                                 <span
-                                    class="bg-purple-100 dark:bg-purple-900/30 text-purple-600 px-2 py-1 rounded-lg text-xs font-bold">Admin</span>
+                                    class="bg-[var(--m3-tertiary-container)] text-[var(--m3-on-tertiary-container)] px-2 py-1 rounded-lg text-xs font-bold">Admin</span>
                                 {% else %}
                                 <span
-                                    class="bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-lg text-xs font-bold">User</span>
+                                    class="bg-[var(--m3-surface-variant)] text-[var(--m3-on-surface-variant)] px-2 py-1 rounded-lg text-xs font-bold">User</span>
                                 {% endif %}
                             </td>
                             <td class="px-4 py-4 text-right space-x-2">
                                 <button onclick="resetUserPassword({{ user.id }}, '{{ user.username }}')"
-                                    class="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                                    class="p-2 text-[var(--m3-outline)] hover:text-[var(--m3-primary)] transition-colors"
                                     title="Passwort zurücksetzen">
                                     <span class="material-icons-round">key</span>
                                 </button>
                                 {% if user.id != current_user.id %}
                                 <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')"
-                                    class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    class="p-2 text-[var(--m3-outline)] hover:text-[var(--m3-error)] transition-colors"
                                     title="Benutzer löschen">
                                     <span class="material-icons-round">delete_outline</span>
                                 </button>

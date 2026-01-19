@@ -43,7 +43,7 @@
             <span class="material-icons-round">interests</span>
             <span>L8teTools</span>
         </a>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
             <!-- Search Container -->
             <div class="relative flex items-center">
                 <div id="searchWrapper"
@@ -67,11 +67,11 @@
                 </button>
             </div>
 
-            <div class="flex items-center gap-2">
-                <a href="{{ url_for('dashboard') }}"
-                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)]"
-                    title="Dashboard">
-                    <span class="material-icons-round">grid_view</span>
+            <div class="flex items-center gap-1">
+                <a href="{{ url_for('settings') }}"
+                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)] hidden md:flex"
+                    title="Einstellungen">
+                    <span class="material-icons-round">settings</span>
                 </a>
                 <a href="{{ url_for('logout') }}"
                     class="p-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all text-red-500"
@@ -81,6 +81,22 @@
             </div>
         </div>
     </header>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav md:hidden">
+        <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
+            <span class="material-icons-round">grid_view</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Tools</span>
+        </a>
+        <a href="javascript:void(0)" onclick="toggleSearch()" class="nav-item">
+            <span class="material-icons-round">search</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Suchen</span>
+        </a>
+        <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if request.endpoint == 'settings' }}">
+            <span class="material-icons-round">settings</span>
+            <span class="text-[10px] font-bold uppercase tracking-tighter">Settings</span>
+        </a>
+    </nav>
     {% endif %}
 
     <script src="{{ url_for('static', filename='search.js') }}"></script>

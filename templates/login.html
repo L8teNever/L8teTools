@@ -6,9 +6,9 @@
 <div class="flex items-center justify-center min-h-[70vh]">
     <div class="m3-card max-w-[400px]">
         <div class="mb-8 text-center">
-            <span class="material-icons-round text-6xl text-blue-600 mb-4">account_circle</span>
-            <h1 class="text-2xl font-bold text-gray-800">Willkommen zurück</h1>
-            <p class="text-gray-500 mt-2">Bitte melde dich an, um fortzufahren.</p>
+            <span class="material-icons-round text-6xl text-[var(--m3-primary)] mb-4">account_circle</span>
+            <h1 class="text-3xl font-extrabold tracking-tight">Willkommen</h1>
+            <p class="text-[var(--m3-on-surface-variant)] mt-2">Bitte melde dich an, um fortzufahren.</p>
         </div>
 
         <form method="POST" class="space-y-6">
@@ -22,22 +22,22 @@
             </div>
 
             <div class="flex items-center gap-3 px-1">
-                <label class="flex items-center gap-2 cursor-pointer group">
+                <label class="flex items-center gap-3 cursor-pointer group">
                     <div class="relative flex items-center">
                         <input type="checkbox" name="remember" id="remember" class="peer hidden">
                         <div
-                            class="w-5 h-5 border-2 border-gray-300 rounded peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
+                            class="w-6 h-6 border-2 border-[var(--m3-outline)] rounded-lg peer-checked:bg-[var(--m3-primary)] peer-checked:border-[var(--m3-primary)] transition-all flex items-center justify-center">
                             <span
-                                class="material-icons-round text-white text-[16px] hidden peer-checked:block">check</span>
+                                class="material-icons-round text-white text-[18px] hidden peer-checked:block">check</span>
                         </div>
                     </div>
                     <span
-                        class="text-sm text-gray-600 group-hover:text-gray-800 transition-colors select-none">Angemeldet
+                        class="text-sm font-medium text-[var(--m3-on-surface-variant)] group-hover:text-[var(--m3-on-surface)] transition-colors select-none">Angemeldet
                         bleiben</span>
                 </label>
             </div>
 
-            <button type="submit" class="m3-button m3-button-filled mt-4">
+            <button type="submit" class="m3-button m3-button-filled w-full py-4 text-lg">
                 Anmelden
                 <span class="material-icons-round">login</span>
             </button>
