@@ -13,10 +13,12 @@
             </h1>
             <p class="text-[var(--m3-on-surface-variant)] text-lg mt-2">Womit möchtest du heute arbeiten?</p>
         </div>
+
+        <!-- Status Card -->
         <div class="hidden md:block">
             <div
-                class="m3-card !py-3 !px-6 flex items-center gap-3 bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] border-none">
-                <span class="material-icons-round">bolt</span>
+                class="m3-card !py-4 !px-6 flex items-center gap-4 bg-[var(--m3-surface-container)] text-[var(--m3-on-surface)]">
+                <span class="material-icons-round text-[var(--m3-primary)]">bolt</span>
                 <span class="font-bold">28 Tools bereit</span>
             </div>
         </div>
@@ -27,65 +29,53 @@
 
         <!-- Section: Interaktion & Spiele -->
         <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-tertiary)] bg-[var(--m3-tertiary-container)] p-2 rounded-xl">videogame_asset</span>
-                <h2 class="text-2xl font-bold">Interaktion & Spiele</h2>
+            <div class="flex items-center gap-4 mb-6 px-1">
+                <h2 class="text-2xl font-bold tracking-tight">Interaktion & Spiele</h2>
             </div>
             <div class="dashboard-grid">
-                <a href="{{ url_for('polls_tool') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">ballot</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('polls_tool') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">ballot</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Umfragen</h3>
-                        <p class="text-xs opacity-70 mt-1">Interaktive Votings erstellen.</p>
+                        <h3>Umfragen</h3>
+                        <p>Interaktive Votings erstellen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('word_clouds_tool') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">cloud_queue</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('word_clouds_tool') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">cloud_queue</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Word Cloud</h3>
-                        <p class="text-xs opacity-70 mt-1">Begriffe sammeln und visualisieren.</p>
+                        <h3>Word Cloud</h3>
+                        <p>Begriffe sammeln und visualisieren.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('wheel_of_fortune') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">autorenew</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('wheel_of_fortune') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">autorenew</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Glücksrad</h3>
-                        <p class="text-xs opacity-70 mt-1">Zufallsentscheidungen treffen.</p>
+                        <h3>Glücksrad</h3>
+                        <p>Zufallsentscheidungen treffen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('dice_roller') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">casino</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('dice_roller') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">casino</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Würfel</h3>
-                        <p class="text-xs opacity-70 mt-1">Digitale Würfel für Spiele.</p>
+                        <h3>Würfel</h3>
+                        <p>Digitale Würfel für Spiele.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('score_tracker') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-tertiary)]">scoreboard</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('score_tracker') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">scoreboard</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Punktezähler</h3>
-                        <p class="text-xs opacity-70 mt-1">Scores live mitverfolgen.</p>
+                        <h3>Punktezähler</h3>
+                        <p>Scores live mitverfolgen.</p>
                     </div>
                 </a>
             </div>
@@ -93,75 +83,62 @@
 
         <!-- Section: Sicherheit & Netzwerk -->
         <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-primary)] bg-[var(--m3-primary-container)] p-2 rounded-xl">security</span>
-                <h2 class="text-2xl font-bold">Sicherheit & Netzwerk</h2>
+            <div class="flex items-center gap-4 mb-6 px-1">
+                <h2 class="text-2xl font-bold tracking-tight">Sicherheit & Netzwerk</h2>
             </div>
             <div class="dashboard-grid">
-                <a href="{{ url_for('password_generator') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">password</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('password_generator') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">password</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Passwort Generator</h3>
-                        <p class="text-xs opacity-70 mt-1">Sichere Keys blitzschnell erzeugt.</p>
+                        <h3>Passwort Generator</h3>
+                        <p>Sichere Keys blitzschnell erzeugt.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('shortlinks') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">link</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('shortlinks') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">link</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">URL Shortener</h3>
-                        <p class="text-xs opacity-70 mt-1">Eigene Kurz-Links verwalten.</p>
+                        <h3>URL Shortener</h3>
+                        <p>Eigene Kurz-Links verwalten.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('qr_generator') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">qr_code_2</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('qr_generator') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">qr_code_2</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">QR Generator</h3>
-                        <p class="text-xs opacity-70 mt-1">Codes für Links und Texte.</p>
+                        <h3>QR Generator</h3>
+                        <p>Codes für Links und Texte.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('my_ip') }}" class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">public</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('my_ip') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">public</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">IP Info</h3>
-                        <p class="text-xs opacity-70 mt-1">Öffentliche IP anzeigen.</p>
+                        <h3>IP Info</h3>
+                        <p>Öffentliche IP anzeigen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('whois_lookup') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">domain_verification</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('whois_lookup') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">domain_verification</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Whois Check</h3>
-                        <p class="text-xs opacity-70 mt-1">Domain-Inhaber abfragen.</p>
+                        <h3>Whois Check</h3>
+                        <p>Domain-Inhaber abfragen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('mac_lookup') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">lan</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('mac_lookup') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">lan</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">MAC Finder</h3>
-                        <p class="text-xs opacity-70 mt-1">Hersteller über MAC finden.</p>
+                        <h3>MAC Finder</h3>
+                        <p>Hersteller über MAC finden.</p>
                     </div>
                 </a>
             </div>
@@ -169,241 +146,179 @@
 
         <!-- Section: Text & Content -->
         <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-secondary)] bg-[var(--m3-secondary-container)] p-2 rounded-xl">article</span>
-                <h2 class="text-2xl font-bold">Textwerkzeuge</h2>
+            <div class="flex items-center gap-4 mb-6 px-1">
+                <h2 class="text-2xl font-bold tracking-tight">Textwerkzeuge</h2>
             </div>
             <div class="dashboard-grid">
-                <a href="{{ url_for('word_counter') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">segment</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('word_counter') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">segment</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Word Counter</h3>
-                        <p class="text-xs opacity-70 mt-1">Wörter und Zeichen zählen.</p>
+                        <h3>Word Counter</h3>
+                        <p>Wörter und Zeichen zählen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('case_converter') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">text_fields</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('case_converter') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">text_fields</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Case Converter</h3>
-                        <p class="text-xs opacity-70 mt-1">Groß-/Kleinschreibung ändern.</p>
+                        <h3>Case Converter</h3>
+                        <p>Groß-/Kleinschreibung ändern.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('text_sorter') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">sort_by_alpha</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('text_sorter') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">sort_by_alpha</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Text Sorter</h3>
-                        <p class="text-xs opacity-70 mt-1">Listen ordnen & bereinigen.</p>
+                        <h3>Text Sorter</h3>
+                        <p>Listen ordnen & bereinigen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('diff_checker') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">difference</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('diff_checker') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">difference</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Diff-Checker</h3>
-                        <p class="text-xs opacity-70 mt-1">Zwei Texte vergleichen.</p>
+                        <h3>Diff-Checker</h3>
+                        <p>Zwei Texte vergleichen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('morse_code') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">graphic_eq</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('morse_code') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">graphic_eq</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Morsecode</h3>
-                        <p class="text-xs opacity-70 mt-1">Übersetzen und Abspielen.</p>
+                        <h3>Morsecode</h3>
+                        <p>Übersetzen und Abspielen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('list_comparator') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">compare_arrows</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('list_comparator') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">compare_arrows</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Listen Vergleicher</h3>
-                        <p class="text-xs opacity-70 mt-1">Gemeinsame Einträge finden.</p>
+                        <h3>Listen Vergleicher</h3>
+                        <p>Gemeinsame Einträge finden.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('notes_tool') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-secondary)]">edit_note</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('notes_tool') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">edit_note</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Notizen</h3>
-                        <p class="text-xs opacity-70 mt-1">Schnelle Notizen speichern.</p>
+                        <h3>Notizen</h3>
+                        <p>Schnelle Notizen speichern.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('prefix_suffix') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">format_quote</span>
+                    </div>
+                    <div>
+                        <h3>Prefix/Suffix</h3>
+                        <p>Listen massenhaft editieren.</p>
+                    </div>
+                </a>
+                <a href="{{ url_for('regex_replacer') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">find_replace</span>
+                    </div>
+                    <div>
+                        <h3>Regex Replacer</h3>
+                        <p>Suchen & Ersetzen Pro.</p>
                     </div>
                 </a>
             </div>
         </section>
 
-        <!-- Section: Medien & Multimedia -->
+        <!-- Section: Weitere -->
         <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-primary)] bg-[var(--m3-primary-container)] p-2 rounded-xl">movie</span>
-                <h2 class="text-2xl font-bold">Medien & Multimedia</h2>
+            <div class="flex items-center gap-4 mb-6 px-1">
+                <h2 class="text-2xl font-bold tracking-tight">Weitere Tools</h2>
             </div>
             <div class="dashboard-grid">
-                <a href="{{ url_for('video_downloader') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">download_for_offline</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('video_downloader') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">download_for_offline</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Video Downloader</h3>
-                        <p class="text-xs opacity-70 mt-1">MP4/MP3 von Webseiten laden.</p>
+                        <h3>Video Downloader</h3>
+                        <p>MP4/MP3 von Webseiten laden.</p>
                     </div>
                 </a>
-            </div>
-        </section>
-
-        <!-- Section: Entwicklung & Design -->
-        <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-primary)] bg-[var(--m3-primary-container)] p-2 rounded-xl">developer_mode</span>
-                <h2 class="text-2xl font-bold">Entwicklung & Design</h2>
-            </div>
-            <div class="dashboard-grid">
-                <a href="{{ url_for('playground') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">code</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('playground') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">code</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Code Playground</h3>
-                        <p class="text-xs opacity-70 mt-1">HTML/CSS live testen.</p>
+                        <h3>Code Playground</h3>
+                        <p>HTML/CSS live testen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('color_picker') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">palette</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('color_picker') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">palette</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Farbwähler</h3>
-                        <p class="text-xs opacity-70 mt-1">Codes & Paletten finden.</p>
+                        <h3>Farbwähler</h3>
+                        <p>Codes & Paletten finden.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('regex_replacer') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">find_replace</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('file_converter') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">transform</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Regex Replacer</h3>
-                        <p class="text-xs opacity-70 mt-1">Suchen & Ersetzen Pro.</p>
+                        <h3>Datei Konverter</h3>
+                        <p>Bilder & PDFs umwandeln.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('prefix_suffix') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">format_quote</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('exif_remover') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">perm_camera_mic</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Prefix/Suffix</h3>
-                        <p class="text-xs opacity-70 mt-1">Listen massenhaft editieren.</p>
+                        <h3>Exif Remover</h3>
+                        <p>Metadaten bereinigen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('wiki_tool') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">library_books</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('wiki_tool') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">library_books</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Wiki</h3>
-                        <p class="text-xs opacity-70 mt-1">Cheat Sheets und Wissen.</p>
+                        <h3>Wiki</h3>
+                        <p>Cheat Sheets und Wissen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('file_converter') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">transform</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('unit_converter') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">straighten</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Datei Konverter</h3>
-                        <p class="text-xs opacity-70 mt-1">Bilder & PDFs umwandeln.</p>
+                        <h3>Einheiten</h3>
+                        <p>Maße und Gewichte rechnen.</p>
                     </div>
                 </a>
-                <a href="{{ url_for('exif_remover') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-primary)]">perm_camera_mic</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('bmi_calculator') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">monitor_weight</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Exif Remover</h3>
-                        <p class="text-xs opacity-70 mt-1">Metadaten bereinigen.</p>
+                        <h3>BMI Rechner</h3>
+                        <p>Körperindex berechnen.</p>
                     </div>
                 </a>
-            </div>
-        </section>
-
-        <!-- Section: Rechner & Hilfsmittel -->
-        <section>
-            <div class="flex items-center gap-4 mb-6 px-2">
-                <span
-                    class="material-icons-round text-[var(--m3-on-surface)] bg-[var(--m3-surface-variant)] p-2 rounded-xl">calculate</span>
-                <h2 class="text-2xl font-bold">Rechner & Hilfsmittel</h2>
-            </div>
-            <div class="dashboard-grid">
-                <a href="{{ url_for('unit_converter') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">straighten</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
+                <a href="{{ url_for('workday_calculator') }}" class="tool-card">
+                    <div class="icon-container">
+                        <span class="material-icons-round">event_available</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Einheiten</h3>
-                        <p class="text-xs opacity-70 mt-1">Maße und Gewichte rechnen.</p>
-                    </div>
-                </a>
-                <a href="{{ url_for('bmi_calculator') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">monitor_weight</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold">BMI Rechner</h3>
-                        <p class="text-xs opacity-70 mt-1">Körperindex berechnen.</p>
-                    </div>
-                </a>
-                <a href="{{ url_for('workday_calculator') }}"
-                    class="tool-card !bg-transparent border-[var(--m3-outline-variant)]">
-                    <div class="flex justify-between items-start">
-                        <span class="material-icons-round text-4xl text-[var(--m3-on-surface)]">event_available</span>
-                        <span class="material-icons-round opacity-30">arrow_forward</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold">Arbeitstage</h3>
-                        <p class="text-xs opacity-70 mt-1">Werktage zwischen Daten.</p>
+                        <h3>Arbeitstage</h3>
+                        <p>Werktage zwischen Daten.</p>
                     </div>
                 </a>
             </div>
