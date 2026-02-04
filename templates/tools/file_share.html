@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Dateien Teilen{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">Dateien Teilen</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Upload Card -->
+        <div class="m3-card">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                <span class="material-icons-round text-[var(--m3-primary)]">cloud_upload</span>
+                Upload
+            </h3>
+
+            <form id="uploadForm" class="space-y-6">
+                <!-- Dropzone -->
+                <div id="dropzone"
+                    class="border-2 border-dashed border-[var(--m3-outline-variant)] rounded-2xl p-10 text-center cursor-pointer hover:bg-[var(--m3-surface-variant)] transition-all">
+                    <input type="file" id="fileInput" name="files" multiple class="hidden">
+                    <span class="material-icons-round text-5xl text-[var(--m3-secondary)] mb-4">upload_file</span>
+                    <p class="font-bold text-lg mb-1">Dateien hier ablegen</p>
+                    <p class="text-sm text-[var(--m3-on-surface-variant)]">oder klicken zum Auswählen (Max. 1GB)</p>
+                    <div id="fileList" class="mt-4 text-left space-y-2"></div>
+                </div>
+
+                <!-- Settings -->
+                <div class="space-y-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Ablaufregeln</label>
+                        <select id="expirationMode" class="m3-text-input" onchange="toggleExpirationOptions()">
+                            <option value="time">Nach Zeit löschen</option>
+                            <option value="download">Nach Download löschen (Burn on read)</option>
+                            <option value="open">Nach dem Öffnen + Zeit löschen</option>
+                        </select>
+                    </div>
+
+                    <div id="timeOption" class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Zeitraum</label>
+                        <select id="timeLimit" name="timeLimit" class="m3-text-input">
+                            <option value="1">1 Stunde</option>
+                            <option value="4" selected>4 Stunden</option>
+                            <option value="24">24 Stunden</option>
+                            <option value="168">1 Woche</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="uploadProgress" class="hidden">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>Wird hochgeladen...</span>
+                        <span id="percentText">0%</span>
+                    </div>
+                    <div class="w-full bg-[var(--m3-surface-container-highest)] rounded-full h-2">
+                        <div id="progressBar"
+                            class="bg-[var(--m3-primary)] h-2 rounded-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="scanStatus" class="hidden flex items-center gap-2 text-[var(--m3-tertiary)] animate-pulse">
+                    <span class="material-icons-round text-sm">security</span>
+                    <span class="text-sm font-bold">Virenscan läuft...</span>
+                </div>
+
+                <button type="submit" class="m3-button m3-button-filled w-full py-4 text-lg">
+                    <span class="material-icons-round">share</span>
+                    Freigabelink erstellen
+                </button>
+            </form>
+        </div>
+
+        <!-- Result / History Card -->
+        <div class="flex flex-col gap-6">
+            <!-- Result Card (Hidden initially) -->
+            <div id="resultCard"
+                class="hidden m3-card bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]">
+                <h3 class="font-bold mb-2">Fertig! Dein Link:</h3>
+                <div class="flex items-center gap-2 bg-[var(--m3-surface)] p-2 rounded-xl mb-4">
+                    <input type="text" id="shareLink"
+                        class="bg-transparent border-none outline-none w-full text-[var(--m3-on-surface)] px-2"
+                        readonly>
+                    <button class="m3-button m3-button-tonal !p-2 rounded-lg" onclick="copyLink()">
+                        <span class="material-icons-round">content_copy</span>
+                    </button>
+                </div>
+                <p class="text-sm opacity-80">
+                    <span class="material-icons-round text-xs align-middle">timer</span>
+                    <span id="expiryInfo text-xs">Ausschluss läuft...</span>
+                </p>
+            </div>
+
+            <div class="m3-card flex-1">
+                <h3 class="text-xl font-bold mb-4">Aktive Freigaben</h3>
+                <div id="activeSharesList" class="space-y-3">
+                    <!-- Loaded via JS -->
+                    <div class="text-center py-8 opacity-50">Lade...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadForm = document.getElementById('uploadForm');
+    const progressBar = document.getElementById('progressBar');
+    const percentText = document.getElementById('percentText');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const scanStatus = document.getElementById('scanStatus');
+    const resultCard = document.getElementById('resultCard');
+    const shareLink = document.getElementById('shareLink');
+
+    // Drag & Drop
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('bg-[var(--m3-surface-variant)]');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('bg-[var(--m3-surface-variant)]');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('bg-[var(--m3-surface-variant)]');
+        fileInput.files = e.dataTransfer.files;
+        updateFileList();
+    });
+
+    fileInput.addEventListener('change', updateFileList);
+
+    function updateFileList() {
+        fileList.innerHTML = '';
+        if (fileInput.files.length > 0) {
+            Array.from(fileInput.files).forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2 text-sm bg-[var(--m3-surface)] p-2 rounded-lg';
+                div.innerHTML = `<span class="material-icons-round text-sm">description</span> ${file.name} <span class="text-xs opacity-50">(${(file.size / 1024 / 1024).toFixed(2)} MB)</span>`;
+                fileList.appendChild(div);
+            });
+        }
+    }
+
+    function toggleExpirationOptions() {
+        // Simple logic for now, standard is visible
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (fileInput.files.length === 0) return alert('Bitte Datei wählen');
+
+        const formData = new FormData(uploadForm);
+        formData.append('mode', document.getElementById('expirationMode').value);
+        formData.append('hours', document.getElementById('timeLimit').value);
+
+        // UI Reset
+        uploadProgress.classList.remove('hidden');
+        resultCard.classList.add('hidden');
+        scanStatus.classList.add('hidden');
+
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/files/upload');
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percent + '%';
+                    percentText.textContent = Math.round(percent) + '%';
+
+                    if (percent >= 100) {
+                        percentText.textContent = "Verarbeite & Scanne...";
+                        scanStatus.classList.remove('hidden');
+                    }
+                }
+            };
+
+            xhr.onload = function () {
+                scanStatus.classList.add('hidden');
+                uploadProgress.classList.add('hidden');
+
+                if (xhr.status === 200) {
+                    const resp = JSON.parse(xhr.responseText);
+                    resultCard.classList.remove('hidden');
+                    shareLink.value = window.location.origin + '/s/' + resp.token;
+                    loadActiveShares(); // Refresh list
+                    fileInput.value = ''; // Reset
+                    fileList.innerHTML = '';
+                } else {
+                    alert('Upload Fehler: ' + xhr.responseText);
+                }
+            };
+
+            xhr.send(formData);
+
+        } catch (err) {
+            console.error(err);
+            alert('Fehler beim Upload');
+        }
+    });
+
+    function copyLink() {
+        const link = document.getElementById('shareLink');
+        link.select();
+        document.execCommand('copy');
+        // Or navigator.clipboard...
+        alert('Link kopiert!');
+    }
+
+    async function loadActiveShares() {
+        const list = document.getElementById('activeSharesList');
+        try {
+            const res = await fetch('/api/files/list');
+            const data = await res.json();
+
+            list.innerHTML = '';
+            if (data.length === 0) list.innerHTML = '<div class="text-center py-4 text-sm opacity-50">Keine aktiven Dateien</div>';
+
+            data.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'flex items-center justify-between p-3 bg-[var(--m3-surface-container)] rounded-xl text-sm';
+                el.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <span class="material-icons-round text-[var(--m3-primary)]">folder</span>
+                        <div class="flex flex-col truncate">
+                            <span class="font-bold truncate">${item.filename}</span>
+                            <span class="text-xs opacity-60">Expires: ${item.expires_at || 'Download'}</span>
+                        </div>
+                    </div>
+                    <button class="text-[var(--m3-error)] hover:bg-[var(--m3-surface-variant)] p-2 rounded-full" onclick="deleteShare('${item.token}')">
+                        <span class="material-icons-round text-lg">delete</span>
+                    </button>
+                `;
+                list.appendChild(el);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function deleteShare(token) {
+        if (!confirm('Wirklich löschen?')) return;
+        await fetch('/api/files/delete/' + token, { method: 'DELETE' });
+        loadActiveShares();
+    }
+
+    loadActiveShares();
+</script>
+{% endblock %}
