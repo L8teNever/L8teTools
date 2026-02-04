@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Daten Zensur{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">Daten Zensur</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Upload Section -->
+        <div class="m3-card">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                <span class="material-icons-round text-[var(--m3-primary)]">shield</span>
+                Upload & Zensieren
+            </h3>
+
+            <div class="space-y-6">
+                <!-- File Upload -->
+                <div id="dropzone"
+                    class="border-2 border-dashed border-[var(--m3-outline-variant)] rounded-2xl p-8 text-center cursor-pointer hover:bg-[var(--m3-surface-variant)] transition-all">
+                    <input type="file" id="fileInput" accept="image/*,.txt,.pdf,.docx" class="hidden">
+                    <span class="material-icons-round text-5xl text-[var(--m3-primary)] mb-4">upload_file</span>
+                    <p class="font-bold text-lg mb-1" id="fileName">Datei hier ablegen</p>
+                    <p class="text-sm text-[var(--m3-on-surface-variant)]">Bilder, Text, PDF, Word</p>
+                </div>
+
+                <!-- Options -->
+                <div class="space-y-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Zensur-Modus</label>
+                        <select id="censorMode" class="m3-text-input">
+                            <option value="redact">Schwärzen (Permanent)</option>
+                            <option value="blur">Verpixeln</option>
+                            <option value="replace">Mit XX ersetzen (Text)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)]">Was soll zensiert
+                            werden?</label>
+
+                        <div class="m3-switch-container">
+                            <span class="font-medium">Namen</span>
+                            <label class="switch">
+                                <input type="checkbox" id="censorNames" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="m3-switch-container">
+                            <span class="font-medium">E-Mail Adressen</span>
+                            <label class="switch">
+                                <input type="checkbox" id="censorEmails" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="m3-switch-container">
+                            <span class="font-medium">Telefonnummern</span>
+                            <label class="switch">
+                                <input type="checkbox" id="censorPhones" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="m3-switch-container">
+                            <span class="font-medium">Adressen</span>
+                            <label class="switch">
+                                <input type="checkbox" id="censorAddresses" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="m3-switch-container">
+                            <span class="font-medium">Gesichter (Bilder)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="censorFaces" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="processingStatus"
+                    class="hidden flex items-center gap-3 text-[var(--m3-tertiary)] animate-pulse">
+                    <span class="material-icons-round">psychology</span>
+                    <span>Analysiere und zensiere...</span>
+                </div>
+
+                <button id="processBtn" class="m3-button m3-button-filled w-full py-4 text-lg" onclick="processFile()">
+                    <span class="material-icons-round">auto_fix_high</span>
+                    Jetzt Zensieren
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview/Result Section -->
+        <div class="m3-card flex flex-col">
+            <h3 class="text-xl font-bold mb-4">Vorschau & Download</h3>
+
+            <div id="previewArea"
+                class="flex-1 bg-[var(--m3-surface-container-low)] rounded-xl p-6 min-h-[400px] flex items-center justify-center">
+                <div class="text-center opacity-50">
+                    <span class="material-icons-round text-6xl mb-2">visibility</span>
+                    <p>Zensierte Datei wird hier angezeigt</p>
+                </div>
+            </div>
+
+            <div id="downloadSection" class="hidden mt-4 space-y-2">
+                <button class="m3-button m3-button-filled w-full py-3" onclick="downloadResult()">
+                    <span class="material-icons-round">download</span>
+                    Zensierte Datei herunterladen
+                </button>
+                <p class="text-xs text-center text-[var(--m3-on-surface-variant)]">
+                    <span id="censorCount">0</span> Elemente wurden zensiert
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    let currentFile = null;
+    let processedData = null;
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('bg-[var(--m3-surface-variant)]');
+    });
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('bg-[var(--m3-surface-variant)]'));
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('bg-[var(--m3-surface-variant)]');
+        fileInput.files = e.dataTransfer.files;
+        updateFileName();
+    });
+
+    fileInput.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            currentFile = fileInput.files[0];
+            document.getElementById('fileName').textContent = currentFile.name;
+            document.getElementById('fileName').classList.add('text-[var(--m3-primary)]');
+        }
+    }
+
+    async function processFile() {
+        if (!currentFile) return alert('Bitte Datei wählen');
+
+        const formData = new FormData();
+        formData.append('file', currentFile);
+        formData.append('mode', document.getElementById('censorMode').value);
+        formData.append('names', document.getElementById('censorNames').checked);
+        formData.append('emails', document.getElementById('censorEmails').checked);
+        formData.append('phones', document.getElementById('censorPhones').checked);
+        formData.append('addresses', document.getElementById('censorAddresses').checked);
+        formData.append('faces', document.getElementById('censorFaces').checked);
+
+        document.getElementById('processingStatus').classList.remove('hidden');
+        document.getElementById('processBtn').disabled = true;
+
+        try {
+            const res = await fetch('/api/censor/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+
+                // Show preview
+                const preview = document.getElementById('previewArea');
+
+                if (data.type === 'image') {
+                    preview.innerHTML = `<img src="data:image/png;base64,${data.preview}" class="max-w-full rounded-lg shadow-lg">`;
+                } else {
+                    preview.innerHTML = `<pre class="text-left w-full overflow-auto text-sm">${data.preview}</pre>`;
+                }
+
+                processedData = data;
+                document.getElementById('censorCount').textContent = data.count;
+                document.getElementById('downloadSection').classList.remove('hidden');
+
+            } else {
+                const err = await res.json();
+                alert('Fehler: ' + (err.error || 'Server Error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Netzwerkfehler');
+        } finally {
+            document.getElementById('processingStatus').classList.add('hidden');
+            document.getElementById('processBtn').disabled = false;
+        }
+    }
+
+    function downloadResult() {
+        if (!processedData) return;
+
+        // Download via hidden link
+        const a = document.createElement('a');
+        a.href = '/api/censor/download/' + processedData.token;
+        a.download = 'censored_' + currentFile.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+</script>
+{% endblock %}

@@ -60,6 +60,44 @@
             </div>
         </div>
 
+        <!-- Time Calculator Section -->
+        <div class="mt-8 p-6 bg-[var(--m3-surface-container)] rounded-2xl max-w-2xl mx-auto">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span class="material-icons-round text-[var(--m3-primary)]">schedule</span>
+                Download/Upload Zeit-Rechner
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Dateigröße</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="fileSize" value="10" min="0.1" step="0.1" class="m3-text-input flex-1"
+                            oninput="calculateTime()">
+                        <select id="fileSizeUnit" class="m3-text-input w-24" onchange="calculateTime()">
+                            <option value="MB">MB</option>
+                            <option value="GB" selected>GB</option>
+                            <option value="TB">TB</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="m3-input-group">
+                    <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Richtung</label>
+                    <select id="direction" class="m3-text-input" onchange="calculateTime()">
+                        <option value="download">Download</option>
+                        <option value="upload">Upload</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="timeResult"
+                class="text-center p-6 bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] rounded-xl">
+                <div class="text-sm font-bold uppercase mb-2">Geschätzte Dauer</div>
+                <div class="text-4xl font-bold font-mono" id="estimatedTime">--</div>
+                <div class="text-xs mt-2 opacity-70" id="speedUsed">Führe zuerst einen Speedtest durch</div>
+            </div>
+        </div>
+
         <!-- Control -->
         <button
             class="m3-button m3-button-filled py-6 px-12 text-xl rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
@@ -213,6 +251,126 @@
         mainSpeedDisplay.textContent = avgSpeed.toFixed(1);
         document.getElementById('uploadCard').classList.remove('border', 'border-[var(--m3-secondary)]');
         progressRing.style.stroke = 'var(--m3-primary)'; // Reset color
+    }
+
+    // Time Calculator
+    let lastDownloadSpeed = 0;
+    let lastUploadSpeed = 0;
+
+    function calculateTime() {
+        const fileSize = parseFloat(document.getElementById('fileSize').value);
+        const unit = document.getElementById('fileSizeUnit').value;
+        const direction = document.getElementById('direction').value;
+
+        if (!fileSize || fileSize <= 0) {
+            document.getElementById('estimatedTime').textContent = '--';
+            return;
+        }
+
+        // Convert to MB
+        let sizeInMB = fileSize;
+        if (unit === 'GB') sizeInMB = fileSize * 1024;
+        if (unit === 'TB') sizeInMB = fileSize * 1024 * 1024;
+
+        // Get speed
+        const speed = direction === 'download' ? lastDownloadSpeed : lastUploadSpeed;
+
+        if (speed === 0) {
+            document.getElementById('estimatedTime').textContent = '--';
+            document.getElementById('speedUsed').textContent = 'Führe zuerst einen Speedtest durch';
+            return;
+        }
+
+        // Calculate time in seconds
+        // Speed is in Mbps, size is in MB
+        // Time = (Size in MB * 8) / Speed in Mbps
+        const timeInSeconds = (sizeInMB * 8) / speed;
+
+        // Format time
+        let formatted = '';
+        if (timeInSeconds < 60) {
+            formatted = Math.round(timeInSeconds) + ' Sekunden';
+        } else if (timeInSeconds < 3600) {
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = Math.round(timeInSeconds % 60);
+            formatted = `${minutes}m ${seconds}s`;
+        } else {
+            const hours = Math.floor(timeInSeconds / 3600);
+            const minutes = Math.floor((timeInSeconds % 3600) / 60);
+            formatted = `${hours}h ${minutes}m`;
+        }
+
+        document.getElementById('estimatedTime').textContent = formatted;
+        document.getElementById('speedUsed').textContent = `Bei ${speed.toFixed(1)} Mbps (${direction === 'download' ? 'Download' : 'Upload'})`;
+    }
+
+    // Update speeds after test
+    async function measureDownload() {
+        statusText.textContent = "Download Test...";
+        document.getElementById('downloadCard').classList.add('border', 'border-[var(--m3-primary)]');
+
+        const startTime = performance.now();
+        const sizeInBytes = 5 * 1024 * 1024;
+        let totalBytes = 0;
+        let testDuration = 5000;
+        const endTime = startTime + testDuration;
+
+        while (performance.now() < endTime) {
+            const chunkStart = performance.now();
+            const response = await fetch(`/api/speedtest/download?size=${sizeInBytes}`);
+            const blob = await response.blob();
+            const chunkDuration = (performance.now() - chunkStart) / 1000;
+            totalBytes += blob.size;
+            const currentSpeed = ((blob.size * 8) / 1000000) / chunkDuration;
+            mainSpeedDisplay.textContent = currentSpeed.toFixed(1);
+            setProgress(Math.min((currentSpeed / 100) * 100, 100));
+        }
+
+        const totalDuration = (performance.now() - startTime) / 1000;
+        const avgSpeed = ((totalBytes * 8) / 1000000) / totalDuration;
+
+        downloadDisplay.textContent = avgSpeed.toFixed(1);
+        mainSpeedDisplay.textContent = avgSpeed.toFixed(1);
+        lastDownloadSpeed = avgSpeed;
+        calculateTime();
+        document.getElementById('downloadCard').classList.remove('border', 'border-[var(--m3-primary)]');
+    }
+
+    async function measureUpload() {
+        statusText.textContent = "Upload Test...";
+        document.getElementById('uploadCard').classList.add('border', 'border-[var(--m3-secondary)]');
+        progressRing.style.stroke = 'var(--m3-secondary)';
+
+        const size = 2 * 1024 * 1024;
+        const data = new Uint8Array(size);
+
+        const startTime = performance.now();
+        let totalBytes = 0;
+        const testDuration = 5000;
+        const endTime = startTime + testDuration;
+
+        while (performance.now() < endTime) {
+            const chunkStart = performance.now();
+            await fetch('/api/speedtest/upload', {
+                method: 'POST',
+                body: data
+            });
+            const chunkDuration = (performance.now() - chunkStart) / 1000;
+            totalBytes += size;
+            const currentSpeed = ((size * 8) / 1000000) / chunkDuration;
+            mainSpeedDisplay.textContent = currentSpeed.toFixed(1);
+            setProgress(Math.min((currentSpeed / 50) * 100, 100));
+        }
+
+        const totalDuration = (performance.now() - startTime) / 1000;
+        const avgSpeed = ((totalBytes * 8) / 1000000) / totalDuration;
+
+        uploadDisplay.textContent = avgSpeed.toFixed(1);
+        mainSpeedDisplay.textContent = avgSpeed.toFixed(1);
+        lastUploadSpeed = avgSpeed;
+        calculateTime();
+        document.getElementById('uploadCard').classList.remove('border', 'border-[var(--m3-secondary)]');
+        progressRing.style.stroke = 'var(--m3-primary)';
     }
 
 </script>

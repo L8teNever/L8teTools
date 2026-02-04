@@ -14,6 +14,7 @@ import requests
 import holidays
 from datetime import datetime, timedelta
 from PIL import Image, ExifTags
+import numpy as np
 import img2pdf
 import fitz  # PyMuPDF
 from pillow_heif import register_heif_opener
@@ -40,7 +41,21 @@ except (ImportError, OSError):
 
 import markdown
 from docx import Document
-from functools import wraps 
+from functools import wraps
+import re
+import base64
+
+# Optional: NLP and CV for censorship
+try:
+    import spacy
+    nlp = spacy.load("de_core_news_sm")
+except:
+    nlp = None
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None 
 
 register_heif_opener()
 
@@ -781,6 +796,11 @@ def create_app():
     @login_required
     def formatter_tool():
         return render_template('tools/document_formatter.html')
+
+    @app.route('/tools/data-censor')
+    @login_required
+    def data_censor_tool():
+        return render_template('tools/data_censor.html')
 
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
@@ -1827,6 +1847,173 @@ def create_app():
         except Exception as e:
             if os.path.exists(temp_in): os.remove(temp_in)
             return jsonify({'error': str(e)}), 500
+
+    # Data Censorship API
+    censor_cache = {}  # Store processed files temporarily
+
+    @app.route('/api/censor/process', methods=['POST'])
+    @login_required
+    def api_censor_process():
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file'}), 400
+        
+        file = request.files['file']
+        mode = request.form.get('mode', 'redact')
+        censor_names = request.form.get('names') == 'true'
+        censor_emails = request.form.get('emails') == 'true'
+        censor_phones = request.form.get('phones') == 'true'
+        censor_addresses = request.form.get('addresses') == 'true'
+        censor_faces = request.form.get('faces') == 'true'
+        
+        filename = file.filename
+        ext = os.path.splitext(filename)[1].lower()
+        
+        temp_in = os.path.join(tempfile.gettempdir(), f"censor_in_{uuid.uuid4()}{ext}")
+        file.save(temp_in)
+        
+        try:
+            count = 0
+            
+            if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.webp']:
+                # Image processing
+                img = Image.open(temp_in)
+                img_array = None
+                
+                if cv2 and censor_faces:
+                    # Face detection and blurring
+                    img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+                    gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+                    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+                    
+                    for (x, y, w, h) in faces:
+                        if mode == 'blur':
+                            roi = img_array[y:y+h, x:x+w]
+                            roi = cv2.GaussianBlur(roi, (99, 99), 30)
+                            img_array[y:y+h, x:x+w] = roi
+                        else:  # redact
+                            cv2.rectangle(img_array, (x, y), (x+w, y+h), (0, 0, 0), -1)
+                        count += 1
+                    
+                    img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(img_array)
+                
+                # Save processed image
+                output_buffer = io.BytesIO()
+                img.save(output_buffer, format='PNG')
+                output_buffer.seek(0)
+                
+                # Create preview
+                preview_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                
+                # Store for download
+                token = uuid.uuid4().hex
+                censor_cache[token] = {
+                    'data': output_buffer.getvalue(),
+                    'filename': f'censored_{filename}',
+                    'mimetype': 'image/png'
+                }
+                
+                os.remove(temp_in)
+                
+                return jsonify({
+                    'type': 'image',
+                    'preview': preview_base64,
+                    'count': count,
+                    'token': token
+                })
+                
+            else:
+                # Text processing
+                text_content = ""
+                
+                if ext == '.pdf':
+                    doc = fitz.open(temp_in)
+                    for page in doc:
+                        text_content += page.get_text()
+                elif ext == '.docx':
+                    doc = Document(temp_in)
+                    text_content = "\n".join([p.text for p in doc.paragraphs])
+                else:
+                    with open(temp_in, 'r', encoding='utf-8', errors='ignore') as f:
+                        text_content = f.read()
+                
+                # Censor text
+                censored_text = text_content
+                
+                if censor_emails:
+                    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+                    emails = re.findall(email_pattern, censored_text)
+                    count += len(emails)
+                    if mode == 'replace':
+                        censored_text = re.sub(email_pattern, 'XX@XX.XX', censored_text)
+                    else:
+                        censored_text = re.sub(email_pattern, '█████████', censored_text)
+                
+                if censor_phones:
+                    phone_pattern = r'(\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}'
+                    phones = re.findall(phone_pattern, censored_text)
+                    count += len(phones)
+                    if mode == 'replace':
+                        censored_text = re.sub(phone_pattern, 'XXX-XXX-XXXX', censored_text)
+                    else:
+                        censored_text = re.sub(phone_pattern, '███████████', censored_text)
+                
+                if censor_names and nlp:
+                    doc = nlp(censored_text)
+                    for ent in doc.ents:
+                        if ent.label_ == 'PER':
+                            count += 1
+                            if mode == 'replace':
+                                censored_text = censored_text.replace(ent.text, 'XX' * len(ent.text.split()))
+                            else:
+                                censored_text = censored_text.replace(ent.text, '█' * len(ent.text))
+                
+                if censor_addresses:
+                    # Simple address pattern (German)
+                    address_pattern = r'\b\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)*\b'
+                    addresses = re.findall(address_pattern, censored_text)
+                    count += len(addresses)
+                    if mode == 'replace':
+                        censored_text = re.sub(address_pattern, 'XXXXX Stadt', censored_text)
+                    else:
+                        censored_text = re.sub(address_pattern, '█████████', censored_text)
+                
+                # Store for download
+                token = uuid.uuid4().hex
+                censor_cache[token] = {
+                    'data': censored_text.encode('utf-8'),
+                    'filename': f'censored_{filename}.txt',
+                    'mimetype': 'text/plain'
+                }
+                
+                os.remove(temp_in)
+                
+                return jsonify({
+                    'type': 'text',
+                    'preview': censored_text[:1000],  # First 1000 chars
+                    'count': count,
+                    'token': token
+                })
+                
+        except Exception as e:
+            if os.path.exists(temp_in): os.remove(temp_in)
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/censor/download/<token>')
+    @login_required
+    def api_censor_download(token):
+        if token not in censor_cache:
+            return "File not found", 404
+        
+        data = censor_cache[token]
+        
+        return send_file(
+            io.BytesIO(data['data']),
+            as_attachment=True,
+            download_name=data['filename'],
+            mimetype=data['mimetype']
+        )
 
     @app.route('/tools/tip-calculator')
     @login_required
