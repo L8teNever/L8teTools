@@ -1,45 +1,45 @@
 :root {
-  /* Android 16 / Material You - "Deep Spirit" Theme */
-  /* Vibrant, yet Deep and Minimalist */
+  /* Android 16 / Material You - "Electric Aqua" Theme */
 
-  /* Primary */
-  --m3-primary: #D0BCFF;
-  --m3-on-primary: #381E72;
-  --m3-primary-container: #4F378B;
-  --m3-on-primary-container: #EADDFF;
+  /* Primary (Aqua) */
+  --m3-primary: #64FFDA;
+  --m3-on-primary: #003730;
+  --m3-primary-container: #005045;
+  --m3-on-primary-container: #80FFE4;
 
-  /* Secondary */
-  --m3-secondary: #CCC2DC;
-  --m3-on-secondary: #332D41;
-  --m3-secondary-container: #4A4458;
-  --m3-on-secondary-container: #E8DEF8;
+  /* Secondary (Cool Grey/Teal) */
+  --m3-secondary: #B2CCC9;
+  --m3-on-secondary: #1D3532;
+  --m3-secondary-container: #334B49;
+  --m3-on-secondary-container: #CEE9E6;
 
-  /* Tertiary */
-  --m3-tertiary: #EFB8C8;
-  --m3-on-tertiary: #492532;
-  --m3-tertiary-container: #633B48;
-  --m3-on-tertiary-container: #FFD8E4;
+  /* Tertiary (Soft Blue/Lavender to contrast) */
+  --m3-tertiary: #A6C8FF;
+  --m3-on-tertiary: #00315F;
+  --m3-tertiary-container: #19468F;
+  --m3-on-tertiary-container: #D4E3FF;
 
   /* Surface / Background */
-  --m3-background: #141218;
-  --m3-on-background: #E6E1E5;
+  --m3-background: #0E1413;
+  /* Very dark teal/black */
+  --m3-on-background: #E0E3E2;
 
-  --m3-surface: #141218;
-  --m3-on-surface: #E6E1E5;
+  --m3-surface: #0E1413;
+  --m3-on-surface: #E0E3E2;
 
-  /* Surface Containers (for cards, sidebars, etc) */
-  --m3-surface-container-lowest: #0F0D13;
-  --m3-surface-container-low: #1D1B20;
-  --m3-surface-container: #211F26;
-  --m3-surface-container-high: #2B2930;
-  --m3-surface-container-highest: #36343B;
+  /* Surface Containers */
+  --m3-surface-container-lowest: #090F0E;
+  --m3-surface-container-low: #151D1C;
+  --m3-surface-container: #192120;
+  --m3-surface-container-high: #242B2A;
+  --m3-surface-container-highest: #2E3635;
 
-  --m3-on-surface-variant: #CAC4D0;
-  --m3-outline: #938F99;
-  --m3-outline-variant: #49454F;
+  --m3-on-surface-variant: #BEC9C7;
+  --m3-outline: #899391;
+  --m3-outline-variant: #3F4947;
 
-  --m3-error: #F2B8B5;
-  --m3-on-error: #601410;
+  --m3-error: #FFB4AB;
+  --m3-on-error: #690005;
 
   /* Typography */
   --font-display: 'Outfit', sans-serif;
@@ -60,38 +60,38 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --m3-primary: #6750A4;
+    --m3-primary: #006A60;
     --m3-on-primary: #FFFFFF;
-    --m3-primary-container: #EADDFF;
-    --m3-on-primary-container: #21005D;
+    --m3-primary-container: #7DF8E8;
+    --m3-on-primary-container: #00201C;
 
-    --m3-secondary: #625B71;
+    --m3-secondary: #4A6360;
     --m3-on-secondary: #FFFFFF;
-    --m3-secondary-container: #E8DEF8;
-    --m3-on-secondary-container: #1D192B;
+    --m3-secondary-container: #CCE8E4;
+    --m3-on-secondary-container: #05201D;
 
-    --m3-tertiary: #7D5260;
+    --m3-tertiary: #4D5F90;
     --m3-on-tertiary: #FFFFFF;
-    --m3-tertiary-container: #FFD8E4;
-    --m3-on-tertiary-container: #31111D;
+    --m3-tertiary-container: #D6E3FF;
+    --m3-on-tertiary-container: #061A49;
 
-    --m3-background: #FEF7FF;
-    --m3-on-background: #1D1B20;
+    --m3-background: #F4FBF9;
+    --m3-on-background: #161D1C;
 
-    --m3-surface: #FEF7FF;
-    --m3-on-surface: #1D1B20;
+    --m3-surface: #F4FBF9;
+    --m3-on-surface: #161D1C;
 
     --m3-surface-container-lowest: #FFFFFF;
-    --m3-surface-container-low: #F7F2FA;
-    --m3-surface-container: #F3EDF7;
-    --m3-surface-container-high: #ECE6F0;
-    --m3-surface-container-highest: #E6E0E9;
+    --m3-surface-container-low: #EFF5F3;
+    --m3-surface-container: #E9EFED;
+    --m3-surface-container-high: #E3E9E7;
+    --m3-surface-container-highest: #DEE4E2;
 
-    --m3-on-surface-variant: #49454F;
-    --m3-outline: #79747E;
-    --m3-outline-variant: #C4C7C5;
+    --m3-on-surface-variant: #3F4947;
+    --m3-outline: #6F7977;
+    --m3-outline-variant: #BEC9C7;
 
-    --m3-error: #B3261E;
+    --m3-error: #BA1A1A;
     --m3-on-error: #FFFFFF;
 
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.1), 0 1px 3px 1px rgba(0, 0, 0, 0.05);
