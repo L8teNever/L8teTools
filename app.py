@@ -54,6 +54,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    must_change_password = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -166,6 +167,12 @@ def create_app():
             db.session.rollback()
 
         try:
+            db.session.execute(db.text('ALTER TABLE user ADD COLUMN must_change_password BOOLEAN DEFAULT 0'))
+            db.session.commit()
+        except:
+            db.session.rollback()
+
+        try:
             db.session.execute(db.text('ALTER TABLE poll ADD COLUMN allow_suggestions BOOLEAN DEFAULT 0'))
             db.session.execute(db.text('ALTER TABLE poll ADD COLUMN anonymous_voting BOOLEAN DEFAULT 0'))
             db.session.commit()
@@ -179,11 +186,13 @@ def create_app():
             db.session.commit()
         
         # Optional: Promote first user to admin if no admin exists
-        if not User.query.filter_by(is_admin=True).first():
-            first_user = User.query.first()
-            if first_user:
-                first_user.is_admin = True
-                db.session.commit()
+        # Create default admin if no user exists
+        if not User.query.first():
+            default_admin = User(username='admin', is_admin=True, must_change_password=True)
+            default_admin.set_password('admin')
+            db.session.add(default_admin)
+            db.session.commit()
+            print("Default admin account created: admin / admin")
 
         # Ensure retention config exists
         retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
@@ -195,6 +204,36 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+
+    # Force password change middleware
+    @app.before_request
+    def check_password_change():
+        if current_user.is_authenticated and current_user.must_change_password:
+            if request.endpoint not in ['change_password', 'logout', 'static']:
+                return redirect(url_for('change_password'))
+
+    @app.route('/change-password', methods=['GET', 'POST'])
+    @login_required
+    def change_password():
+        if not current_user.must_change_password:
+            return redirect(url_for('dashboard'))
+            
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if new_password != confirm_password:
+                flash('Passwörter stimmen nicht überein', 'error')
+            elif len(new_password) < 4:
+                flash('Passwort muss mindestens 4 Zeichen lang sein', 'error')
+            else:
+                current_user.set_password(new_password)
+                current_user.must_change_password = False
+                db.session.commit()
+                flash('Passwort erfolgreich geändert', 'success')
+                return redirect(url_for('dashboard'))
+                
+        return render_template('change_password.html')
 
     # Routes
     @app.route('/')
