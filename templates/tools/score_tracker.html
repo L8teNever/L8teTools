@@ -66,6 +66,39 @@
                     <p>Noch keine Spieler hinzugefügt.</p>
                 </div>
             </div>
+
+            <!-- Settings Panel inside Card (Toggleable) -->
+            <div id="gameSettingsPanel"
+                class="hidden border-t border-[var(--m3-outline-variant)] p-6 bg-[var(--m3-surface-variant)]">
+                <h4 class="font-bold mb-4">Spielregeln</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Ziel-Punktzahl</label>
+                        <input type="number" id="targetScoreInput" class="m3-text-input" placeholder="z.B. 500"
+                            inputmode="numeric">
+                    </div>
+                    <div class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Spielende</label>
+                        <select id="winConditionSelect" class="m3-text-input">
+                            <option value="none">Kein Limit (Endlos)</option>
+                            <option value="first_to_target_wins">Wer Ziel erreicht, gewinnt</option>
+                            <option value="first_to_target_loses">Wer Ziel erreicht, verliert</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button class="m3-button m3-button-tonal" onclick="toggleGameSettings()">Schließen</button>
+                    <button class="m3-button m3-button-filled ml-2" onclick="saveGameSettings()">Speichern &
+                        Neustart</button>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-[var(--m3-outline-variant)]">
+                <button class="m3-button text-sm w-full" onclick="toggleGameSettings()">
+                    <span class="material-icons-round text-sm">settings</span>
+                    Spielregeln anpassen
+                </button>
+            </div>
         </div>
 
     </div>
@@ -73,32 +106,51 @@
 
 <template id="playerTemplate">
     <div
-        class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 transition-all player-row">
-        <div class="flex items-center gap-4">
+        class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-[var(--m3-surface)] rounded-2xl border border-[var(--m3-outline-variant)] transition-all player-row gap-4">
+
+        <!-- Player Info -->
+        <div class="flex items-center gap-4 flex-1">
             <div
-                class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <span class="material-icons-round">person</span>
+                class="w-12 h-12 rounded-full bg-[var(--m3-primary-container)] flex items-center justify-center text-[var(--m3-on-primary-container)]">
+                <span class="material-icons-round text-2xl">person</span>
             </div>
             <div>
-                <div class="font-bold text-gray-800 dark:text-white player-name-display text-lg"></div>
+                <div class="font-bold text-[var(--m3-on-surface)] player-name-display text-xl"></div>
+                <div class="text-xs text-[var(--m3-on-surface-variant)] status-text hidden"></div>
             </div>
         </div>
-        <div class="flex items-center gap-6">
+
+        <!-- Controls -->
+        <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+
+            <!-- Quick Input -->
             <div
-                class="flex items-center bg-white dark:bg-gray-900 rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700">
-                <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    onclick="updateScore(this, -1)">
-                    <span class="material-icons-round text-gray-600 dark:text-gray-400">remove</span>
-                </button>
-                <div class="w-16 text-center font-bold text-2xl player-score">0</div>
-                <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    onclick="updateScore(this, 1)">
-                    <span class="material-icons-round text-blue-600 dark:text-blue-400">add</span>
-                </button>
+                class="flex items-center bg-[var(--m3-surface-variant)] rounded-full p-1 border border-[var(--m3-outline-variant)]">
+                <input type="number"
+                    class="bg-transparent border-none outline-none w-20 text-center font-mono font-bold text-lg score-input p-2"
+                    placeholder="0" inputmode="numeric" onkeypress="handleScoreInputKey(event, this)">
             </div>
-            <button class="p-2 text-gray-400 hover:text-red-500 transition-colors delete-btn hidden"
+
+            <button
+                class="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--m3-error)] text-white hover:opacity-90 transition-colors shadow-sm"
+                onclick="applyScoreInput(this, -1)" title="Subtrahieren">
+                <span class="material-icons-round">remove</span>
+            </button>
+
+            <button
+                class="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--m3-primary)] text-white hover:opacity-90 transition-colors shadow-sm"
+                onclick="applyScoreInput(this, 1)" title="Addieren">
+                <span class="material-icons-round">add</span>
+            </button>
+
+            <!-- Total Score Display -->
+            <div class="w-24 text-center">
+                <div class="text-[10px] uppercase font-bold text-[var(--m3-primary)] tracking-wider">Gesamt</div>
+                <div class="font-bold text-3xl player-score">0</div>
+            </div>
+
+            <button
+                class="p-2 text-[var(--m3-outline)] hover:text-[var(--m3-error)] transition-colors delete-btn hidden"
                 onclick="removePlayer(this)">
                 <span class="material-icons-round">close</span>
             </button>
@@ -197,6 +249,78 @@
         }
     }
 
+    function handleScoreInputKey(event, input) {
+        if (event.key === 'Enter') {
+            applyScoreInput(input, 1);
+        }
+    }
+
+    function applyScoreInput(element, multiplier) {
+        const row = element.closest('.player-row');
+        const index = parseInt(row.dataset.index);
+        const input = row.querySelector('.score-input');
+
+        let val = parseInt(input.value);
+        if (isNaN(val)) val = 1; // Default to 1 if empty or invalid
+
+        // Add current value sequence logic if needed, simplify for now: total update
+        players[index].score += (val * multiplier);
+        input.value = ''; // Reset input after adding
+
+        updateGameStatus();
+
+        row.querySelector('.player-score').textContent = players[index].score;
+        renderGameStatusText(row, index);
+        savePlayers();
+    }
+
+    // New Logic for Game Status
+    let gameSettings = {
+        targetScore: 0,
+        condition: 'none' // 'none', 'first_to_target_wins', 'first_to_target_loses'
+    };
+
+    function updateGameStatus() {
+        if (gameSettings.condition === 'none' || gameSettings.targetScore === 0) {
+            players.forEach(p => p.status = null);
+            return;
+        }
+
+        players.forEach(p => {
+            p.status = null; // Reset first
+            if (gameSettings.condition === 'first_to_target_wins') {
+                if (p.score >= gameSettings.targetScore) p.status = 'winner';
+            } else if (gameSettings.condition === 'first_to_target_loses') {
+                if (p.score >= gameSettings.targetScore) p.status = 'loser';
+            }
+
+            // Special case for "First to 0 wins" (Uno style if counting down)
+            // But usually Uno is counting UP points and 500 loses.
+        });
+    }
+
+    function renderGameStatusText(row, index) {
+        const p = players[index];
+        const statusEl = row.querySelector('.status-text');
+        const card = row.closest('.player-row'); // The row itself
+
+        // Reset styles
+        card.classList.remove('border-[var(--m3-primary)]', 'border-[var(--m3-error)]', 'bg-[var(--m3-primary-container)]', 'bg-[var(--m3-error-container)]');
+        statusEl.classList.add('hidden');
+
+        if (p.status === 'winner') {
+            statusEl.textContent = '🏆 GEWONNEN!';
+            statusEl.classList.remove('hidden');
+            statusEl.classList.add('text-[var(--m3-primary)]', 'font-bold');
+            card.classList.add('border-[var(--m3-primary)]', 'bg-[var(--m3-primary-container)]');
+        } else if (p.status === 'loser') {
+            statusEl.textContent = '💀 VERLOREN!';
+            statusEl.classList.remove('hidden');
+            statusEl.classList.add('text-[var(--m3-error)]', 'font-bold');
+            card.classList.add('border-[var(--m3-error)]', 'bg-[var(--m3-error-container)]');
+        }
+    }
+
     function renderPlayers() {
         // Clear current list
         const rows = playerList.querySelectorAll('.player-row');
@@ -219,28 +343,18 @@
                     row.querySelector('.delete-btn').classList.remove('hidden');
                 }
 
+                // Render Status styles
+                // Need to append first to querySelector effectively or do it before append
+                // Let's do it after append call or manually now
+                // We'll call logic after render cycle or immediately
+
                 playerList.appendChild(clone);
+
+                // Re-select inserted row to apply styles
+                const insertedRow = playerList.lastElementChild;
+                renderGameStatusText(insertedRow, index);
             });
         }
-    }
-
-    function addPlayer() {
-        const name = playerNameInput.value.trim();
-        if (!name) return;
-
-        players.push({ name: name, score: 0 });
-        playerNameInput.value = '';
-        savePlayers();
-        renderPlayers();
-    }
-
-    function updateScore(btn, delta) {
-        const row = btn.closest('.player-row');
-        const index = parseInt(row.dataset.index);
-        players[index].score += delta;
-
-        row.querySelector('.player-score').textContent = players[index].score;
-        savePlayers();
     }
 
     function removePlayer(btn) {
@@ -251,8 +365,29 @@
         renderPlayers();
     }
 
+    function saveGameSettings() {
+        const target = document.getElementById('targetScoreInput').value;
+        const condition = document.getElementById('winConditionSelect').value;
+
+        gameSettings.targetScore = target ? parseInt(target) : 0;
+        gameSettings.condition = condition;
+
+        updateGameStatus();
+        renderPlayers();
+        toggleGameSettings();
+        showToast('Regeln gespeichert');
+    }
+
+    function toggleGameSettings() {
+        const panel = document.getElementById('gameSettingsPanel');
+        panel.classList.toggle('hidden');
+    }
+
     function resetAllScores() {
-        players.forEach(p => p.score = 0);
+        players.forEach(p => {
+            p.score = 0;
+            p.status = null; // Clear winner/loser status
+        });
         savePlayers();
         renderPlayers();
     }
