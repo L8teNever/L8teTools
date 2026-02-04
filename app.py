@@ -718,6 +718,16 @@ def create_app():
     def wiki_tool():
         return render_template('tools/wiki.html')
 
+    @app.route('/tools/speed-test')
+    @login_required
+    def speed_test():
+        return render_template('tools/speed_test.html')
+
+    @app.route('/tools/speedometer')
+    @login_required
+    def speedometer():
+        return render_template('tools/speedometer.html')
+
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
     def api_get_my_ip():
@@ -832,6 +842,27 @@ def create_app():
 
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
+    # Speedtest APIs
+    @app.route('/api/speedtest/ping', methods=['GET'])
+    def api_speedtest_ping():
+        return '', 204
+
+    @app.route('/api/speedtest/download', methods=['GET'])
+    @login_required
+    def api_speedtest_download():
+        # Generate random bytes
+        size = int(request.args.get('size', 1024 * 1024)) # Default 1MB
+        # Limit max size to avoid memory kills
+        size = min(size, 20 * 1024 * 1024) 
+        return os.urandom(size)
+
+    @app.route('/api/speedtest/upload', methods=['POST'])
+    @login_required
+    def api_speedtest_upload():
+        # Just receive and do nothing
+        # Flask reads stream automatically
+        return jsonify({'received': True})
 
     # Notes API
     @app.route('/api/notes', methods=['GET'])

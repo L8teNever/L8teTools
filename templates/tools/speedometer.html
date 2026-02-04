@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}GPS Tacho{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">GPS Tacho</h2>
+    </div>
+
+    <div
+        class="m3-card max-w-4xl mx-auto text-center py-16 px-8 relative overflow-hidden min-h-[500px] flex flex-col justify-center items-center">
+
+        <!-- Error Message (Hidden by default) -->
+        <div id="errorMsg"
+            class="hidden absolute top-0 left-0 w-full p-4 bg-[var(--m3-error)] text-[var(--m3-on-error)] z-20">
+            Standortzugriff erforderlich. Bitte erlauben.
+        </div>
+
+        <!-- Speed Display -->
+        <div class="relative z-10 mb-8">
+            <h1 class="text-[8rem] md:text-[12rem] font-bold font-mono text-[var(--m3-primary)] leading-none tracking-tighter"
+                id="speedDisplay">0</h1>
+            <div
+                class="text-xl md:text-2xl font-bold uppercase tracking-[0.5em] text-[var(--m3-on-surface-variant)] mt-4">
+                km/h</div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid grid-cols-2 gap-8 w-full max-w-lg">
+            <div class="flex flex-col items-center">
+                <span class="material-icons-round text-[var(--m3-secondary)] mb-2 text-3xl">explore</span>
+                <span class="text-xs uppercase font-bold text-[var(--m3-on-surface-variant)]">Richtung</span>
+                <span class="text-2xl font-bold text-[var(--m3-on-surface)] mt-1" id="headingDisplay">--</span>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <span class="material-icons-round text-[var(--m3-tertiary)] mb-2 text-3xl">gps_fixed</span>
+                <span class="text-xs uppercase font-bold text-[var(--m3-on-surface-variant)]">Genauigkeit</span>
+                <span class="text-2xl font-bold text-[var(--m3-on-surface)] mt-1" id="accuracyDisplay">--</span>
+                <span class="text-xs text-[var(--m3-on-surface-variant)]">Meter</span>
+            </div>
+        </div>
+
+        <!-- Start Button (Initial Overlay) -->
+        <div id="startOverlay"
+            class="absolute inset-0 bg-[var(--m3-surface-container-high)] flex items-center justify-center z-30 transition-opacity duration-300">
+            <button class="m3-button m3-button-filled py-6 px-12 text-xl rounded-full shadow-lg"
+                onclick="startTracking()">
+                <span class="material-icons-round mr-2">play_arrow</span>
+                GPS Starten
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let watchId = null;
+
+    function startTracking() {
+        if (!("geolocation" in navigator)) {
+            showError("GPS wird von diesem Browser nicht unterstützt.");
+            return;
+        }
+
+        // Hide overlay
+        document.getElementById('startOverlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('startOverlay').classList.add('hidden');
+        }, 300);
+
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        watchId = navigator.geolocation.watchPosition(success, error, options);
+    }
+
+    function success(pos) {
+        const crd = pos.coords;
+        const speed = crd.speed; // speed is in meters per second
+
+        let kmh = 0;
+        if (speed !== null) {
+            kmh = speed * 3.6; // Convert to km/h
+        }
+
+        // Update UI
+        document.getElementById('speedDisplay').textContent = Math.round(kmh);
+
+        // Heading
+        if (crd.heading !== null && !isNaN(crd.heading)) {
+            document.getElementById('headingDisplay').textContent = Math.round(crd.heading) + "°";
+        } else {
+            document.getElementById('headingDisplay').textContent = "--";
+        }
+
+        // Accuracy
+        document.getElementById('accuracyDisplay').textContent = Math.round(crd.accuracy);
+
+        // Hide error if previously shown
+        document.getElementById('errorMsg').classList.add('hidden');
+    }
+
+    function error(err) {
+        let msg = "Unbekannter Fehler.";
+        switch (err.code) {
+            case err.PERMISSION_DENIED:
+                msg = "Standortzugriff verweigert.";
+                break;
+            case err.POSITION_UNAVAILABLE:
+                msg = "Standort nicht verfügbar.";
+                break;
+            case err.TIMEOUT:
+                msg = "Zeitüberschreitung bei der Standortsuche.";
+                break;
+        }
+        showError(msg);
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        // Bring back start overlay
+        document.getElementById('startOverlay').classList.remove('hidden');
+        document.getElementById('startOverlay').style.opacity = '1';
+    }
+
+    // Cleanup on navigate away (though browser pages reload anyway)
+    window.addEventListener('beforeunload', () => {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    });
+</script>
+{% endblock %}

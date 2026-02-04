@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Speedtest{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">Netzwerk Speedtest</h2>
+    </div>
+
+    <div class="m3-card max-w-4xl mx-auto text-center py-16 px-8 relative overflow-hidden">
+
+        <!-- Gauge Circle -->
+        <div class="relative w-64 h-64 mx-auto mb-12">
+            <!-- Background Ring -->
+            <svg class="w-full h-full transform -rotate-90">
+                <circle cx="128" cy="128" r="120" stroke="var(--m3-surface-container-highest)" stroke-width="12"
+                    fill="none" />
+                <circle id="progressRing" cx="128" cy="128" r="120" stroke="var(--m3-primary)" stroke-width="12"
+                    fill="none" stroke-dasharray="753" stroke-dashoffset="753"
+                    class="transition-all duration-300 ease-out" />
+            </svg>
+
+            <!-- Center Text -->
+            <div
+                class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                <span class="text-5xl font-bold text-[var(--m3-primary)] font-mono" id="mainSpeedDisplay">0.0</span>
+                <span
+                    class="text-sm font-bold uppercase tracking-widest text-[var(--m3-on-surface-variant)] mt-2">Mbps</span>
+                <span class="text-xs text-[var(--m3-primary)] mt-1 animate-pulse hidden"
+                    id="statusText">Initialisieren...</span>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-8 mb-12 max-w-2xl mx-auto">
+            <div class="flex flex-col items-center p-4 rounded-2xl bg-[var(--m3-surface-container)]">
+                <span class="material-icons-round text-[var(--m3-tertiary)] mb-2">network_check</span>
+                <span class="text-sm uppercase font-bold text-[var(--m3-on-surface-variant)]">Ping</span>
+                <span class="text-2xl font-bold text-[var(--m3-on-surface)] mt-1" id="pingDisplay">--</span>
+                <span class="text-xs text-[var(--m3-on-surface-variant)]">ms</span>
+            </div>
+
+            <div class="flex flex-col items-center p-4 rounded-2xl bg-[var(--m3-surface-container)]" id="downloadCard">
+                <span class="material-icons-round text-[var(--m3-primary)] mb-2">download</span>
+                <span class="text-sm uppercase font-bold text-[var(--m3-on-surface-variant)]">Download</span>
+                <span class="text-2xl font-bold text-[var(--m3-on-surface)] mt-1" id="downloadDisplay">--</span>
+                <span class="text-xs text-[var(--m3-on-surface-variant)]">Mbps</span>
+            </div>
+
+            <div class="flex flex-col items-center p-4 rounded-2xl bg-[var(--m3-surface-container)]" id="uploadCard">
+                <span class="material-icons-round text-[var(--m3-secondary)] mb-2">upload</span>
+                <span class="text-sm uppercase font-bold text-[var(--m3-on-surface-variant)]">Upload</span>
+                <span class="text-2xl font-bold text-[var(--m3-on-surface)] mt-1" id="uploadDisplay">--</span>
+                <span class="text-xs text-[var(--m3-on-surface-variant)]">Mbps</span>
+            </div>
+        </div>
+
+        <!-- Control -->
+        <button
+            class="m3-button m3-button-filled py-6 px-12 text-xl rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all"
+            onclick="startSpeedTest()" id="startBtn">
+            <span class="material-icons-round mr-2">speed</span>
+            Test Starten
+        </button>
+
+    </div>
+</div>
+
+<script>
+    const startBtn = document.getElementById('startBtn');
+    const statusText = document.getElementById('statusText');
+    const mainSpeedDisplay = document.getElementById('mainSpeedDisplay');
+    const progressRing = document.getElementById('progressRing');
+
+    const downloadDisplay = document.getElementById('downloadDisplay');
+    const uploadDisplay = document.getElementById('uploadDisplay');
+    const pingDisplay = document.getElementById('pingDisplay');
+
+    let isRunning = false;
+
+    // Circumference = 2 * PI * 120 ≈ 753.98
+    const circumference = 754;
+
+    function setProgress(percent) {
+        const offset = circumference - (percent / 100) * circumference;
+        progressRing.style.strokeDashoffset = offset;
+    }
+
+    async function startSpeedTest() {
+        if (isRunning) return;
+        isRunning = true;
+        startBtn.disabled = true;
+        startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Reset UI
+        downloadDisplay.textContent = '--';
+        uploadDisplay.textContent = '--';
+        pingDisplay.textContent = '--';
+        mainSpeedDisplay.textContent = '0.0';
+        setProgress(0);
+
+        statusText.classList.remove('hidden');
+
+        try {
+            await measurePing();
+            await measureDownload();
+            await measureUpload();
+
+            statusText.textContent = "Test Abgeschlossen";
+            statusText.classList.remove('animate-pulse');
+        } catch (e) {
+            console.error(e);
+            statusText.textContent = "Fehler aufgetreten";
+            statusText.classList.add('text-red-500');
+        } finally {
+            isRunning = false;
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            startBtn.innerHTML = '<span class="material-icons-round mr-2">refresh</span> Neustarten';
+        }
+    }
+
+    async function measurePing() {
+        statusText.textContent = "Ping wird gemessen...";
+        const start = performance.now();
+        await fetch('/api/speedtest/ping'); // Simple empty endpoint
+        const duration = performance.now() - start;
+        pingDisplay.textContent = Math.round(duration);
+    }
+
+    async function measureDownload() {
+        statusText.textContent = "Download Test...";
+        document.getElementById('downloadCard').classList.add('border', 'border-[var(--m3-primary)]');
+
+        const startTime = performance.now();
+        const sizeInBytes = 5 * 1024 * 1024; // 5MB chunks to start
+        let totalBytes = 0;
+        let testDuration = 5000; // 5 seconds test
+
+        // Parallel streams for saturation
+        const streams = 4;
+
+        // Not a real parallel implementation for simplicity in this artifact, 
+        // effectively doing sequential fetch for checking. 
+        // For a better "Speedtest", we basically fetch random data blocks.
+
+        // We will do a loop for X seconds
+        const endTime = startTime + testDuration;
+
+        while (performance.now() < endTime) {
+            const chunkStart = performance.now();
+            const response = await fetch(`/api/speedtest/download?size=${sizeInBytes}`);
+            const blob = await response.blob();
+            const chunkDuration = (performance.now() - chunkStart) / 1000; // seconds
+
+            totalBytes += blob.size;
+
+            // Current Speed in Mbps
+            // bits = bytes * 8
+            // Mbps = (bits / 1000000) / seconds
+            const currentSpeed = ((blob.size * 8) / 1000000) / chunkDuration;
+
+            mainSpeedDisplay.textContent = currentSpeed.toFixed(1);
+            setProgress(Math.min((currentSpeed / 100) * 100, 100)); // Visual scale up to 100mbps roughly or dynamic
+        }
+
+        const totalDuration = (performance.now() - startTime) / 1000;
+        const avgSpeed = ((totalBytes * 8) / 1000000) / totalDuration;
+
+        downloadDisplay.textContent = avgSpeed.toFixed(1);
+        mainSpeedDisplay.textContent = avgSpeed.toFixed(1);
+        document.getElementById('downloadCard').classList.remove('border', 'border-[var(--m3-primary)]');
+    }
+
+    async function measureUpload() {
+        statusText.textContent = "Upload Test...";
+        document.getElementById('uploadCard').classList.add('border', 'border-[var(--m3-secondary)]');
+        progressRing.style.stroke = 'var(--m3-secondary)';
+
+        // Create dummy data (2MB chunk)
+        const size = 2 * 1024 * 1024;
+        const data = new Uint8Array(size); // Random noises
+
+        const startTime = performance.now();
+        let totalBytes = 0;
+        const testDuration = 5000;
+        const endTime = startTime + testDuration;
+
+        while (performance.now() < endTime) {
+            const chunkStart = performance.now();
+            await fetch('/api/speedtest/upload', {
+                method: 'POST',
+                body: data
+            });
+            const chunkDuration = (performance.now() - chunkStart) / 1000;
+
+            totalBytes += size;
+            const currentSpeed = ((size * 8) / 1000000) / chunkDuration;
+
+            mainSpeedDisplay.textContent = currentSpeed.toFixed(1);
+            setProgress(Math.min((currentSpeed / 50) * 100, 100)); // Upload usually slower
+        }
+
+        const totalDuration = (performance.now() - startTime) / 1000;
+        const avgSpeed = ((totalBytes * 8) / 1000000) / totalDuration;
+
+        uploadDisplay.textContent = avgSpeed.toFixed(1);
+        mainSpeedDisplay.textContent = avgSpeed.toFixed(1);
+        document.getElementById('uploadCard').classList.remove('border', 'border-[var(--m3-secondary)]');
+        progressRing.style.stroke = 'var(--m3-primary)'; // Reset color
+    }
+
+</script>
+{% endblock %}
