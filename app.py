@@ -17,7 +17,11 @@ from PIL import Image, ExifTags
 import img2pdf
 import fitz  # PyMuPDF
 from pillow_heif import register_heif_opener
-import cairosvg
+try:
+    import cairosvg
+except (ImportError, OSError):
+    cairosvg = None
+
 from pdf2docx import Converter as PDF2Docx
 import markdown2
 import glob
@@ -27,13 +31,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 try:
     import moviepy.editor as mp
 except ImportError:
-    import moviepy.editor as mp
-except ImportError:
     import moviepy as mp
 
 try:
     from xhtml2pdf import pisa
-except ImportError:
+except (ImportError, OSError):
     pisa = None
 
 import markdown
@@ -147,6 +149,8 @@ class WordCloud(db.Model):
     user = db.relationship('User', backref=db.backref('word_clouds', lazy=True))
     entries = db.relationship('WordCloudEntry', backref='word_cloud', cascade="all, delete-orphan", lazy=True)
 
+class WordCloudEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     word_cloud_id = db.Column(db.Integer, db.ForeignKey('word_cloud.id'), nullable=False)
     word = db.Column(db.String(100), nullable=False)
     voter_name = db.Column(db.String(100), default='Anonym')
@@ -1655,6 +1659,185 @@ def create_app():
         # If not found, you might want to show a 404 or redirect back to index
         return redirect(url_for('index'))
 
+    # --- Markdown & Formatter Inputs ---
+
+    @app.route('/api/markdown/export', methods=['POST'])
+    @login_required
+    def api_markdown_export():
+        content = request.form.get('content', '')
+        fmt = request.form.get('format', 'txt')
+        
+        if fmt == 'txt':
+            return send_file(
+                io.BytesIO(content.encode('utf-8')),
+                as_attachment=True,
+                download_name=f'export_{int(time.time())}.md',
+                mimetype='text/markdown'
+            )
+            
+        elif fmt == 'pdf':
+            # Markdown -> HTML -> PDF
+            html = markdown.markdown(content)
+            
+            # Add basic styling for PDF
+            styled_html = f"""
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Helvetica, sans-serif; font-size: 12pt; }}
+                    code {{ font-family: Courier; background: #eee; padding: 2px; }}
+                    pre {{ background: #eee; padding: 10px; }}
+                    blockquote {{ border-left: 2px solid #ccc; padding-left: 10px; color: #666; }}
+                </style>
+            </head>
+            <body>{html}</body>
+            </html>
+            """
+            
+            pdf_buffer = io.BytesIO()
+            pisa_status = pisa.CreatePDF(io.BytesIO(styled_html.encode('utf-8')), dest=pdf_buffer)
+            
+            if pisa_status.err:
+                return "PDF Generation Error", 500
+                
+            pdf_buffer.seek(0)
+            return send_file(
+                pdf_buffer,
+                as_attachment=True,
+                download_name=f'export_{int(time.time())}.pdf',
+                mimetype='application/pdf'
+            )
+            
+        elif fmt == 'docx':
+            doc = Document()
+            for line in content.split('\n'):
+                if line.startswith('# '):
+                    doc.add_heading(line[2:], level=1)
+                elif line.startswith('## '):
+                    doc.add_heading(line[3:], level=2)
+                elif line.startswith('### '):
+                    doc.add_heading(line[4:], level=3)
+                else:
+                    doc.add_paragraph(line)
+            
+            docx_buffer = io.BytesIO()
+            doc.save(docx_buffer)
+            docx_buffer.seek(0)
+            
+            return send_file(
+                docx_buffer,
+                as_attachment=True,
+                download_name=f'export_{int(time.time())}.docx',
+                mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            
+        return "Invalid Format", 400
+
+    @app.route('/api/formatter/process', methods=['POST'])
+    @login_required
+    def api_formatter_process():
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file'}), 400
+        
+        file = request.files['file']
+        action = request.form.get('action', 'clean_text')
+        
+        filename = file.filename
+        ext = os.path.splitext(filename)[1].lower()
+        
+        # Save temp
+        temp_in = os.path.join(tempfile.gettempdir(), f"fmt_in_{uuid.uuid4()}{ext}")
+        file.save(temp_in)
+        
+        output_buffer = io.BytesIO()
+        out_name = "output.txt"
+        mimetype = "text/plain"
+        
+        try:
+            if action == 'convert_to_docx':
+                if ext == '.pdf':
+                    cv = PDF2Docx(temp_in)
+                    temp_out = temp_in + '.docx'
+                    cv.convert(temp_out)
+                    cv.close()
+                    with open(temp_out, 'rb') as f:
+                        output_buffer.write(f.read())
+                    os.remove(temp_out)
+                    out_name = filename.replace('.pdf', '.docx')
+                    mimetype = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                else:
+                     doc = Document()
+                     with open(temp_in, 'r', encoding='utf-8', errors='ignore') as f:
+                         doc.add_paragraph(f.read())
+                     temp_out = temp_in + '.docx'
+                     doc.save(temp_out)
+                     with open(temp_out, 'rb') as f:
+                        output_buffer.write(f.read())
+                     os.remove(temp_out)
+                     out_name = "converted.docx"
+                     mimetype = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+            elif action == 'convert_to_pdf':
+                 text_content = ""
+                 if ext == '.docx':
+                     doc = Document(temp_in)
+                     text_content = "\n".join([p.text for p in doc.paragraphs])
+                 elif ext == '.txt' or ext == '.md':
+                     with open(temp_in, 'r', encoding='utf-8', errors='ignore') as f:
+                         text_content = f.read()
+                 html = f"<html><body><pre>{text_content}</pre></body></html>"
+                 pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=output_buffer)
+                 out_name = "converted.pdf"
+                 mimetype = "application/pdf"
+
+            elif action == 'extract_html':
+                text_content = ""
+                if ext == '.pdf':
+                    doc = fitz.open(temp_in)
+                    for page in doc:
+                        text_content += page.get_text()
+                elif ext == '.docx':
+                    doc = Document(temp_in)
+                    text_content = "\n".join([p.text for p in doc.paragraphs])
+                else:
+                     with open(temp_in, 'r', encoding='utf-8', errors='ignore') as f:
+                         text_content = f.read()
+                os.remove(temp_in)
+                return text_content
+            
+            else: 
+                 text_content = ""
+                 if ext == '.pdf':
+                    doc = fitz.open(temp_in)
+                    for page in doc:
+                        text_content += page.get_text()
+                 elif ext == '.docx':
+                    doc = Document(temp_in)
+                    text_content = "\n".join([p.text for p in doc.paragraphs])
+                 else:
+                     with open(temp_in, 'r', encoding='utf-8', errors='ignore') as f:
+                         text_content = f.read()
+                 output_buffer.write(text_content.encode('utf-8'))
+                 out_name = "cleaned.txt"
+
+            output_buffer.seek(0)
+            os.remove(temp_in)
+            return send_file(output_buffer, as_attachment=True, download_name=out_name, mimetype=mimetype)
+            
+        except Exception as e:
+            if os.path.exists(temp_in): os.remove(temp_in)
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/tools/tip-calculator')
+    @login_required
+    def tip_calculator():
+        return render_template('tools/tip_calculator.html')
+
+    @app.route('/tools/lorem-ipsum')
+    @login_required
+    def lorem_ipsum():
+        return render_template('tools/lorem_ipsum.html')
+
     return app
 
 app = create_app()
@@ -1710,3 +1893,4 @@ scheduler.start()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
