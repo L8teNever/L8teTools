@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Formatierungs-Helfer{% endblock %}
+
+{% block content %}
+<div class="tool-page-container">
+    <div class="page-header">
+        <a href="{{ url_for('dashboard') }}"
+            class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+            <span class="material-icons-round text-2xl">arrow_back</span>
+        </a>
+        <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">Formatierungs-Helfer</h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Upload Card -->
+        <div class="m3-card">
+            <h3 class="text-xl font-bold mb-6">Datei Konverter & Cleaner</h3>
+
+            <form id="convertForm" class="space-y-6">
+                <!-- Dropzone -->
+                <div id="dropzone"
+                    class="border-2 border-dashed border-[var(--m3-outline-variant)] rounded-2xl p-8 text-center cursor-pointer hover:bg-[var(--m3-surface-variant)] transition-all">
+                    <input type="file" id="fileInput" name="file" class="hidden"
+                        accept=".pdf,.docx,.doc,.txt,.md,.html">
+                    <span class="material-icons-round text-5xl text-[var(--m3-primary)] mb-4">analytics</span>
+                    <p class="font-bold text-lg mb-1" id="fileNamePlaceholder">Datei hier ablegen</p>
+                    <p class="text-sm text-[var(--m3-on-surface-variant)]">Unterstützt: PDF, Word, Text</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-4">
+                    <div class="m3-input-group">
+                        <label class="text-xs font-bold uppercase text-[var(--m3-primary)] mb-1">Aktion wählen</label>
+                        <select id="actionSelect" class="m3-text-input">
+                            <option value="convert_to_pdf">Konvertieren zu PDF (Standardisieren)</option>
+                            <option value="convert_to_docx">Konvertieren zu Word (Editierbar machen)</option>
+                            <option value="clean_text">Text bereinigen (Nur Text extrahieren)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="processingStatus" class="hidden items-center gap-3 text-[var(--m3-tertiary)] animate-pulse">
+                    <span class="material-icons-round">settings_suggest</span>
+                    <span>Wird verarbeitet... Dies kann einen Moment dauern.</span>
+                </div>
+
+                <button type="submit" class="m3-button m3-button-filled w-full py-4 text-lg">
+                    <span class="material-icons-round">auto_fix_high</span>
+                    Formatierung Fixen
+                </button>
+            </form>
+        </div>
+
+        <!-- Manual Edit Card -->
+        <div class="m3-card flex flex-col">
+            <h3 class="text-xl font-bold mb-4">Manueller Editor</h3>
+            <p class="text-sm text-[var(--m3-on-surface-variant)] mb-4">Inhalt direkt im Browser bearbeiten.</p>
+
+            <div
+                class="flex-1 bg-white text-black rounded-lg overflow-hidden border border-[var(--m3-outline)] min-h-[400px]">
+                <!-- TinyMCE or simple contenteditable -->
+                <textarea id="manualEditor" class="w-full h-full p-4 outline-none resize-none"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button class="m3-button m3-button-tonal" onclick="loadFromFile()">
+                    <span class="material-icons-round">upload_file</span>
+                    Aus Upload laden
+                </button>
+                <button class="m3-button m3-button-filled" onclick="saveManual()">
+                    <span class="material-icons-round">save</span>
+                    Als PDF speichern
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNamePlaceholder = document.getElementById('fileNamePlaceholder');
+    const convertForm = document.getElementById('convertForm');
+    const processingStatus = document.getElementById('processingStatus');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('bg-[var(--m3-surface-variant)]');
+    });
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('bg-[var(--m3-surface-variant)]'));
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('bg-[var(--m3-surface-variant)]');
+        fileInput.files = e.dataTransfer.files;
+        updateFileLabel();
+    });
+
+    fileInput.addEventListener('change', updateFileLabel);
+
+    function updateFileLabel() {
+        if (fileInput.files.length > 0) {
+            fileNamePlaceholder.textContent = fileInput.files[0].name;
+            fileNamePlaceholder.classList.add('text-[var(--m3-primary)]');
+        }
+    }
+
+    convertForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (fileInput.files.length === 0) return alert('Bitte Datei wählen');
+
+        const action = document.getElementById('actionSelect').value;
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('action', action);
+
+        processingStatus.classList.remove('hidden');
+
+        try {
+            const res = await fetch('/api/formatter/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "fixed_" + fileInput.files[0].name.split('.')[0] + (action.includes('pdf') ? '.pdf' : (action.includes('docx') ? '.docx' : '.txt'));
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                const err = await res.json();
+                alert('Fehler: ' + (err.error || 'Server Error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Netzwerkfehler');
+        } finally {
+            processingStatus.classList.add('hidden');
+        }
+    });
+
+    async function loadFromFile() {
+        if (fileInput.files.length === 0) return alert('Bitte erst links eine Datei wählen, um sie zu laden.');
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        // We use a special 'extract_text' action
+        formData.append('action', 'extract_html');
+
+        processingStatus.classList.remove('hidden');
+        try {
+            const res = await fetch('/api/formatter/process', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const text = await res.text();
+                document.getElementById('manualEditor').value = text; // Ideally strictly text for textarea, or HTML for WYSIWYG
+            } else {
+                alert('Konnte Text nicht extrahieren');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            processingStatus.classList.add('hidden');
+        }
+    }
+
+    async function saveManual() {
+        const content = document.getElementById('manualEditor').value;
+        if (!content) return;
+
+        // Use markdown export endpoint actually, easiest way to gen PDF from raw text
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/markdown/export';
+        form.target = '_blank';
+
+        const i1 = document.createElement('input');
+        i1.name = 'content';
+        i1.value = content;
+        i1.type = 'hidden';
+
+        const i2 = document.createElement('input');
+        i2.name = 'format';
+        i2.value = 'pdf'; // Default to PDF save
+        i2.type = 'hidden';
+
+        form.appendChild(i1);
+        form.appendChild(i2);
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    }
+</script>
+{% endblock %}

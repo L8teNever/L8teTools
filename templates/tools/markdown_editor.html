@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Markdown Editor{% endblock %}
+
+{% block content %}
+<div class="tool-page-container h-[calc(100vh-100px)] flex flex-col">
+    <div class="page-header flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-4">
+            <a href="{{ url_for('dashboard') }}"
+                class="p-4 hover:bg-[var(--m3-surface-container-high)] rounded-full transition-colors text-[var(--m3-on-surface)]">
+                <span class="material-icons-round text-2xl">arrow_back</span>
+            </a>
+            <h2 class="text-3xl font-bold text-[var(--m3-on-surface)]">Markdown Editor</h2>
+        </div>
+
+        <div class="flex gap-2">
+            <div class="dropdown relative">
+                <button class="m3-button m3-button-filled"
+                    onclick="document.getElementById('exportMenu').classList.toggle('hidden')">
+                    <span class="material-icons-round">save_alt</span>
+                    Exportieren
+                </button>
+                <div id="exportMenu"
+                    class="hidden absolute right-0 top-full mt-2 w-48 bg-[var(--m3-surface-container)] rounded-xl shadow-xl z-50 overflow-hidden border border-[var(--m3-outline-variant)]">
+                    <button
+                        class="w-full text-left px-4 py-3 hover:bg-[var(--m3-surface-variant)] flex items-center gap-2"
+                        onclick="exportFile('pdf')">
+                        <span class="material-icons-round text-red-500">picture_as_pdf</span> PDF
+                    </button>
+                    <button
+                        class="w-full text-left px-4 py-3 hover:bg-[var(--m3-surface-variant)] flex items-center gap-2"
+                        onclick="exportFile('docx')">
+                        <span class="material-icons-round text-blue-600">description</span> Word (.docx)
+                    </button>
+                    <button
+                        class="w-full text-left px-4 py-3 hover:bg-[var(--m3-surface-variant)] flex items-center gap-2"
+                        onclick="exportFile('txt')">
+                        <span class="material-icons-round text-[var(--m3-on-surface)]">text_snippet</span> Text (.md)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Area -->
+    <div class="flex flex-col md:flex-row gap-4 h-full overflow-hidden mt-4 pb-4">
+
+        <!-- Input -->
+        <div
+            class="flex-1 flex flex-col h-full bg-[var(--m3-surface-container-low)] rounded-2xl overflow-hidden border border-[var(--m3-outline-variant)]">
+            <div
+                class="bg-[var(--m3-surface-container)] px-4 py-2 border-b border-[var(--m3-outline-variant)] flex justify-between items-center">
+                <span class="font-bold text-xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">Editor
+                    (Markdown)</span>
+                <button class="p-1 hover:bg-[var(--m3-surface-variant)] rounded" onclick="clearEditor()" title="Leeren">
+                    <span class="material-icons-round text-sm">delete</span>
+                </button>
+            </div>
+            <textarea id="mdInput"
+                class="flex-1 w-full bg-transparent p-4 outline-none font-mono text-sm md:text-base resize-none text-[var(--m3-on-surface)]"
+                placeholder="# Überschrift&#10;&#10;Schreibe deinen Text hier..."></textarea>
+        </div>
+
+        <!-- Preview -->
+        <div
+            class="hidden md:flex flex-1 flex-col h-full bg-[var(--m3-surface)] rounded-2xl overflow-hidden border border-[var(--m3-outline-variant)] shadow-lg">
+            <div class="bg-[var(--m3-surface-container)] px-4 py-2 border-b border-[var(--m3-outline-variant)]">
+                <span
+                    class="font-bold text-xs uppercase tracking-wider text-[var(--m3-on-surface-variant)]">Vorschau</span>
+            </div>
+            <div id="mdPreview" class="flex-1 w-full p-8 overflow-y-auto prose dark:prose-invert max-w-none">
+                <!-- Content -->
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<form id="exportForm" action="/api/markdown/export" method="POST" target="_blank" class="hidden">
+    <input type="hidden" name="content" id="exportContent">
+    <input type="hidden" name="format" id="exportFormat">
+</form>
+
+<!-- Use marked.js for client side preview -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const mdInput = document.getElementById('mdInput');
+    const mdPreview = document.getElementById('mdPreview');
+
+    // Load from local storage
+    const saved = localStorage.getItem('l8te_md_draft');
+    if (saved) mdInput.value = saved;
+    updatePreview();
+
+    mdInput.addEventListener('input', () => {
+        updatePreview();
+        localStorage.setItem('l8te_md_draft', mdInput.value);
+    });
+
+    function updatePreview() {
+        const text = mdInput.value;
+        mdPreview.innerHTML = marked.parse(text);
+    }
+
+    function clearEditor() {
+        if (confirm('Text löschen?')) {
+            mdInput.value = '';
+            updatePreview();
+            localStorage.removeItem('l8te_md_draft');
+        }
+    }
+
+    function exportFile(format) {
+        const content = mdInput.value;
+        if (!content) return alert('Bitte zuerst Text schreiben.');
+
+        document.getElementById('exportContent').value = content;
+        document.getElementById('exportFormat').value = format;
+        document.getElementById('exportForm').submit();
+
+        document.getElementById('exportMenu').classList.add('hidden');
+    }
+
+    // Close menu on click outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

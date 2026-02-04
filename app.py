@@ -27,7 +27,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 try:
     import moviepy.editor as mp
 except ImportError:
+    import moviepy.editor as mp
+except ImportError:
     import moviepy as mp
+
+try:
+    from xhtml2pdf import pisa
+except ImportError:
+    pisa = None
+
+import markdown
+from docx import Document
+from functools import wraps 
 
 register_heif_opener()
 
@@ -756,6 +767,16 @@ def create_app():
     @login_required
     def file_share_tool():
         return render_template('tools/file_share.html')
+
+    @app.route('/tools/markdown')
+    @login_required
+    def markdown_tool():
+        return render_template('tools/markdown_editor.html')
+
+    @app.route('/tools/formatter')
+    @login_required
+    def formatter_tool():
+        return render_template('tools/document_formatter.html')
 
     @app.route('/api/tools/my-ip', methods=['GET'])
     @login_required
