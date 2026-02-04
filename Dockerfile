@@ -12,10 +12,18 @@ RUN apt-get update && \
     shared-mime-info \
     gcc \
     python3-dev \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Download spacy language model (optional, for name recognition)
+RUN python -m spacy download de_core_news_sm || echo "Spacy model download skipped"
 
 COPY . .
 
@@ -28,3 +36,4 @@ EXPOSE 5000
 
 # Run the application
 CMD ["python", "app.py"]
+

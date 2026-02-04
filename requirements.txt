@@ -10,7 +10,10 @@ pillow-heif
 cairosvg
 pdf2docx
 markdown2
-moviepy==1.0.3
+markdown
+python-docx
+xhtml2pdf
+moviepy
 decorator
 pandas
 openpyxl
@@ -20,3 +23,6 @@ holidays
 APScheduler
 yt-dlp
 imageio-ffmpeg
+numpy
+opencv-python
+spacy
