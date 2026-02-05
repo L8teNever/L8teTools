@@ -2,7 +2,12 @@ version: '3.8'
 
 services:
   l8tetools:
-    image: l8tenever/l8tetools:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: l8tetools:latest
     container_name: l8tetools
     ports:
       - "5000:5000"
@@ -14,3 +19,4 @@ services:
 
 volumes:
   l8te_data:
+
