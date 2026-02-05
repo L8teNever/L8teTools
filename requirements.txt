@@ -10,7 +10,7 @@ pillow-heif
 cairosvg
 pdf2docx
 markdown2
-Markdown
+markdown
 python-docx
 xhtml2pdf
 moviepy
