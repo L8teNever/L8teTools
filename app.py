@@ -39,7 +39,11 @@ try:
 except (ImportError, OSError):
     pisa = None
 
-import markdown
+try:
+    import markdown
+except ImportError:
+    markdown = None
+
 from docx import Document
 from functools import wraps
 import re
@@ -1696,6 +1700,9 @@ def create_app():
             )
             
         elif fmt == 'pdf':
+            if not markdown or not pisa:
+                return jsonify({'error': 'PDF export not available (missing dependencies)'}), 500
+            
             # Markdown -> HTML -> PDF
             html = markdown.markdown(content)
             
