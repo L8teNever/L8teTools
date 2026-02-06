@@ -21,7 +21,17 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt || \
+    (echo "Some packages failed, installing core packages only..." && \
+     pip install --no-cache-dir flask flask-login flask-sqlalchemy werkzeug gunicorn \
+     Pillow img2pdf PyMuPDF pillow-heif pdf2docx markdown2 markdown python-docx \
+     decorator pandas openpyxl requests holidays APScheduler yt-dlp imageio-ffmpeg numpy && \
+     pip install --no-cache-dir moviepy || echo "moviepy failed" && \
+     pip install --no-cache-dir xhtml2pdf || echo "xhtml2pdf failed" && \
+     pip install --no-cache-dir cairosvg || echo "cairosvg failed" && \
+     pip install --no-cache-dir python-whois || echo "python-whois failed" && \
+     pip install --no-cache-dir opencv-python-headless || echo "opencv failed" && \
+     pip install --no-cache-dir spacy || echo "spacy failed")
 
 # Download spacy language model (optional, for name recognition)
 RUN python -m spacy download de_core_news_sm || echo "Spacy model download skipped"

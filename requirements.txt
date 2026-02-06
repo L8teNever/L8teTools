@@ -24,5 +24,5 @@ APScheduler
 yt-dlp
 imageio-ffmpeg
 numpy
-opencv-python
+opencv-python-headless
 spacy
