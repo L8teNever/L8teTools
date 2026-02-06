@@ -24,7 +24,7 @@ except (ImportError, OSError):
     cairosvg = None
 
 from pdf2docx import Converter as PDF2Docx
-import markdown2
+
 import glob
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -43,6 +43,13 @@ try:
     import markdown
 except ImportError:
     markdown = None
+
+import markdown2
+
+def render_markdown(text):
+    if markdown:
+        return markdown.markdown(text)
+    return markdown2.markdown(text)
 
 from docx import Document
 from functools import wraps
@@ -1700,11 +1707,11 @@ def create_app():
             )
             
         elif fmt == 'pdf':
-            if not markdown or not pisa:
+            if not pisa:
                 return jsonify({'error': 'PDF export not available (missing dependencies)'}), 500
             
             # Markdown -> HTML -> PDF
-            html = markdown.markdown(content)
+            html = render_markdown(content)
             
             # Add basic styling for PDF
             styled_html = f"""
