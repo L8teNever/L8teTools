@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILDKIT_INLINE_CACHE=1
-    image: l8tetools:latest
+    image: l8tetools-local:latest
     container_name: l8tetools
     ports:
       - "5000:5000"
