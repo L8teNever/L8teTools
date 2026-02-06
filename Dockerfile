@@ -12,7 +12,7 @@ RUN apt-get update && \
     shared-mime-info \
     gcc \
     python3-dev \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
