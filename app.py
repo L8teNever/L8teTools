@@ -1051,7 +1051,7 @@ def create_app():
         return jsonify({'success': True})
 
     @app.route('/s/<token>')
-    def shared_file_download(token):
+    def shared_file_view(token):
         f = SharedFile.query.get(token)
         if not f:
             return "File not found or expired", 404
@@ -1061,21 +1061,48 @@ def create_app():
             delete_shared_file(f)
             return "Link expired", 410 # Gone
             
-        # Check Expiration (Downloads)
+        # Check Expiration (Downloads) - Preview doesn't consume download, but check if exhausted
         if f.max_downloads != -1 and f.download_count >= f.max_downloads:
             delete_shared_file(f)
             return "Download limit reached", 410
             
-        # Check Expiration (Open / Access Window)
+        # Check Expiration (Open / Access Window) - Start timer on view
         if f.expiration_mode == 'open':
             if not f.first_accessed_at:
                 f.first_accessed_at = datetime.now()
                 # Set the absolute expiration now based on window
                 f.expires_at = datetime.now() + timedelta(hours=f.access_window_hours)
                 db.session.commit()
-            elif datetime.now() > f.expires_at: # Should be caught above, but safety check
+            elif datetime.now() > f.expires_at:
                 delete_shared_file(f)
                 return "Link expired after opening", 410
+
+        # Calculate file size
+        file_size_str = "Unknown"
+        try:
+            size_bytes = os.path.getsize(f.filepath)
+            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+                if size_bytes < 1024:
+                    file_size_str = f"{size_bytes:.2f} {unit}"
+                    break
+                size_bytes /= 1024
+        except:
+            pass
+
+        return render_template('shared_file_view.html', file=f, file_size_str=file_size_str)
+
+    @app.route('/s/<token>/download')
+    def shared_file_download_action(token):
+        f = SharedFile.query.get(token)
+        if not f:
+            return "File not found or expired", 404
+        
+        # Re-check expirations for safety
+        if f.expires_at and datetime.now() > f.expires_at:
+            return "Link expired", 410
+            
+        if f.max_downloads != -1 and f.download_count >= f.max_downloads:
+            return "Download limit reached", 410
 
         # Increment count
         f.download_count += 1
@@ -1083,12 +1110,6 @@ def create_app():
         
         # Serve file
         try:
-             # If "Burn after read" (download mode), queue deletion after response?
-             # Flask doesn't support 'after_request' specifically for file deletion easily without wrappers.
-             # But if max_downloads was 1, next request will fail. We rely on cleanup task or next check.
-             # Alternatively, if this IS the last download, we could try to delete, but streaming might fail.
-             # We rely on 'lazy deletion' on next check or separate thread.
-             
              return send_file(f.filepath, as_attachment=True, download_name=f.filename)
         except Exception as e:
             return str(e), 500

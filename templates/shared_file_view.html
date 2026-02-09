@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Datei Download{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div
+        class="bg-[var(--m3-surface)] p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-[var(--m3-outline-variant)]">
+
+        <div class="mb-6">
+            <div
+                class="w-20 h-20 bg-[var(--m3-primary-container)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-icons-round text-4xl text-[var(--m3-on-primary-container)]">
+                    {% if file.filename.endswith(('.jpg', '.png', '.jpeg', '.gif', '.webp')) %}
+                    image
+                    {% elif file.filename.endswith(('.mp4', '.mov', '.avi')) %}
+                    movie
+                    {% elif file.filename.endswith(('.mp3', '.wav')) %}
+                    audiotrack
+                    {% elif file.filename.endswith('.pdf') %}
+                    picture_as_pdf
+                    {% elif file.filename.endswith('.zip') %}
+                    folder_zip
+                    {% else %}
+                    description
+                    {% endif %}
+                </span>
+            </div>
+            <h2 class="text-2xl font-bold text-[var(--m3-on-surface)] break-all">{{ file.filename }}</h2>
+            <p class="text-[var(--m3-on-surface-variant)] mt-2">
+                Geteilt von <span class="font-medium">{{ file.user.username }}</span>
+            </p>
+        </div>
+
+        <div class="flex flex-col gap-2 mb-8 bg-[var(--m3-surface-variant)] p-4 rounded-xl text-sm">
+            {% if file.expires_at %}
+            <div class="flex justify-between">
+                <span class="text-[var(--m3-on-surface-variant)]">Läuft ab am:</span>
+                <span class="font-medium text-[var(--m3-on-surface)]">{{ file.expires_at.strftime('%d.%m.%Y %H:%M')
+                    }}</span>
+            </div>
+            {% endif %}
+
+            {% if file.max_downloads != -1 %}
+            <div class="flex justify-between">
+                <span class="text-[var(--m3-on-surface-variant)]">Downloads übrig:</span>
+                <span class="font-medium text-[var(--m3-on-surface)]">{{ file.max_downloads - file.download_count
+                    }}</span>
+            </div>
+            {% endif %}
+
+            {% if file_size_str %}
+            <div class="flex justify-between">
+                <span class="text-[var(--m3-on-surface-variant)]">Größe:</span>
+                <span class="font-medium text-[var(--m3-on-surface)]">{{ file_size_str }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="{{ url_for('shared_file_download_action', token=file.id) }}"
+            class="inline-flex items-center justify-center gap-2 w-full py-4 px-6 bg-[var(--m3-primary)] text-[var(--m3-on-primary)] rounded-full font-bold text-lg hover:shadow-lg transition-all active:scale-95">
+            <span class="material-icons-round">download</span>
+            Herunterladen
+        </a>
+
+        <p class="mt-6 text-xs text-[var(--m3-on-surface-variant)]">
+            Dieser Link wurde mit L8teTools erstellt.
+        </p>
+    </div>
+</div>
+{% endblock %}
