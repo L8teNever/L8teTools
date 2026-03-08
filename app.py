@@ -275,8 +275,8 @@ def create_app():
 
         cf_email = request.headers.get('Cf-Access-Authenticated-User-Email')
         
-        # Optional: Disable development override in production via STRICT_AUTH env
-        if not cf_email and app.debug and not os.environ.get('STRICT_AUTH'):
+        # Development override ONLY if explicitly enabled via environment variable
+        if not cf_email and os.environ.get('DEV_AUTH_ENABLED') == 'true':
             cf_email = "dev@local.host"
 
         if cf_email:
@@ -2060,5 +2060,6 @@ scheduler.add_job(func=cleanup_job, trigger="interval", minutes=60)
 scheduler.start()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    is_debug = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=5000, debug=is_debug)
 
