@@ -12,13 +12,13 @@ L8teTools ist eine moderne Web-Anwendung, die verschiedene hilfreiche Tools unte
 
 ---
 
-## 🚀 Deployment mit Docker / Dockge
+## 🚀 Deployment mit Cloudflare Access / Docker
 
-Hier ist die passende `docker-compose.yml` für dein Setup (z.B. in Dockge):
+L8teTools nutzt **Cloudflare Access** für die Authentifizierung. Das bedeutet, es gibt kein klassisches Login-Feld mehr; stattdessen wird die E-Mail-Adresse direkt von Cloudflare aus dem Header gelesen.
+
+Hier ist die passende `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
-
 services:
   l8tetools:
     image: l8tenever/l8tetools:latest
@@ -26,7 +26,10 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - SECRET_KEY=dein_geheimer_schlüssel_hier
+      - SECRET_KEY=dein_geheimer_schlüssel
+      - ADMIN_EMAILS=deine-email@beispiel.de,andere@email.de  # Liste von Admins (kommagetrennt)
+      - DEV_AUTH_ENABLED=false  # Setze auf 'true' für lokalen Test ohne Cloudflare
+      - FLASK_DEBUG=false
     restart: unless-stopped
     volumes:
       - l8te_data:/app/instance
@@ -34,6 +37,14 @@ services:
 volumes:
   l8te_data:
 ```
+
+### 🔐 Authentifizierungs-Optionen
+
+| Variable | Beschreibung | Standard |
+| :--- | :--- | :--- |
+| `ADMIN_EMAILS` | Liste von E-Mails, die Admin-Rechte erhalten sollen. | (leer) |
+| `DEV_AUTH_ENABLED` | Schaltet den lokalen Testmodus (`dev@local.host`) an/aus. | `false` |
+| `FLASK_DEBUG` | Aktiviert den Flask Debug-Modus für Fehlerdiagnosen. | `false` |
 
 ---
 
