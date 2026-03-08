@@ -92,6 +92,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     username = db.Column(db.String(150), nullable=True) # Required for transition from old DB schema
+    password_hash = db.Column(db.String(150), nullable=True) # Required for transition from old DB schema
     is_admin = db.Column(db.Boolean, default=False)
 
 class Shortlink(db.Model):
@@ -256,8 +257,8 @@ def create_app():
         for email in admin_emails:
             email = email.strip()
             if email and not User.query.filter_by(email=email).first():
-                # Provide username as well to satisfy NOT NULL constraints in existing databases
-                admin = User(email=email, username=email, is_admin=True)
+                # Provide username and dummy password hash to satisfy constraints
+                admin = User(email=email, username=email, password_hash='cloudflare_auth', is_admin=True)
                 db.session.add(admin)
                 db.session.commit()
 
@@ -290,8 +291,8 @@ def create_app():
                 if not User.query.filter_by(is_admin=True).first():
                     is_admin = True
 
-                # Provide username as well to satisfy NOT NULL constraints in existing databases
-                user = User(email=cf_email, username=cf_email, is_admin=is_admin)
+                # Provide username and dummy password hash to satisfy constraints
+                user = User(email=cf_email, username=cf_email, password_hash='cloudflare_auth', is_admin=is_admin)
                 db.session.add(user)
                 db.session.commit()
             
