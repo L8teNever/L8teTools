@@ -91,11 +91,8 @@ class Config:
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
+    username = db.Column(db.String(150), nullable=True) # Required for transition from old DB schema
     is_admin = db.Column(db.Boolean, default=False)
-
-    @property
-    def username(self):
-        return self.email
 
 class Shortlink(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -259,7 +256,8 @@ def create_app():
         for email in admin_emails:
             email = email.strip()
             if email and not User.query.filter_by(email=email).first():
-                admin = User(email=email, is_admin=True)
+                # Provide username as well to satisfy NOT NULL constraints in existing databases
+                admin = User(email=email, username=email, is_admin=True)
                 db.session.add(admin)
                 db.session.commit()
 
@@ -292,7 +290,8 @@ def create_app():
                 if not User.query.filter_by(is_admin=True).first():
                     is_admin = True
 
-                user = User(email=cf_email, is_admin=is_admin)
+                # Provide username as well to satisfy NOT NULL constraints in existing databases
+                user = User(email=cf_email, username=cf_email, is_admin=is_admin)
                 db.session.add(user)
                 db.session.commit()
             
