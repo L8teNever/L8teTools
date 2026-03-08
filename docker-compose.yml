@@ -1,12 +1,7 @@
 
 services:
   l8tetools:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - BUILDKIT_INLINE_CACHE=1
-    image: l8tetools-local:latest
+    image: l8tenever/l8tetools:latest
     container_name: l8tetools
     ports:
       - "5000:5000"

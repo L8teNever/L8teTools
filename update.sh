@@ -4,11 +4,8 @@
 echo "🔄 Stoppe Container..."
 docker-compose down
 
-echo "🗑️  Lösche altes Image..."
-docker rmi l8tetools:latest 2>/dev/null || echo "Kein altes Image gefunden"
-
-echo "🔨 Baue neues Image (ohne Cache)..."
-docker-compose build --no-cache
+echo "📥  Lade neuestes Image herunter..."
+docker-compose pull
 
 echo "🚀 Starte Container..."
 docker-compose up -d
