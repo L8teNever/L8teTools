@@ -220,6 +220,28 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+        # Migration: Add email column if it doesn't exist (renaming/migrating from username)
+        try:
+            # Check if email exists
+            db.session.execute(db.text('SELECT email FROM user LIMIT 1'))
+        except:
+            db.session.rollback()
+            try:
+                # Add email column
+                db.session.execute(db.text('ALTER TABLE user ADD COLUMN email VARCHAR(150)'))
+                # If we have old usernames, we could try to use them as emails, 
+                # but most likely they are just names. We'll leave them null or copy them.
+                db.session.execute(db.text('UPDATE user SET email = username'))
+                db.session.commit()
+            except:
+                db.session.rollback()
+                # If username also doesn't exist (very old DB), just add it
+                try:
+                    db.session.execute(db.text('ALTER TABLE user ADD COLUMN email VARCHAR(150)'))
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+
         # Ensure retention config exists
         retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
         if not retention_config:
@@ -241,12 +263,6 @@ def create_app():
                 db.session.add(admin)
                 db.session.commit()
 
-        # Ensure retention config exists
-        retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
-        if not retention_config:
-            # Default: 1440 minutes = 24 hours
-            db.session.add(SystemConfig(key='file_retention_minutes', value='1440'))
-            db.session.commit()
 
     @login_manager.user_loader
     def load_user(user_id):
