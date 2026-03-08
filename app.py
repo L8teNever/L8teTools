@@ -275,8 +275,8 @@ def create_app():
 
         cf_email = request.headers.get('Cf-Access-Authenticated-User-Email')
         
-        # Development override if not behind Cloudflare
-        if not cf_email and app.debug:
+        # Optional: Disable development override in production via STRICT_AUTH env
+        if not cf_email and app.debug and not os.environ.get('STRICT_AUTH'):
             cf_email = "dev@local.host"
 
         if cf_email:
@@ -300,15 +300,19 @@ def create_app():
                 login_user(user, remember=True)
         else:
             # If no header is present, we are not authenticated via Cloudflare
-            # Since the user wants to remove the login page, we show a 403 or redirect
-            if request.endpoint not in ['static', 'offline']:
-                return "Unauthorized: Cloudflare Access header missing.", 401
+            # Since the user wants to remove the login page, we show a nice error
+            if request.endpoint not in ['static', 'no_access']:
+                return render_template('no_access.html'), 401
 
     # Routes
     @app.route('/')
     def index():
         return redirect(url_for('dashboard'))
 
+
+    @app.route('/no-access')
+    def no_access():
+        return render_template('no_access.html')
 
     @app.route('/offline')
     def offline():

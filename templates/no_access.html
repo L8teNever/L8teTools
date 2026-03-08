@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zugriff Verweigert - Cloudflare Access erforderlich</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="bg-gray-950 text-gray-100 flex items-center justify-center min-h-screen p-6">
+    <div class="m3-card max-w-lg w-full text-center space-y-6 animate-fade-in border-red-500/20">
+        <div
+            class="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-icons-round text-red-500 text-4xl">block</span>
+        </div>
+
+        <h1 class="text-3xl font-extrabold tracking-tight">Zugriff Verweigert</h1>
+
+        <p class="text-[var(--m3-on-surface-variant)] leading-relaxed">
+            Deine E-Mail Adresse konnte nicht über **Cloudflare Access** verifiziert werden.
+        </p>
+
+        <div
+            class="p-4 bg-[var(--m3-surface-container)] rounded-2xl border border-[var(--m3-outline-variant)] text-xs text-left">
+            <p class="font-bold flex items-center gap-2 mb-2">
+                <span class="material-icons-round text-xs">info</span>
+                Was ist passiert?
+            </p>
+            <p>
+                Diese Instanz von L8teTools ist strikt durch einen Cloudflare Zero Trust Tunnel geschützt. Ohne eine
+                gültige Session (E-Mail Header) ist kein Zugriff möglich.
+            </p>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <a href="https://cloudflare.com" target="_blank"
+                class="m3-button m3-button-filled py-3 flex items-center justify-center gap-2">
+                <span class="material-icons-round">cloud_queue</span>
+                Cloudflare Dashboard
+            </a>
+            <button onclick="location.reload()" class="p-3 text-sm text-[var(--m3-primary)] font-bold hover:underline">
+                Erneut versuchen
+            </button>
+        </div>
+
+        <p class="text-[10px] text-gray-500 mt-8">
+            Server-ID: {{ request.host }}
+        </p>
+    </div>
+</body>
+
+</html>
