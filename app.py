@@ -90,16 +90,12 @@ class Config:
 # Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    must_change_password = db.Column(db.Boolean, default=False)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    @property
+    def username(self):
+        return self.email
 
 class Shortlink(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -224,40 +220,26 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-        # SQLite Migration: Add is_admin column if it doesn't exist
-        try:
-            db.session.execute(db.text('ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+        # Ensure retention config exists
+        retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
+        if not retention_config:
+            db.session.add(SystemConfig(key='file_retention_minutes', value='1440'))
             db.session.commit()
-        except:
-            db.session.rollback()
-
-        try:
-            db.session.execute(db.text('ALTER TABLE user ADD COLUMN must_change_password BOOLEAN DEFAULT 0'))
-            db.session.commit()
-        except:
-            db.session.rollback()
-
-        try:
-            db.session.execute(db.text('ALTER TABLE poll ADD COLUMN allow_suggestions BOOLEAN DEFAULT 0'))
-            db.session.execute(db.text('ALTER TABLE poll ADD COLUMN anonymous_voting BOOLEAN DEFAULT 0'))
-            db.session.commit()
-        except:
-            db.session.rollback()
 
         # Ensure default domain exists
         domain_config = SystemConfig.query.filter_by(key='shortener_domain').first()
         if not domain_config:
             db.session.add(SystemConfig(key='shortener_domain', value='tools.l8tenever.de'))
             db.session.commit()
-        
-        # Optional: Promote first user to admin if no admin exists
-        # Create default admin if no user exists
-        if not User.query.first():
-            default_admin = User(username='admin', is_admin=True, must_change_password=True)
-            default_admin.set_password('admin')
-            db.session.add(default_admin)
-            db.session.commit()
-            print("Default admin account created: admin / admin")
+
+        # Admin emails from environment
+        admin_emails = os.environ.get('ADMIN_EMAILS', '').split(',')
+        for email in admin_emails:
+            email = email.strip()
+            if email and not User.query.filter_by(email=email).first():
+                admin = User(email=email, is_admin=True)
+                db.session.add(admin)
+                db.session.commit()
 
         # Ensure retention config exists
         retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
@@ -270,68 +252,47 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # Force password change middleware
     @app.before_request
-    def check_password_change():
-        if current_user.is_authenticated and current_user.must_change_password:
-            if request.endpoint not in ['change_password', 'logout', 'static']:
-                return redirect(url_for('change_password'))
+    def handle_cloudflare_auth():
+        # Only exclude specific public routes if any (e.g. status)
+        if request.endpoint == 'static':
+            return
 
-    @app.route('/change-password', methods=['GET', 'POST'])
-    @login_required
-    def change_password():
-        if not current_user.must_change_password:
-            return redirect(url_for('dashboard'))
-            
-        if request.method == 'POST':
-            new_password = request.form.get('new_password')
-            confirm_password = request.form.get('confirm_password')
-            
-            if new_password != confirm_password:
-                flash('Passwörter stimmen nicht überein', 'error')
-            elif len(new_password) < 4:
-                flash('Passwort muss mindestens 4 Zeichen lang sein', 'error')
-            else:
-                current_user.set_password(new_password)
-                current_user.must_change_password = False
-                db.session.commit()
-                flash('Passwort erfolgreich geändert', 'success')
-                return redirect(url_for('dashboard'))
+        cf_email = request.headers.get('Cf-Access-Authenticated-User-Email')
+        
+        # Development override if not behind Cloudflare
+        if not cf_email and app.debug:
+            cf_email = "dev@local.host"
+
+        if cf_email:
+            user = User.query.filter_by(email=cf_email).first()
+            if not user:
+                # Automatisches Erstellen neuer User falls sie über Cloudflare reinkommen
+                # Falls ADMIN_EMAILS gesetzt ist, prüfen wir ob dieser User Admin sein sollte
+                admin_emails = [e.strip() for e in os.environ.get('ADMIN_EMAILS', '').split(',') if e.strip()]
+                is_admin = cf_email in admin_emails
                 
-        return render_template('change_password.html')
+                # Wenn kein Admin definiert ist, wird der ERSTE User Admin
+                if not User.query.filter_by(is_admin=True).first():
+                    is_admin = True
+
+                user = User(email=cf_email, is_admin=is_admin)
+                db.session.add(user)
+                db.session.commit()
+            
+            if not current_user.is_authenticated or current_user.email != cf_email:
+                login_user(user, remember=True)
+        else:
+            # If no header is present, we are not authenticated via Cloudflare
+            # Since the user wants to remove the login page, we show a 403 or redirect
+            if request.endpoint not in ['static', 'offline']:
+                return "Unauthorized: Cloudflare Access header missing.", 401
 
     # Routes
     @app.route('/')
     def index():
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
-        return redirect(url_for('login'))
+        return redirect(url_for('dashboard'))
 
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
-        
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            user = User.query.filter_by(username=username).first()
-
-            if user and user.check_password(password):
-                remember = True if request.form.get('remember') else False
-                session.permanent = remember
-                login_user(user, remember=remember)
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Ungültiger Benutzername oder Passwort', 'error')
-
-        return render_template('login.html')
-
-    @app.route('/logout')
-    @login_required
-    def logout():
-        logout_user()
-        return redirect(url_for('login'))
 
     @app.route('/offline')
     def offline():
@@ -537,41 +498,6 @@ def create_app():
         except ValueError:
             return jsonify({'error': 'Muss eine Zahl sein'}), 400
 
-    @app.route('/api/settings/password', methods=['POST'])
-    @login_required
-    def api_change_password():
-        data = request.json
-        new_password = data.get('password')
-        if not new_password or len(new_password) < 4:
-            return jsonify({'error': 'Passwort zu kurz'}), 400
-        
-        current_user.set_password(new_password)
-        db.session.commit()
-        return jsonify({'message': 'Passwort geändert'})
-
-    @app.route('/api/settings/create-user', methods=['POST'])
-    @login_required
-    def api_create_user():
-        # Optional: only allow if current user is admin, or always allow? 
-        # User requested: "auch neue acc erstllen" - usually for admins or if open.
-        # I'll check is_admin.
-        if not current_user.is_admin:
-            return jsonify({'error': 'Nur Admins können Benutzer erstellen'}), 403
-            
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        is_admin = data.get('is_admin', False)
-
-        if User.query.filter_by(username=username).first():
-            return jsonify({'error': 'Benutzer existiert bereits'}), 400
-        
-        new_user = User(username=username)
-        new_user.set_password(password)
-        new_user.is_admin = is_admin
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({'message': f'Benutzer {username} erstellt'})
 
     @app.route('/api/settings/domain', methods=['POST'])
     @login_required

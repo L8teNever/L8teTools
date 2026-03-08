@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     environment:
       - SECRET_KEY=change-me-in-production
+      - ADMIN_EMAILS=deine-email@beispiel.de,andere@email.de
     restart: unless-stopped
     volumes:
       - l8te_data:/app/instance
