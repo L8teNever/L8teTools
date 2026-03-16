@@ -798,7 +798,7 @@ def create_app():
 
         # Return the character map and text for client-side rendering
         return jsonify({
-            'text': text.upper(),
+            'text': text,
             'char_map': char_map
         })
 

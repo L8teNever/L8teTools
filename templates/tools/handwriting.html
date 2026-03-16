@@ -394,7 +394,7 @@
         <div class="hidden md:flex items-center gap-3">
             <div class="hw-info-chip" id="progressChip">
                 <span class="material-icons-round">draw</span>
-                <span id="progressText">0 / 36</span>
+                <span id="progressText">0 / 62</span>
             </div>
         </div>
     </div>
@@ -430,8 +430,13 @@
 
             <!-- Letter Chips: A-Z -->
             <div class="mb-3">
-                <span class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest mb-2 block px-1">Buchstaben</span>
+                <span class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest mb-2 block px-1">Grossbuchstaben</span>
                 <div class="flex flex-wrap gap-1.5" id="charSelectorLetters"></div>
+            </div>
+            <!-- Lowercase Chips: a-z -->
+            <div class="mb-3">
+                <span class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest mb-2 block px-1">Kleinbuchstaben</span>
+                <div class="flex flex-wrap gap-1.5" id="charSelectorLowercase"></div>
             </div>
             <!-- Number Chips: 0-9 -->
             <div>
@@ -507,7 +512,7 @@
                             <span class="material-icons-round text-[var(--m3-primary)]" style="font-size:20px">grid_view</span>
                             <h3 class="font-bold text-[var(--m3-on-surface)]">Deine Schrift</h3>
                         </div>
-                        <span class="text-xs font-bold text-[var(--m3-on-surface-variant)] bg-[var(--m3-surface-container)] px-3 py-1 rounded-full" id="savedCount">0 / 36</span>
+                        <span class="text-xs font-bold text-[var(--m3-on-surface-variant)] bg-[var(--m3-surface-container)] px-3 py-1 rounded-full" id="savedCount">0 / 62</span>
                     </div>
 
                     <!-- Progress Bar -->
@@ -558,16 +563,16 @@
                     <label>Zeichenabstand</label>
                     <div class="hw-control-row">
                         <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">space_bar</span>
-                        <input type="range" min="0" max="40" value="5" id="charSpacing" class="m3-slider flex-1">
-                        <span class="hw-val" id="charSpacingLabel">5px</span>
+                        <input type="range" min="-5" max="40" value="2" id="charSpacing" class="m3-slider flex-1">
+                        <span class="hw-val" id="charSpacingLabel">2px</span>
                     </div>
                 </div>
                 <div class="hw-control-item">
                     <label>Zeilenabstand</label>
                     <div class="hw-control-row">
                         <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">format_line_spacing</span>
-                        <input type="range" min="0" max="40" value="12" id="lineSpacing" class="m3-slider flex-1">
-                        <span class="hw-val" id="lineSpacingLabel">12px</span>
+                        <input type="range" min="-5" max="40" value="8" id="lineSpacing" class="m3-slider flex-1">
+                        <span class="hw-val" id="lineSpacingLabel">8px</span>
                     </div>
                 </div>
                 <div class="hw-control-item">
@@ -618,8 +623,9 @@
 <script>
     // ── State ──
     const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'.split('');
     const NUMBERS = '0123456789'.split('');
-    const ALL_CHARS = [...LETTERS, ...NUMBERS];
+    const ALL_CHARS = [...LETTERS, ...LOWERCASE, ...NUMBERS];
     let savedChars = {};
     let currentChar = 'A';
     let isDrawing = false;
@@ -747,6 +753,7 @@
     // ── Character Selector ──
     function buildCharSelector() {
         buildChipRow('charSelectorLetters', LETTERS);
+        buildChipRow('charSelectorLowercase', LOWERCASE);
         buildChipRow('charSelectorNumbers', NUMBERS);
     }
 
@@ -797,7 +804,9 @@
         document.getElementById('currentCharLabel').textContent = ch;
         document.getElementById('canvasGuide').textContent = ch;
 
-        const isLetter = LETTERS.includes(ch);
+        const isUpper = LETTERS.includes(ch);
+        const isLower = LOWERCASE.includes(ch);
+        const isLetter = isUpper || isLower;
         document.getElementById('currentCharHint').textContent =
             'Zeichne ' + (isLetter ? 'den Buchstaben ' : 'die Ziffer ') + ch;
 
@@ -989,10 +998,10 @@
                     continue;
                 }
 
-                const upper = ch.toUpperCase();
-                if (charMap[upper]) {
+                const charKey = charMap[ch] ? ch : ch.toUpperCase();
+                if (charMap[charKey]) {
                     const img = document.createElement('img');
-                    img.src = charMap[upper];
+                    img.src = charMap[charKey];
                     img.style.width = charSize + 'px';
                     img.style.height = charSize + 'px';
                     img.style.marginRight = charSpacing + 'px';
@@ -1058,15 +1067,16 @@
 
         // Load images
         const images = {};
-        const text = document.getElementById('convertInput').value.trim().toUpperCase();
-        const uniqueChars = [...new Set(text.replace(/[^A-Z0-9]/g, '').split(''))];
+        const text = document.getElementById('convertInput').value.trim();
+        const uniqueChars = [...new Set(text.replace(/[^A-Za-z0-9]/g, '').split(''))];
 
         await Promise.all(uniqueChars.map(ch => new Promise(resolve => {
-            if (savedChars[ch]) {
+            const key = savedChars[ch] ? ch : ch.toUpperCase();
+            if (savedChars[key]) {
                 const img = new Image();
-                img.onload = () => { images[ch] = img; resolve(); };
+                img.onload = () => { images[key] = img; resolve(); };
                 img.onerror = resolve;
-                img.src = savedChars[ch];
+                img.src = savedChars[key];
             } else resolve();
         })));
 
@@ -1081,8 +1091,9 @@
                     x += charSize * 0.4 + charSpacing;
                     continue;
                 }
-                if (images[ch]) {
-                    rCtx.drawImage(images[ch], x, y, charSize, charSize);
+                const imgKey = images[ch] ? ch : ch.toUpperCase();
+                if (images[imgKey]) {
+                    rCtx.drawImage(images[imgKey], x, y, charSize, charSize);
                 } else {
                     rCtx.fillStyle = '#cccccc';
                     rCtx.font = (charSize * 0.6) + 'px sans-serif';
