@@ -8,10 +8,25 @@ services:
     environment:
       - SECRET_KEY=change-me-in-production
       - ADMIN_EMAILS=deine-email@beispiel.de,andere@email.de
+      - PUBLIC_SHARE_DOMAIN=share.example.de
     restart: unless-stopped
     volumes:
       - l8te_data:/app/instance
+      - l8te_uploads:/tmp/l8te_uploads
+
+  l8tetools-public:
+    image: l8tenever/l8tetools:latest
+    container_name: l8tetools-public
+    ports:
+      - "5001:5001"
+    environment:
+      - PUBLIC_SHARE_PORT=5001
+    restart: unless-stopped
+    command: ["python", "public_server.py"]
+    volumes:
+      - l8te_data:/app/instance
+      - l8te_uploads:/tmp/l8te_uploads
 
 volumes:
   l8te_data:
-
+  l8te_uploads:

@@ -111,6 +111,7 @@
 </div>
 
 <script>
+    const PUBLIC_SHARE_DOMAIN = '{{ public_share_domain }}';
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');
@@ -196,7 +197,8 @@
                 if (xhr.status === 200) {
                     const resp = JSON.parse(xhr.responseText);
                     resultCard.classList.remove('hidden');
-                    shareLink.value = window.location.origin + '/s/' + resp.token;
+                    const base = PUBLIC_SHARE_DOMAIN ? ('https://' + PUBLIC_SHARE_DOMAIN) : window.location.origin;
+                    shareLink.value = base + '/s/' + resp.token;
                     loadActiveShares(); // Refresh list
                     fileInput.value = ''; // Reset
                     fileList.innerHTML = '';

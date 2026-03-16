@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ file.filename }} – L8teTools Download</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0E1413;
+            --surface: #1A2422;
+            --surface-high: #222E2B;
+            --surface-highest: #2A3634;
+            --primary: #7EDAB5;
+            --primary-container: #1B4D3A;
+            --on-primary: #003826;
+            --on-primary-container: #9AF7D0;
+            --on-surface: #E0E3E1;
+            --on-surface-variant: #BFC9C4;
+            --outline: #899390;
+            --outline-variant: #3F4946;
+            --error: #FFB4AB;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--on-surface);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--outline-variant);
+            border-radius: 28px;
+            padding: 40px 32px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+        }
+        .icon-circle {
+            width: 80px; height: 80px;
+            background: var(--primary-container);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .icon-circle .material-icons-round {
+            font-size: 36px;
+            color: var(--on-primary-container);
+        }
+        .filename {
+            font-size: 1.4rem;
+            font-weight: 800;
+            word-break: break-all;
+            margin-bottom: 6px;
+        }
+        .shared-by {
+            color: var(--on-surface-variant);
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+        }
+        .meta-box {
+            background: var(--surface-high);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 28px;
+            font-size: 0.85rem;
+        }
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .meta-label { color: var(--on-surface-variant); }
+        .meta-value { font-weight: 600; }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: var(--on-primary);
+            border: none;
+            border-radius: 100px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+        }
+        .download-btn:hover {
+            box-shadow: 0 4px 20px rgba(126, 218, 181, .3);
+            transform: translateY(-1px);
+        }
+        .download-btn:active { transform: scale(.97); }
+        .footer-text {
+            margin-top: 24px;
+            font-size: 0.7rem;
+            color: var(--outline);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-circle">
+            <span class="material-icons-round">
+                {% if file.filename.endswith(('.jpg', '.png', '.jpeg', '.gif', '.webp')) %}image
+                {% elif file.filename.endswith(('.mp4', '.mov', '.avi')) %}movie
+                {% elif file.filename.endswith(('.mp3', '.wav')) %}audiotrack
+                {% elif file.filename.endswith('.pdf') %}picture_as_pdf
+                {% elif file.filename.endswith('.zip') %}folder_zip
+                {% else %}description{% endif %}
+            </span>
+        </div>
+
+        <div class="filename">{{ file.filename }}</div>
+        <div class="shared-by">Geteilt von <strong>{{ file.user.email.split('@')[0] }}</strong></div>
+
+        <div class="meta-box">
+            {% if file.expires_at %}
+            <div class="meta-row">
+                <span class="meta-label">Läuft ab</span>
+                <span class="meta-value">{{ file.expires_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+            {% endif %}
+            {% if file.max_downloads != -1 %}
+            <div class="meta-row">
+                <span class="meta-label">Downloads übrig</span>
+                <span class="meta-value">{{ file.max_downloads - file.download_count }}</span>
+            </div>
+            {% endif %}
+            {% if file_size_str %}
+            <div class="meta-row">
+                <span class="meta-label">Größe</span>
+                <span class="meta-value">{{ file_size_str }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="/s/{{ file.id }}/download" class="download-btn">
+            <span class="material-icons-round">download</span>
+            Herunterladen
+        </a>
+
+        <div class="footer-text">Dieser Link wurde mit L8teTools erstellt.</div>
+    </div>
+</body>
+</html>

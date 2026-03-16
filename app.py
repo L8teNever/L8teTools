@@ -825,7 +825,8 @@ def create_app():
     @app.route('/tools/file-share')
     @login_required
     def file_share_tool():
-        return render_template('tools/file_share.html')
+        public_domain = os.environ.get('PUBLIC_SHARE_DOMAIN', '')
+        return render_template('tools/file_share.html', public_share_domain=public_domain)
 
     @app.route('/tools/markdown')
     @login_required
@@ -1079,69 +1080,7 @@ def create_app():
             db.session.commit()
         return jsonify({'success': True})
 
-    @app.route('/s/<token>')
-    def shared_file_view(token):
-        f = SharedFile.query.get(token)
-        if not f:
-            return "File not found or expired", 404
-        
-        # Check Expiration (Time)
-        if f.expires_at and datetime.now() > f.expires_at:
-            delete_shared_file(f)
-            return "Link expired", 410 # Gone
-            
-        # Check Expiration (Downloads) - Preview doesn't consume download, but check if exhausted
-        if f.max_downloads != -1 and f.download_count >= f.max_downloads:
-            delete_shared_file(f)
-            return "Download limit reached", 410
-            
-        # Check Expiration (Open / Access Window) - Start timer on view
-        if f.expiration_mode == 'open':
-            if not f.first_accessed_at:
-                f.first_accessed_at = datetime.now()
-                # Set the absolute expiration now based on window
-                f.expires_at = datetime.now() + timedelta(hours=f.access_window_hours)
-                db.session.commit()
-            elif datetime.now() > f.expires_at:
-                delete_shared_file(f)
-                return "Link expired after opening", 410
-
-        # Calculate file size
-        file_size_str = "Unknown"
-        try:
-            size_bytes = os.path.getsize(f.filepath)
-            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-                if size_bytes < 1024:
-                    file_size_str = f"{size_bytes:.2f} {unit}"
-                    break
-                size_bytes /= 1024
-        except:
-            pass
-
-        return render_template('shared_file_view.html', file=f, file_size_str=file_size_str)
-
-    @app.route('/s/<token>/download')
-    def shared_file_download_action(token):
-        f = SharedFile.query.get(token)
-        if not f:
-            return "File not found or expired", 404
-        
-        # Re-check expirations for safety
-        if f.expires_at and datetime.now() > f.expires_at:
-            return "Link expired", 410
-            
-        if f.max_downloads != -1 and f.download_count >= f.max_downloads:
-            return "Download limit reached", 410
-
-        # Increment count
-        f.download_count += 1
-        db.session.commit()
-        
-        # Serve file
-        try:
-             return send_file(f.filepath, as_attachment=True, download_name=f.filename)
-        except Exception as e:
-            return str(e), 500
+    # /s/<token> routes moved to public_server.py (separate port, no auth required)
 
     def delete_shared_file(file_obj):
         try:

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nicht gefunden – L8teTools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0E1413; --surface: #1A2422; --outline-variant: #3F4946; --on-surface: #E0E3E1; --on-surface-variant: #BFC9C4; --outline: #899390; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--on-surface); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .card { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: 28px; padding: 40px 32px; max-width: 400px; width: 100%; text-align: center; }
+        .icon-circle { width: 80px; height: 80px; background: #2A3634; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .icon-circle .material-icons-round { font-size: 36px; color: var(--outline); }
+        h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+        p { color: var(--on-surface-variant); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-circle">
+            <span class="material-icons-round">search_off</span>
+        </div>
+        <h1>Datei nicht gefunden</h1>
+        <p>Diese Datei existiert nicht oder wurde bereits gelöscht.</p>
+    </div>
+</body>
+</html>
