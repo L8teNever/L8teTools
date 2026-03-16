@@ -195,6 +195,18 @@ class SharedFile(db.Model):
     
     user = db.relationship('User', backref=db.backref('shared_files', lazy=True))
 
+class HandwritingChar(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    character = db.Column(db.String(5), nullable=False)  # The letter/character
+    image_data = db.Column(db.Text, nullable=False)  # Base64 PNG data
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('handwriting_chars', lazy=True))
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'character', name='uq_user_character'),)
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -718,6 +730,77 @@ def create_app():
     @login_required
     def prefix_suffix():
         return render_template('tools/prefix_suffix.html')
+
+    @app.route('/tools/handwriting')
+    @login_required
+    def handwriting_tool():
+        return render_template('tools/handwriting.html')
+
+    @app.route('/api/handwriting/letters')
+    @login_required
+    def api_handwriting_get_letters():
+        chars = HandwritingChar.query.filter_by(user_id=current_user.id).all()
+        return jsonify({c.character: c.image_data for c in chars})
+
+    @app.route('/api/handwriting/save-letter', methods=['POST'])
+    @login_required
+    def api_handwriting_save_letter():
+        data = request.json
+        character = data.get('character', '').upper()
+        image_data = data.get('image_data', '')
+
+        if not character or not image_data:
+            return jsonify({'error': 'Zeichen und Bilddaten erforderlich'}), 400
+
+        existing = HandwritingChar.query.filter_by(user_id=current_user.id, character=character).first()
+        if existing:
+            existing.image_data = image_data
+        else:
+            new_char = HandwritingChar(user_id=current_user.id, character=character, image_data=image_data)
+            db.session.add(new_char)
+
+        db.session.commit()
+        return jsonify({'success': True, 'character': character})
+
+    @app.route('/api/handwriting/delete-letter', methods=['POST'])
+    @login_required
+    def api_handwriting_delete_letter():
+        data = request.json
+        character = data.get('character', '').upper()
+
+        existing = HandwritingChar.query.filter_by(user_id=current_user.id, character=character).first()
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+
+        return jsonify({'success': True})
+
+    @app.route('/api/handwriting/reset', methods=['POST'])
+    @login_required
+    def api_handwriting_reset():
+        HandwritingChar.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        return jsonify({'success': True})
+
+    @app.route('/api/handwriting/convert', methods=['POST'])
+    @login_required
+    def api_handwriting_convert():
+        data = request.json
+        text = data.get('text', '')
+        if not text:
+            return jsonify({'error': 'Text erforderlich'}), 400
+
+        chars = HandwritingChar.query.filter_by(user_id=current_user.id).all()
+        char_map = {c.character: c.image_data for c in chars}
+
+        if not char_map:
+            return jsonify({'error': 'Keine Handschrift gespeichert. Bitte zuerst Buchstaben zeichnen.'}), 400
+
+        # Return the character map and text for client-side rendering
+        return jsonify({
+            'text': text.upper(),
+            'char_map': char_map
+        })
 
     @app.route('/tools/notes')
     @login_required

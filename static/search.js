@@ -27,6 +27,7 @@ const toolsData = [
     { name: "Wiki", url: "/tools/wiki", icon: "library_books", category: "dev", keywords: ["wissen", "linux", "befehle", "help", "cheat", "sheet", "wiki", "docs"] },
     { name: "Umfragen", url: "/tools/polls", icon: "ballot", category: "games", keywords: ["abstimmung", "votum", "umfrage", "feedback", "poll", "vote"] },
     { name: "Word Cloud", url: "/tools/word_clouds", icon: "cloud_queue", category: "games", keywords: ["wortwolke", "wörter", "begriffe", "visualisierung", "cloud"] },
+    { name: "Handschrift", url: "/tools/handwriting", icon: "draw", category: "text", keywords: ["handwriting", "schrift", "zeichnen", "buchstaben", "font", "handschrift", "schreiben", "text", "umwandeln"] },
 ];
 
 function toggleSearch() {
