@@ -4,130 +4,158 @@
 
 {% block content %}
 <div class="tool-page-container">
-    <div class="page-header">
-        <a href="{{ url_for('dashboard') }}"
-            class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-            <span class="material-icons-round text-2xl">arrow_back</span>
-        </a>
-        <div class="flex items-baseline gap-3">
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Einstellungen</h2>
-            <span class="text-xs font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{{ version
-                }}</span>
+
+    <!-- Page Header -->
+    <div class="mb-10" style="animation: fadeUp .5s var(--md-ease-decelerate) both;">
+        <div class="flex items-center gap-4 mb-6">
+            <a href="{{ url_for('dashboard') }}"
+                class="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[var(--md-surface-container-high)] transition-colors">
+                <span class="material-icons-round text-[var(--md-on-surface)]">arrow_back</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-extrabold text-[var(--md-on-surface)] tracking-tight">Einstellungen</h1>
+                <span class="text-[10px] font-bold text-[var(--md-on-surface-variant)] bg-[var(--md-surface-container-high)] px-2.5 py-1 rounded-full tracking-wide">{{ version }}</span>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Profile View -->
-        <div class="flex flex-col gap-6">
-            <div class="m3-card space-y-6">
-                <h3 class="text-xl font-bold flex items-center gap-2">
-                    <span class="material-icons-round text-[var(--m3-primary)]">account_circle</span>
-                    Profil
-                </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <div class="p-4 bg-[var(--m3-surface-variant)] rounded-2xl border border-[var(--m3-outline-variant)]">
-                    <label
-                        class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase block mb-1">Angemeldet
-                        als</label>
-                    <div class="flex items-center gap-3">
-                        <span class="material-icons-round text-3xl text-[var(--m3-primary)]">alternate_email</span>
-                        <div>
-                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ current_user.email }}
-                            </div>
-                            <div class="text-[10px] text-[var(--m3-on-surface-variant)]">Authentifiziert via Cloudflare
-                                Access</div>
-                        </div>
+        <!-- Profile Card -->
+        <div class="m3-card" style="animation: fadeUp .5s var(--md-ease-decelerate) .05s both;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-[var(--md-primary-container)] flex items-center justify-center">
+                    <span class="material-icons-round text-[var(--md-on-primary-container)]" style="font-size:22px">account_circle</span>
+                </div>
+                <h3 class="text-lg font-bold text-[var(--md-on-surface)]">Profil</h3>
+            </div>
+
+            <div class="p-4 bg-[var(--md-surface-container)] rounded-2xl border border-[var(--md-outline-variant)] mb-5">
+                <label class="text-[10px] font-bold text-[var(--md-on-surface-variant)] uppercase tracking-wide block mb-2">Angemeldet als</label>
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-full bg-[var(--md-primary)] flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons-round text-[var(--md-on-primary)]" style="font-size:22px">person</span>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-[var(--md-on-surface)] truncate">{{ current_user.email }}</div>
+                        <div class="text-[11px] text-[var(--md-on-surface-variant)]">Cloudflare Access</div>
                     </div>
                 </div>
+            </div>
 
-                <div
-                    class="m3-info-banner !bg-[var(--m3-primary-container)]/10 border border-[var(--m3-primary)]/20 rounded-2xl p-4">
-                    <p class="text-[10px] text-[var(--m3-on-primary-container)] flex items-center gap-2">
-                        <span class="material-icons-round text-sm">info</span>
-                        Authentifizierung wird durch dein Cloudflare-Konto verwaltet.
-                    </p>
-                </div>
+            <div class="flex items-start gap-3 p-3.5 rounded-xl bg-[var(--md-surface-container)]">
+                <span class="material-icons-round text-[var(--md-primary)] mt-0.5" style="font-size:18px">info</span>
+                <p class="text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
+                    Authentifizierung wird durch dein Cloudflare-Konto verwaltet.
+                </p>
             </div>
         </div>
 
         {% if current_user.is_admin %}
         <!-- Admin: Domain Settings -->
-        <div class="m3-card space-y-6 border-2 border-[var(--m3-primary-container)]">
-            <h3 class="text-xl font-bold flex items-center gap-2 text-[var(--m3-primary)]">
-                <span class="material-icons-round">language</span>
-                Admin: Shortener Domain
-            </h3>
-
-            <div class="m3-input-group">
-                <label class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase px-1 mb-2 block">Aktive
-                    Domain</label>
-                <div class="relative">
-                    <input type="text" id="shortenerDomain" class="m3-text-input pl-10" value="{{ domain }}">
-                    <span
-                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-[var(--m3-outline)]">dns</span>
+        <div class="m3-card" style="animation: fadeUp .5s var(--md-ease-decelerate) .1s both;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-[var(--md-tertiary-container)] flex items-center justify-center">
+                    <span class="material-icons-round text-[var(--md-on-tertiary-container)]" style="font-size:22px">language</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-[var(--md-on-surface)]">Shortener Domain</h3>
+                    <span class="text-[10px] font-bold text-[var(--md-primary)] uppercase tracking-widest">Admin</span>
                 </div>
             </div>
 
-            <button class="m3-button m3-button-filled w-full py-3" onclick="updateDomain()">
-                Domain aktualisieren
-            </button>
-            <p class="text-[10px] text-[var(--m3-on-surface-variant)]">Diese Einstellung ändert nur die Anzeige in der
-                App. Die tatsächliche
-                Domain muss im Webserver/DNS konfiguriert sein.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-[var(--md-on-surface-variant)] uppercase tracking-wide mb-2 block px-1">Aktive Domain</label>
+                    <div class="relative">
+                        <span class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-[var(--md-outline)]" style="font-size:20px">dns</span>
+                        <input type="text" id="shortenerDomain" class="m3-text-input !pl-12" value="{{ domain }}">
+                    </div>
+                </div>
+
+                <button class="m3-button m3-button-filled w-full !h-11 text-sm font-bold !rounded-2xl" onclick="updateDomain()">
+                    Domain aktualisieren
+                </button>
+
+                <p class="text-[11px] text-[var(--md-on-surface-variant)] leading-relaxed px-1">
+                    Diese Einstellung aendert nur die Anzeige in der App. Die tatsaechliche Domain muss im Webserver/DNS konfiguriert sein.
+                </p>
+            </div>
         </div>
 
         <!-- Admin: User Management -->
-        <div class="m3-card space-y-6 md:col-span-2">
-            <h3 class="text-xl font-bold flex items-center gap-2">
-                <span class="material-icons-round text-[var(--m3-secondary)]">group</span>
-                Admin: Benutzerverwaltung
-            </h3>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr
-                            class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase border-b border-[var(--m3-outline-variant)] opacity-60">
-                            <th class="px-4 py-3">E-Mail Adresse</th>
-                            <th class="px-4 py-3">Rolle</th>
-                            <th class="px-4 py-3 text-right">Aktionen</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-[var(--m3-outline-variant)]/20">
-                        {% for user in users %}
-                        <tr class="text-sm">
-                            <td class="px-4 py-4 font-medium">{{ user.email }} {% if user.id == current_user.id
-                                %}<span
-                                    class="text-[10px] bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] px-2 py-0.5 rounded-full ml-2">Du</span>{%
-                                endif %}</td>
-                            <td class="px-4 py-4">
-                                {% if user.is_admin %}
-                                <span
-                                    class="bg-[var(--m3-tertiary-container)] text-[var(--m3-on-tertiary-container)] px-2 py-1 rounded-lg text-xs font-bold">Admin</span>
-                                {% else %}
-                                <span
-                                    class="bg-[var(--m3-surface-variant)] text-[var(--m3-on-surface-variant)] px-2 py-1 rounded-lg text-xs font-bold">User</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-4 text-right">
-                                {% if user.id != current_user.id %}
-                                <button onclick="deleteUser({{ user.id }}, '{{ user.email }}')"
-                                    class="p-2 text-[var(--m3-outline)] hover:text-[var(--m3-error)] transition-colors"
-                                    title="Benutzer löschen">
-                                    <span class="material-icons-round">person_remove</span>
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="m3-card md:col-span-2" style="animation: fadeUp .5s var(--md-ease-decelerate) .15s both;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-[var(--md-secondary-container)] flex items-center justify-center">
+                    <span class="material-icons-round text-[var(--md-on-secondary-container)]" style="font-size:22px">group</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-[var(--md-on-surface)]">Benutzerverwaltung</h3>
+                    <span class="text-[10px] font-bold text-[var(--md-primary)] uppercase tracking-widest">Admin</span>
+                </div>
             </div>
-            <p class="text-[10px] text-[var(--m3-on-surface-variant)] p-4 bg-[var(--m3-surface-variant)] rounded-2xl">
-                Hinweis: Neue Benutzer werden automatisch beim ersten Login via Cloudflare erstellt.
-            </p>
+
+            <!-- User List -->
+            <div class="space-y-2 mb-5">
+                {% for user in users %}
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-[var(--md-surface-container)] hover:bg-[var(--md-surface-container-high)] transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                            {% if user.is_admin %}bg-[var(--md-tertiary-container)]{% else %}bg-[var(--md-surface-container-highest)]{% endif %}">
+                            <span class="material-icons-round
+                                {% if user.is_admin %}text-[var(--md-on-tertiary-container)]{% else %}text-[var(--md-on-surface-variant)]{% endif %}"
+                                style="font-size:20px">
+                                {% if user.is_admin %}shield{% else %}person{% endif %}
+                            </span>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-[var(--md-on-surface)] truncate flex items-center gap-2">
+                                {{ user.email }}
+                                {% if user.id == current_user.id %}
+                                <span class="text-[10px] font-bold bg-[var(--md-primary-container)] text-[var(--md-on-primary-container)] px-2 py-0.5 rounded-full flex-shrink-0">Du</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-[11px] text-[var(--md-on-surface-variant)]">
+                                {% if user.is_admin %}Administrator{% else %}Benutzer{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        {% if user.is_admin %}
+                        <span class="text-[10px] font-bold bg-[var(--md-tertiary-container)] text-[var(--md-on-tertiary-container)] px-2.5 py-1 rounded-full">Admin</span>
+                        {% else %}
+                        <span class="text-[10px] font-bold bg-[var(--md-surface-container-highest)] text-[var(--md-on-surface-variant)] px-2.5 py-1 rounded-full">User</span>
+                        {% endif %}
+                        {% if user.id != current_user.id %}
+                        <button onclick="deleteUser({{ user.id }}, '{{ user.email }}')"
+                            class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--md-error-container)] text-[var(--md-outline)] hover:text-[var(--md-error)] transition-all"
+                            title="Benutzer loeschen">
+                            <span class="material-icons-round" style="font-size:20px">person_remove</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-start gap-3 p-3.5 rounded-xl bg-[var(--md-surface-container)]">
+                <span class="material-icons-round text-[var(--md-on-surface-variant)] mt-0.5" style="font-size:18px">info</span>
+                <p class="text-xs text-[var(--md-on-surface-variant)] leading-relaxed">
+                    Neue Benutzer werden automatisch beim ersten Login via Cloudflare erstellt.
+                </p>
+            </div>
         </div>
         {% endif %}
+
+        <!-- Logout -->
+        <div class="{% if current_user.is_admin %}md:col-span-2{% endif %}" style="animation: fadeUp .5s var(--md-ease-decelerate) .2s both;">
+            <a href="{{ url_for('logout') }}"
+                class="m3-button m3-button-outline w-full !h-12 text-base font-bold gap-3 !rounded-2xl flex items-center justify-center border-[var(--md-error)] text-[var(--md-error)] hover:bg-[var(--md-error-container)]">
+                <span class="material-icons-round" style="font-size:20px">logout</span>
+                Abmelden
+            </a>
+        </div>
+
     </div>
 </div>
 

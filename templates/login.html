@@ -3,45 +3,57 @@
 {% block title %}Anmelden{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-[70vh]">
-    <div class="m3-card max-w-[400px]">
-        <div class="mb-8 text-center">
-            <span class="material-icons-round text-6xl text-[var(--m3-primary)] mb-4">account_circle</span>
-            <h1 class="text-3xl font-extrabold tracking-tight">Willkommen</h1>
-            <p class="text-[var(--m3-on-surface-variant)] mt-2">Bitte melde dich an, um fortzufahren.</p>
+<div class="flex items-center justify-center min-h-[80vh] px-4">
+    <div class="w-full max-w-[420px]" style="animation: fadeUp .5s var(--md-ease-decelerate) both;">
+
+        <!-- Logo + Brand -->
+        <div class="text-center mb-10">
+            <div class="w-20 h-20 rounded-3xl bg-[var(--md-primary-container)] flex items-center justify-center mx-auto mb-6">
+                <span class="material-icons-round text-[var(--md-on-primary-container)]" style="font-size:40px">interests</span>
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-[var(--md-on-surface)]">L8teTools</h1>
+            <p class="text-[var(--md-on-surface-variant)] mt-2 text-sm">Melde dich an, um fortzufahren.</p>
         </div>
 
-        <form method="POST" class="space-y-6">
-            <div class="m3-input-group">
-                <input type="text" id="username" name="username" class="m3-text-input" placeholder="Benutzername"
-                    required autofocus>
-            </div>
-            <div class="m3-input-group">
-                <input type="password" id="password" name="password" class="m3-text-input" placeholder="Passwort"
-                    required>
-            </div>
+        <!-- Login Card -->
+        <div class="m3-card">
+            <form method="POST" class="space-y-5">
+                <div>
+                    <label class="text-xs font-bold text-[var(--md-on-surface-variant)] uppercase tracking-wide mb-2 block px-1">Benutzername</label>
+                    <div class="relative">
+                        <span class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-[var(--md-outline)]" style="font-size:20px">person</span>
+                        <input type="text" id="username" name="username" class="m3-text-input !pl-12"
+                            placeholder="Benutzername" required autofocus>
+                    </div>
+                </div>
 
-            <div class="flex items-center gap-3 px-1">
-                <label class="flex items-center gap-3 cursor-pointer group">
+                <div>
+                    <label class="text-xs font-bold text-[var(--md-on-surface-variant)] uppercase tracking-wide mb-2 block px-1">Passwort</label>
+                    <div class="relative">
+                        <span class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-[var(--md-outline)]" style="font-size:20px">lock</span>
+                        <input type="password" id="password" name="password" class="m3-text-input !pl-12"
+                            placeholder="Passwort" required>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-3 cursor-pointer group px-1 py-1">
                     <div class="relative flex items-center">
                         <input type="checkbox" name="remember" id="remember" class="peer hidden">
-                        <div
-                            class="w-6 h-6 border-2 border-[var(--m3-outline)] rounded-lg peer-checked:bg-[var(--m3-primary)] peer-checked:border-[var(--m3-primary)] transition-all flex items-center justify-center">
-                            <span
-                                class="material-icons-round text-white text-[18px] hidden peer-checked:block">check</span>
+                        <div class="w-5 h-5 border-2 border-[var(--md-outline)] rounded-md peer-checked:bg-[var(--md-primary)] peer-checked:border-[var(--md-primary)] transition-all flex items-center justify-center">
+                            <span class="material-icons-round text-[var(--md-on-primary)] text-[16px] hidden peer-checked:block">check</span>
                         </div>
                     </div>
-                    <span
-                        class="text-sm font-medium text-[var(--m3-on-surface-variant)] group-hover:text-[var(--m3-on-surface)] transition-colors select-none">Angemeldet
-                        bleiben</span>
+                    <span class="text-sm text-[var(--md-on-surface-variant)] group-hover:text-[var(--md-on-surface)] transition-colors select-none">Angemeldet bleiben</span>
                 </label>
-            </div>
 
-            <button type="submit" class="m3-button m3-button-filled w-full py-4 text-lg">
-                Anmelden
-                <span class="material-icons-round">login</span>
-            </button>
-        </form>
+                <button type="submit"
+                    class="m3-button m3-button-filled w-full !h-12 text-base font-bold gap-3 !rounded-2xl mt-2">
+                    Anmelden
+                    <span class="material-icons-round" style="font-size:20px">arrow_forward</span>
+                </button>
+            </form>
+        </div>
+
     </div>
 </div>
 {% endblock %}

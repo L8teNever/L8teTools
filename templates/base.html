@@ -18,10 +18,10 @@
 
     <!-- PWA -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#0E1413">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -38,6 +38,36 @@
     <div id="loadingBar" class="loading-bar"></div>
 
     {% if current_user.is_authenticated %}
+
+    <!-- ═══════ Desktop Navigation Rail (>=900px) ═══════ -->
+    <nav class="nav-rail" id="navRail">
+        <a href="{{ url_for('dashboard') }}" class="nav-rail-brand" title="L8teTools">
+            <span class="material-icons-round">interests</span>
+        </a>
+
+        <div class="nav-rail-items">
+            <a href="{{ url_for('dashboard') }}" class="nav-rail-item {{ 'active' if request.endpoint == 'dashboard' }}">
+                <div class="icon-wrap">
+                    <span class="material-icons-round">grid_view</span>
+                </div>
+                <span class="nav-label">Tools</span>
+            </a>
+            <a href="javascript:void(0)" onclick="toggleSearch()" class="nav-rail-item">
+                <div class="icon-wrap">
+                    <span class="material-icons-round">search</span>
+                </div>
+                <span class="nav-label">Suche</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-rail-item {{ 'active' if request.endpoint == 'settings' }}">
+                <div class="icon-wrap">
+                    <span class="material-icons-round">settings</span>
+                </div>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ═══════ Top App Bar ═══════ -->
     <header class="top-app-bar">
         <a href="{{ url_for('dashboard') }}" class="brand">
             <span class="material-icons-round">interests</span>
@@ -47,8 +77,8 @@
             <!-- Search Container -->
             <div class="relative flex items-center">
                 <div id="searchWrapper"
-                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-[var(--m3-surface)] shadow-2xl rounded-2xl border border-[var(--m3-outline-variant)] flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
-                    <span class="material-icons-round px-4 text-[var(--m3-primary)]">search</span>
+                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-[var(--md-surface-container-high)] shadow-2xl rounded-2xl border border-[var(--md-outline-variant)] flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
+                    <span class="material-icons-round px-4 text-[var(--md-primary)]">search</span>
                     <input type="text" id="globalSearch"
                         class="bg-transparent outline-none py-3 pr-4 w-full text-sm font-medium"
                         placeholder="Wonach suchst du?" oninput="performSearch(this.value)"
@@ -56,40 +86,42 @@
                 </div>
 
                 <div id="searchResults"
-                    class="hidden absolute top-12 right-0 w-80 bg-[var(--m3-surface)] shadow-2xl rounded-2xl border border-[var(--m3-outline-variant)] z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
+                    class="hidden absolute top-12 right-0 w-80 bg-[var(--md-surface-container-high)] shadow-2xl rounded-2xl border border-[var(--md-outline-variant)] z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
                     <!-- Results injected via JS -->
                 </div>
 
                 <button onclick="toggleSearch()"
-                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)]"
+                    class="md-icon-btn"
                     title="Suche">
                     <span class="material-icons-round">search</span>
                 </button>
             </div>
 
-            <div class="flex items-center gap-1">
-                <a href="{{ url_for('settings') }}"
-                    class="p-3 hover:bg-[var(--m3-surface-variant)] rounded-full transition-all text-[var(--m3-on-surface)]"
-                    title="Einstellungen">
-                    <span class="material-icons-round">settings</span>
-                </a>
-            </div>
+            <a href="{{ url_for('settings') }}" class="md-icon-btn" title="Einstellungen">
+                <span class="material-icons-round">settings</span>
+            </a>
         </div>
     </header>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav md:hidden">
-        <a href="{{ url_for('dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
-            <span class="material-icons-round">grid_view</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Tools</span>
+    <!-- ═══════ Mobile Bottom Navigation (<900px) ═══════ -->
+    <nav class="bottom-nav">
+        <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {{ 'active' if request.endpoint == 'dashboard' }}">
+            <div class="icon-wrap">
+                <span class="material-icons-round">grid_view</span>
+            </div>
+            <span class="nav-label">Tools</span>
         </a>
-        <a href="javascript:void(0)" onclick="toggleSearch()" class="nav-item">
-            <span class="material-icons-round">search</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Suchen</span>
+        <a href="javascript:void(0)" onclick="toggleSearch()" class="bottom-nav-item">
+            <div class="icon-wrap">
+                <span class="material-icons-round">search</span>
+            </div>
+            <span class="nav-label">Suche</span>
         </a>
-        <a href="{{ url_for('settings') }}" class="nav-item {{ 'active' if request.endpoint == 'settings' }}">
-            <span class="material-icons-round">settings</span>
-            <span class="text-[10px] font-bold uppercase tracking-tighter">Settings</span>
+        <a href="{{ url_for('settings') }}" class="bottom-nav-item {{ 'active' if request.endpoint == 'settings' }}">
+            <div class="icon-wrap">
+                <span class="material-icons-round">settings</span>
+            </div>
+            <span class="nav-label">Settings</span>
         </a>
     </nav>
     {% endif %}

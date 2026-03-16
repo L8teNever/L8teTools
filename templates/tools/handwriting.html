@@ -3,146 +3,633 @@
 {% block title %}Handschrift{% endblock %}
 
 {% block content %}
+<style>
+    /* ── Handwriting Tool Styles ── */
+    .hw-tab-bar {
+        display: flex;
+        background: var(--m3-surface-container);
+        border-radius: var(--m3-shape-xl);
+        padding: 4px;
+        gap: 4px;
+    }
+    .hw-tab {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: calc(var(--m3-shape-xl) - 4px);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--m3-on-surface-variant);
+        transition: all var(--m3-duration-medium2) var(--m3-easing-standard);
+    }
+    .hw-tab.active {
+        background: var(--m3-primary);
+        color: var(--m3-on-primary);
+        box-shadow: var(--m3-elevation-1);
+    }
+    .hw-tab:not(.active):hover {
+        background: var(--m3-surface-container-high);
+    }
+
+    /* Character Grid Chips */
+    .hw-char-chip {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--m3-shape-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all var(--m3-duration-short4) var(--m3-easing-standard);
+        position: relative;
+        overflow: hidden;
+    }
+    @media (max-width: 480px) {
+        .hw-char-chip {
+            width: 36px;
+            height: 36px;
+            font-size: 0.75rem;
+            border-radius: 10px;
+        }
+    }
+    .hw-char-chip.empty {
+        background: var(--m3-surface-container);
+        color: var(--m3-on-surface-variant);
+        border-color: transparent;
+    }
+    .hw-char-chip.empty:hover {
+        background: var(--m3-surface-container-high);
+        transform: scale(1.05);
+    }
+    .hw-char-chip.saved {
+        background: var(--m3-primary-container);
+        color: var(--m3-on-primary-container);
+        border-color: var(--m3-primary-container);
+    }
+    .hw-char-chip.saved:hover {
+        border-color: var(--m3-primary);
+        transform: scale(1.05);
+    }
+    .hw-char-chip.active {
+        background: var(--m3-primary);
+        color: var(--m3-on-primary);
+        border-color: var(--m3-primary);
+        transform: scale(1.12);
+        box-shadow: var(--m3-elevation-2);
+    }
+    .hw-char-chip .check-dot {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--m3-primary);
+    }
+
+    /* Canvas Area */
+    .hw-canvas-wrap {
+        position: relative;
+        border-radius: var(--m3-shape-xl);
+        overflow: hidden;
+        border: 2px solid var(--m3-outline-variant);
+        background: #ffffff;
+        transition: border-color var(--m3-duration-short4) var(--m3-easing-standard);
+        aspect-ratio: 1 / 1;
+        max-width: 100%;
+    }
+    .hw-canvas-wrap:hover,
+    .hw-canvas-wrap.drawing {
+        border-color: var(--m3-primary);
+    }
+    .hw-canvas-wrap canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+        touch-action: none;
+    }
+    .hw-canvas-guide {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        font-size: min(55vw, 260px);
+        font-weight: 800;
+        color: #000;
+        opacity: 0.04;
+        user-select: none;
+        line-height: 1;
+    }
+
+    /* Progress Ring */
+    .hw-progress-ring {
+        width: 72px;
+        height: 72px;
+    }
+    .hw-progress-ring__bg {
+        stroke: var(--m3-surface-container-high);
+    }
+    .hw-progress-ring__fill {
+        stroke: var(--m3-primary);
+        transition: stroke-dashoffset 0.5s ease;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+
+    /* Saved Grid */
+    .hw-saved-cell {
+        aspect-ratio: 1;
+        border-radius: var(--m3-shape-md);
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+        transition: all var(--m3-duration-short4) var(--m3-easing-standard);
+        border: 2px solid var(--m3-outline-variant);
+        background: var(--m3-surface-container);
+    }
+    .hw-saved-cell.filled {
+        border-color: var(--m3-primary-container);
+        background: #fff;
+    }
+    .hw-saved-cell:hover {
+        transform: scale(1.06);
+        border-color: var(--m3-primary);
+        box-shadow: var(--m3-elevation-1);
+    }
+    .hw-saved-cell img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .hw-saved-cell .hw-cell-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: opacity var(--m3-duration-short3) ease;
+        backdrop-filter: blur(2px);
+    }
+    .hw-saved-cell:hover .hw-cell-label {
+        opacity: 1;
+    }
+
+    /* Brush Controls */
+    .hw-brush-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: var(--m3-surface-container);
+        border-radius: var(--m3-shape-lg);
+        flex-wrap: wrap;
+    }
+    .hw-brush-bar label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--m3-on-surface-variant);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    .hw-color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--m3-shape-full);
+        border: 3px solid var(--m3-outline-variant);
+        cursor: pointer;
+        padding: 0;
+        overflow: hidden;
+        transition: border-color var(--m3-duration-short3) ease;
+    }
+    .hw-color-swatch:hover {
+        border-color: var(--m3-primary);
+    }
+    .hw-color-swatch input[type="color"] {
+        width: 48px;
+        height: 48px;
+        margin: -8px;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* Convert Panel */
+    .hw-result-paper {
+        background: #fff;
+        border-radius: var(--m3-shape-xl);
+        padding: 32px;
+        min-height: 120px;
+        position: relative;
+        overflow-x: auto;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .hw-result-paper::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 32px;
+        height: 1px;
+        background: repeating-linear-gradient(90deg, transparent, transparent 10px, #e8e8e8 10px, #e8e8e8 11px);
+        opacity: 0.5;
+    }
+
+    /* Slider Controls Card */
+    .hw-controls-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    @media (max-width: 640px) {
+        .hw-controls-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .hw-control-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .hw-control-item label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--m3-on-surface-variant);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .hw-control-item .hw-control-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .hw-control-item .hw-val {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--m3-primary);
+        min-width: 36px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Animations */
+    @keyframes hw-fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .hw-animate {
+        animation: hw-fade-up 0.4s var(--m3-easing-standard) both;
+    }
+    .hw-animate-d1 { animation-delay: 0.05s; }
+    .hw-animate-d2 { animation-delay: 0.1s; }
+    .hw-animate-d3 { animation-delay: 0.15s; }
+    .hw-animate-d4 { animation-delay: 0.2s; }
+
+    /* Info Chip */
+    .hw-info-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: var(--m3-shape-full);
+        background: var(--m3-primary-container);
+        color: var(--m3-on-primary-container);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .hw-info-chip .material-icons-round {
+        font-size: 16px;
+    }
+
+    /* Panel transitions */
+    .hw-panel {
+        display: none;
+    }
+    .hw-panel.visible {
+        display: block;
+    }
+
+    /* ── Responsive: Tablet (<=1024px) ── */
+    @media (max-width: 1024px) {
+        .hw-canvas-guide {
+            font-size: min(45vw, 220px);
+        }
+        .hw-result-paper {
+            padding: 24px;
+        }
+    }
+
+    /* ── Responsive: Mobile (<=640px) ── */
+    @media (max-width: 640px) {
+        .hw-tab {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            gap: 6px;
+        }
+        .hw-tab .material-icons-round {
+            font-size: 18px !important;
+        }
+        .hw-canvas-guide {
+            font-size: min(60vw, 180px);
+        }
+        .hw-brush-bar {
+            gap: 8px;
+            padding: 10px 12px;
+        }
+        .hw-result-paper {
+            padding: 16px;
+        }
+        .hw-controls-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .hw-info-chip {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+        }
+    }
+
+    /* ── Responsive: Small phones (<=380px) ── */
+    @media (max-width: 380px) {
+        .hw-char-chip {
+            width: 30px;
+            height: 30px;
+            font-size: 0.65rem;
+            border-radius: 8px;
+        }
+    }
+</style>
+
 <div class="tool-page-container">
-    <div class="page-header">
+
+    <!-- Header -->
+    <div class="page-header hw-animate">
         <a href="{{ url_for('dashboard') }}"
             class="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
             <span class="material-icons-round text-2xl">arrow_back</span>
         </a>
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Handschrift</h2>
+        <div>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Handschrift</h2>
+            <p class="text-sm text-[var(--m3-on-surface-variant)] mt-1">Erstelle deine eigene Schrift & wandle Text um</p>
+        </div>
         <div class="flex-1"></div>
-        <button onclick="resetAll()" class="m3-button m3-button-outline text-sm" title="Alle Buchstaben loeschen">
-            <span class="material-icons-round">restart_alt</span>
-            Zuruecksetzen
-        </button>
+
+        <!-- Progress Ring + Counter -->
+        <div class="hidden md:flex items-center gap-3">
+            <div class="hw-info-chip" id="progressChip">
+                <span class="material-icons-round">draw</span>
+                <span id="progressText">0 / 36</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="flex gap-2 mb-8">
-        <button onclick="switchTab('draw')" id="tabDraw"
-            class="m3-button m3-button-filled flex items-center gap-2">
-            <span class="material-icons-round">draw</span>
-            Buchstaben zeichnen
+    <!-- Tab Bar -->
+    <div class="hw-tab-bar mb-8 hw-animate hw-animate-d1">
+        <button class="hw-tab active" id="tabDraw" onclick="switchTab('draw')">
+            <span class="material-icons-round" style="font-size:20px">draw</span>
+            Zeichnen
         </button>
-        <button onclick="switchTab('convert')" id="tabConvert"
-            class="m3-button m3-button-outline flex items-center gap-2">
-            <span class="material-icons-round">text_fields</span>
+        <button class="hw-tab" id="tabConvert" onclick="switchTab('convert')">
+            <span class="material-icons-round" style="font-size:20px">text_fields</span>
             Text umwandeln
         </button>
     </div>
 
-    <!-- TAB 1: Draw Letters -->
-    <div id="panelDraw">
-        <!-- Character Selector -->
-        <div class="m3-card mb-6">
-            <h3 class="text-lg font-bold mb-4">Zeichen auswaehlen</h3>
-            <div class="flex flex-wrap gap-2" id="charSelector">
-                <!-- Generated by JS -->
+    <!-- ═══════════ TAB 1: DRAW ═══════════ -->
+    <div id="panelDraw" class="hw-panel visible">
+
+        <!-- Character Picker -->
+        <div class="m3-card mb-6 hw-animate hw-animate-d2">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-round text-[var(--m3-primary)]" style="font-size:20px">abc</span>
+                    <h3 class="font-bold text-[var(--m3-on-surface)]">Buchstabe waehlen</h3>
+                </div>
+                <button onclick="resetAll()"
+                    class="text-xs font-bold text-[var(--m3-error)] hover:underline flex items-center gap-1 px-3 py-1.5 rounded-full hover:bg-[var(--m3-error-container)] transition-colors">
+                    <span class="material-icons-round" style="font-size:16px">restart_alt</span>
+                    Alle loeschen
+                </button>
+            </div>
+
+            <!-- Letter Chips: A-Z -->
+            <div class="mb-3">
+                <span class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest mb-2 block px-1">Buchstaben</span>
+                <div class="flex flex-wrap gap-1.5" id="charSelectorLetters"></div>
+            </div>
+            <!-- Number Chips: 0-9 -->
+            <div>
+                <span class="text-[10px] font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-widest mb-2 block px-1">Ziffern</span>
+                <div class="flex flex-wrap gap-1.5" id="charSelectorNumbers"></div>
             </div>
         </div>
 
-        <!-- Drawing Area -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="m3-card flex flex-col items-center">
-                <div class="flex items-center justify-between w-full mb-4">
-                    <h3 class="text-lg font-bold">Zeichne: <span id="currentCharLabel" class="text-[var(--m3-primary)]">A</span></h3>
-                    <div class="flex gap-2">
-                        <button onclick="clearCanvas()" class="m3-button m3-button-outline text-sm">
-                            <span class="material-icons-round">cleaning_services</span>
-                            Loeschen
-                        </button>
-                        <button onclick="saveCurrentChar()" class="m3-button m3-button-filled text-sm">
-                            <span class="material-icons-round">save</span>
-                            Speichern
-                        </button>
-                    </div>
-                </div>
+        <!-- Drawing + Preview Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-                <!-- Canvas Container -->
-                <div class="relative w-full" style="max-width: 400px;">
-                    <canvas id="drawCanvas" width="400" height="400"
-                        class="w-full border-2 border-dashed border-[var(--m3-outline)] rounded-2xl cursor-crosshair bg-white"
-                        style="touch-action: none; aspect-ratio: 1/1;">
-                    </canvas>
-                    <!-- Guide lines -->
-                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10">
-                        <span class="text-[200px] font-bold text-gray-500 select-none" id="canvasGuide">A</span>
+            <!-- Canvas Column (3/5) -->
+            <div class="lg:col-span-3 space-y-4 hw-animate hw-animate-d3">
+                <!-- Active Letter Display -->
+                <div class="m3-card !p-0 overflow-hidden">
+                    <div class="bg-[var(--m3-surface-container)] border-b border-[var(--m3-outline-variant)] px-5 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-[var(--m3-primary)] flex items-center justify-center">
+                                <span class="text-[var(--m3-on-primary)] font-extrabold text-lg" id="currentCharLabel">A</span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-[var(--m3-on-surface-variant)] uppercase tracking-wider">Aktuell</span>
+                                <p class="text-sm font-bold text-[var(--m3-on-surface)]" id="currentCharHint">Zeichne den Buchstaben A</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="undoStroke()" class="p-2.5 rounded-xl hover:bg-[var(--m3-surface-container-high)] transition-colors" title="Rueckgaengig">
+                                <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:20px">undo</span>
+                            </button>
+                            <button onclick="clearCanvas()" class="p-2.5 rounded-xl hover:bg-[var(--m3-surface-container-high)] transition-colors" title="Canvas leeren">
+                                <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:20px">cleaning_services</span>
+                            </button>
+                            <button onclick="saveCurrentChar()" id="saveBtn"
+                                class="px-5 py-2.5 rounded-xl bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-bold text-sm flex items-center gap-2 hover:shadow-lg transition-all active:scale-95">
+                                <span class="material-icons-round" style="font-size:18px">check</span>
+                                Speichern
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Brush Controls -->
-                <div class="flex items-center gap-4 mt-4 w-full" style="max-width: 400px;">
-                    <label class="text-sm text-[var(--m3-on-surface-variant)]">Strichstaerke:</label>
-                    <input type="range" min="2" max="20" value="6" id="brushSize" class="m3-slider flex-1"
-                        oninput="updateBrushSize()">
-                    <span id="brushSizeLabel" class="text-sm font-mono w-8 text-center">6</span>
-                    <label class="text-sm text-[var(--m3-on-surface-variant)] ml-4">Farbe:</label>
-                    <input type="color" value="#000000" id="brushColor" class="w-8 h-8 rounded cursor-pointer border-0">
+                    <!-- Canvas -->
+                    <div class="p-4 md:p-6 flex justify-center bg-[var(--m3-surface-container-lowest)]">
+                        <div class="hw-canvas-wrap" id="canvasWrap" style="max-width: 420px;">
+                            <canvas id="drawCanvas" width="420" height="420"></canvas>
+                            <div class="hw-canvas-guide" id="canvasGuide">A</div>
+                        </div>
+                    </div>
+
+                    <!-- Brush Bar -->
+                    <div class="px-4 md:px-6 pb-4 md:pb-6">
+                        <div class="hw-brush-bar">
+                            <label>Stift</label>
+                            <input type="range" min="2" max="24" value="6" id="brushSize" class="m3-slider flex-1" style="min-width:80px"
+                                oninput="updateBrushSize()">
+                            <span id="brushSizeLabel" class="text-xs font-bold text-[var(--m3-on-surface)] font-mono w-6 text-center">6</span>
+
+                            <div class="w-px h-6 bg-[var(--m3-outline-variant)]"></div>
+
+                            <label>Farbe</label>
+                            <div class="hw-color-swatch">
+                                <input type="color" value="#000000" id="brushColor">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Saved Characters Preview -->
-            <div class="m3-card">
-                <h3 class="text-lg font-bold mb-4">Gespeicherte Zeichen <span id="savedCount" class="text-[var(--m3-on-surface-variant)] text-sm font-normal">(0/36)</span></h3>
-                <div class="grid grid-cols-6 gap-2" id="savedCharsGrid">
-                    <!-- Filled by JS -->
+            <!-- Saved Characters Column (2/5) -->
+            <div class="lg:col-span-2 hw-animate hw-animate-d4">
+                <div class="m3-card h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-icons-round text-[var(--m3-primary)]" style="font-size:20px">grid_view</span>
+                            <h3 class="font-bold text-[var(--m3-on-surface)]">Deine Schrift</h3>
+                        </div>
+                        <span class="text-xs font-bold text-[var(--m3-on-surface-variant)] bg-[var(--m3-surface-container)] px-3 py-1 rounded-full" id="savedCount">0 / 36</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 rounded-full bg-[var(--m3-surface-container-high)] mb-4 overflow-hidden">
+                        <div class="h-full rounded-full bg-[var(--m3-primary)] transition-all duration-500 ease-out" id="progressBar" style="width:0%"></div>
+                    </div>
+
+                    <div class="grid grid-cols-6 gap-1.5" id="savedCharsGrid">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <div class="mt-4 p-3 rounded-xl bg-[var(--m3-surface-container)] flex items-start gap-2">
+                        <span class="material-icons-round text-[var(--m3-on-surface-variant)] mt-0.5" style="font-size:16px">info</span>
+                        <p class="text-xs text-[var(--m3-on-surface-variant)] leading-relaxed">
+                            Klicke auf ein Zeichen, um es zu bearbeiten. Gespeicherte Zeichen werden auf deinem Account hinterlegt.
+                        </p>
+                    </div>
                 </div>
-                <p class="text-sm text-[var(--m3-on-surface-variant)] mt-4">
-                    Klicke auf ein gespeichertes Zeichen, um es zu bearbeiten.
-                </p>
             </div>
         </div>
     </div>
 
-    <!-- TAB 2: Convert Text -->
-    <div id="panelConvert" style="display: none;">
-        <div class="grid grid-cols-1 gap-6">
-            <div class="m3-card">
-                <h3 class="text-lg font-bold mb-4">Text eingeben</h3>
-                <textarea id="convertInput" rows="4"
-                    class="m3-text-input w-full resize-none"
-                    placeholder="Gib hier deinen Text ein..."></textarea>
-                <div class="flex items-center gap-4 mt-4">
-                    <button onclick="convertText()" class="m3-button m3-button-filled">
-                        <span class="material-icons-round">brush</span>
-                        In Handschrift umwandeln
-                    </button>
-                    <label class="text-sm text-[var(--m3-on-surface-variant)]">Groesse:</label>
-                    <input type="range" min="20" max="100" value="50" id="charSize" class="m3-slider" style="width: 120px;">
-                    <span id="charSizeLabel" class="text-sm font-mono">50px</span>
-                    <label class="text-sm text-[var(--m3-on-surface-variant)] ml-2">Abstand:</label>
-                    <input type="range" min="0" max="30" value="5" id="charSpacing" class="m3-slider" style="width: 100px;">
-                    <span id="charSpacingLabel" class="text-sm font-mono">5px</span>
+    <!-- ═══════════ TAB 2: CONVERT ═══════════ -->
+    <div id="panelConvert" class="hw-panel">
+
+        <!-- Input Card -->
+        <div class="m3-card mb-6 hw-animate">
+            <div class="flex items-center gap-3 mb-5">
+                <span class="material-icons-round text-[var(--m3-primary)]" style="font-size:20px">edit</span>
+                <h3 class="font-bold text-[var(--m3-on-surface)]">Text eingeben</h3>
+            </div>
+
+            <textarea id="convertInput" rows="5"
+                class="m3-text-input w-full resize-none mb-5"
+                placeholder="Schreibe deinen Text hier..."></textarea>
+
+            <!-- Controls -->
+            <div class="hw-controls-grid mb-5">
+                <div class="hw-control-item">
+                    <label>Zeichengroesse</label>
+                    <div class="hw-control-row">
+                        <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">format_size</span>
+                        <input type="range" min="20" max="120" value="50" id="charSize" class="m3-slider flex-1">
+                        <span class="hw-val" id="charSizeLabel">50px</span>
+                    </div>
+                </div>
+                <div class="hw-control-item">
+                    <label>Zeichenabstand</label>
+                    <div class="hw-control-row">
+                        <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">space_bar</span>
+                        <input type="range" min="0" max="40" value="5" id="charSpacing" class="m3-slider flex-1">
+                        <span class="hw-val" id="charSpacingLabel">5px</span>
+                    </div>
+                </div>
+                <div class="hw-control-item">
+                    <label>Zeilenabstand</label>
+                    <div class="hw-control-row">
+                        <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">format_line_spacing</span>
+                        <input type="range" min="0" max="40" value="12" id="lineSpacing" class="m3-slider flex-1">
+                        <span class="hw-val" id="lineSpacingLabel">12px</span>
+                    </div>
+                </div>
+                <div class="hw-control-item">
+                    <label>Zufaellige Rotation</label>
+                    <div class="hw-control-row">
+                        <span class="material-icons-round text-[var(--m3-on-surface-variant)]" style="font-size:18px">rotate_right</span>
+                        <input type="range" min="0" max="15" value="3" id="charRotation" class="m3-slider flex-1">
+                        <span class="hw-val" id="charRotationLabel">3&deg;</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="m3-card" id="convertResultCard" style="display: none;">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold">Ergebnis</h3>
-                    <button onclick="downloadResult()" class="m3-button m3-button-filled text-sm">
-                        <span class="material-icons-round">download</span>
-                        Als Bild speichern
+            <button onclick="convertText()" id="convertBtn"
+                class="w-full py-3.5 rounded-2xl bg-[var(--m3-primary)] text-[var(--m3-on-primary)] font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-[0.98]">
+                <span class="material-icons-round" style="font-size:20px">brush</span>
+                In Handschrift umwandeln
+            </button>
+        </div>
+
+        <!-- Result Card -->
+        <div class="m3-card hw-animate" id="convertResultCard" style="display: none;">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons-round text-[var(--m3-primary)]" style="font-size:20px">auto_awesome</span>
+                    <h3 class="font-bold text-[var(--m3-on-surface)]">Ergebnis</h3>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadResult('png')"
+                        class="px-4 py-2 rounded-xl bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)] font-bold text-xs flex items-center gap-1.5 hover:shadow transition-all">
+                        <span class="material-icons-round" style="font-size:16px">image</span>
+                        PNG
+                    </button>
+                    <button onclick="downloadResult('jpg')"
+                        class="px-4 py-2 rounded-xl bg-[var(--m3-surface-container)] text-[var(--m3-on-surface)] font-bold text-xs flex items-center gap-1.5 hover:shadow transition-all">
+                        <span class="material-icons-round" style="font-size:16px">photo</span>
+                        JPG
                     </button>
                 </div>
-                <div class="p-6 rounded-xl bg-white overflow-x-auto" id="convertResult">
-                    <!-- Rendered handwriting -->
-                </div>
+            </div>
+            <div class="hw-result-paper" id="convertResult">
+                <!-- Rendered handwriting -->
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
-    // -- State --
-    const ALL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+    // ── State ──
+    const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const NUMBERS = '0123456789'.split('');
+    const ALL_CHARS = [...LETTERS, ...NUMBERS];
     let savedChars = {};
     let currentChar = 'A';
     let isDrawing = false;
     let lastX = 0, lastY = 0;
+    let strokeHistory = []; // For undo
 
-    // -- Canvas Setup --
+    // ── Canvas Setup ──
     const canvas = document.getElementById('drawCanvas');
     const ctx = canvas.getContext('2d');
+    const canvasWrap = document.getElementById('canvasWrap');
 
     function initCanvas() {
         ctx.lineCap = 'round';
@@ -163,51 +650,77 @@
         };
     }
 
+    function saveStrokeState() {
+        strokeHistory.push(canvas.toDataURL());
+        if (strokeHistory.length > 30) strokeHistory.shift();
+    }
+
+    // Mouse events
     canvas.addEventListener('mousedown', (e) => {
+        saveStrokeState();
         isDrawing = true;
+        canvasWrap.classList.add('drawing');
         const pos = getCanvasPos(e);
         lastX = pos.x;
         lastY = pos.y;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
     });
 
     canvas.addEventListener('mousemove', (e) => {
         if (!isDrawing) return;
         const pos = getCanvasPos(e);
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
         lastX = pos.x;
         lastY = pos.y;
     });
 
-    canvas.addEventListener('mouseup', () => isDrawing = false);
-    canvas.addEventListener('mouseleave', () => isDrawing = false);
+    canvas.addEventListener('mouseup', () => { isDrawing = false; canvasWrap.classList.remove('drawing'); });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; canvasWrap.classList.remove('drawing'); });
 
-    // Touch support
+    // Touch events
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
+        saveStrokeState();
         isDrawing = true;
+        canvasWrap.classList.add('drawing');
         const pos = getCanvasPos(e);
         lastX = pos.x;
         lastY = pos.y;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
     });
 
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         if (!isDrawing) return;
         const pos = getCanvasPos(e);
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
         lastX = pos.x;
         lastY = pos.y;
     });
 
-    canvas.addEventListener('touchend', () => isDrawing = false);
+    canvas.addEventListener('touchend', () => { isDrawing = false; canvasWrap.classList.remove('drawing'); });
 
-    // -- Brush --
+    // ── Undo ──
+    function undoStroke() {
+        if (strokeHistory.length === 0) return;
+        const prev = strokeHistory.pop();
+        const img = new Image();
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+        };
+        img.src = prev;
+    }
+
+    // ── Brush Controls ──
     function updateBrushSize() {
         const val = document.getElementById('brushSize').value;
         document.getElementById('brushSizeLabel').textContent = val;
@@ -221,40 +734,60 @@
     document.getElementById('charSize').addEventListener('input', (e) => {
         document.getElementById('charSizeLabel').textContent = e.target.value + 'px';
     });
-
     document.getElementById('charSpacing').addEventListener('input', (e) => {
         document.getElementById('charSpacingLabel').textContent = e.target.value + 'px';
     });
+    document.getElementById('lineSpacing').addEventListener('input', (e) => {
+        document.getElementById('lineSpacingLabel').textContent = e.target.value + 'px';
+    });
+    document.getElementById('charRotation').addEventListener('input', (e) => {
+        document.getElementById('charRotationLabel').innerHTML = e.target.value + '&deg;';
+    });
 
-    // -- Character Selector --
+    // ── Character Selector ──
     function buildCharSelector() {
-        const container = document.getElementById('charSelector');
+        buildChipRow('charSelectorLetters', LETTERS);
+        buildChipRow('charSelectorNumbers', NUMBERS);
+    }
+
+    function buildChipRow(containerId, chars) {
+        const container = document.getElementById(containerId);
         container.innerHTML = '';
-        ALL_CHARS.forEach(ch => {
+        chars.forEach(ch => {
             const btn = document.createElement('button');
-            btn.className = 'w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center transition-all duration-200 ';
+            btn.className = 'hw-char-chip empty';
             btn.textContent = ch;
             btn.dataset.char = ch;
             btn.onclick = () => selectChar(ch);
             container.appendChild(btn);
         });
-        updateCharSelectorStyles();
     }
 
     function updateCharSelectorStyles() {
-        document.querySelectorAll('#charSelector button').forEach(btn => {
+        document.querySelectorAll('.hw-char-chip').forEach(btn => {
             const ch = btn.dataset.char;
             const isCurrent = ch === currentChar;
-            const isSaved = savedChars[ch];
+            const isSaved = !!savedChars[ch];
 
-            btn.className = 'w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center transition-all duration-200 ';
-
+            btn.className = 'hw-char-chip';
             if (isCurrent) {
-                btn.className += 'bg-[var(--m3-primary)] text-[var(--m3-on-primary)] scale-110 shadow-lg';
+                btn.classList.add('active');
             } else if (isSaved) {
-                btn.className += 'bg-[var(--m3-primary-container)] text-[var(--m3-on-primary-container)]';
+                btn.classList.add('saved');
             } else {
-                btn.className += 'bg-[var(--m3-surface-container)] text-[var(--m3-on-surface)] hover:bg-[var(--m3-surface-container-high)]';
+                btn.classList.add('empty');
+            }
+
+            // Check dot
+            let dot = btn.querySelector('.check-dot');
+            if (isSaved && !isCurrent) {
+                if (!dot) {
+                    dot = document.createElement('div');
+                    dot.className = 'check-dot';
+                    btn.appendChild(dot);
+                }
+            } else if (dot) {
+                dot.remove();
             }
         });
     }
@@ -263,22 +796,26 @@
         currentChar = ch;
         document.getElementById('currentCharLabel').textContent = ch;
         document.getElementById('canvasGuide').textContent = ch;
-        clearCanvas();
 
-        // If we have a saved version, load it onto canvas
+        const isLetter = LETTERS.includes(ch);
+        document.getElementById('currentCharHint').textContent =
+            'Zeichne ' + (isLetter ? 'den Buchstaben ' : 'die Ziffer ') + ch;
+
+        clearCanvas();
+        strokeHistory = [];
+
         if (savedChars[ch]) {
             const img = new Image();
-            img.onload = () => {
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            };
+            img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             img.src = savedChars[ch];
         }
 
         updateCharSelectorStyles();
     }
 
-    // -- Canvas Operations --
+    // ── Canvas Operations ──
     function clearCanvas() {
+        saveStrokeState();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
@@ -296,6 +833,10 @@
             return;
         }
 
+        const btn = document.getElementById('saveBtn');
+        btn.innerHTML = '<span class="material-icons-round animate-spin" style="font-size:18px">autorenew</span> Speichern...';
+        btn.style.pointerEvents = 'none';
+
         const imageData = canvas.toDataURL('image/png');
 
         try {
@@ -310,12 +851,13 @@
                 savedChars[currentChar] = imageData;
                 updateCharSelectorStyles();
                 renderSavedGrid();
+                updateProgress();
                 showToast('"' + currentChar + '" gespeichert!');
 
-                // Auto-advance to next unsaved character
+                // Auto-advance
                 const nextUnsaved = ALL_CHARS.find(ch => !savedChars[ch] && ch !== currentChar);
                 if (nextUnsaved) {
-                    selectChar(nextUnsaved);
+                    setTimeout(() => selectChar(nextUnsaved), 300);
                 }
             } else {
                 showToast(result.error || 'Fehler beim Speichern');
@@ -323,60 +865,69 @@
         } catch (e) {
             showToast('Fehler beim Speichern');
         }
+
+        btn.innerHTML = '<span class="material-icons-round" style="font-size:18px">check</span> Speichern';
+        btn.style.pointerEvents = '';
     }
 
-    // -- Saved Characters Grid --
+    // ── Progress ──
+    function updateProgress() {
+        const count = Object.keys(savedChars).length;
+        const pct = Math.round((count / ALL_CHARS.length) * 100);
+
+        document.getElementById('savedCount').textContent = count + ' / ' + ALL_CHARS.length;
+        document.getElementById('progressText').textContent = count + ' / ' + ALL_CHARS.length;
+        document.getElementById('progressBar').style.width = pct + '%';
+    }
+
+    // ── Saved Characters Grid ──
     function renderSavedGrid() {
         const grid = document.getElementById('savedCharsGrid');
         grid.innerHTML = '';
 
         ALL_CHARS.forEach(ch => {
             const cell = document.createElement('div');
-            cell.className = 'aspect-square rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all duration-200 overflow-hidden relative group ';
+            cell.className = 'hw-saved-cell';
 
             if (savedChars[ch]) {
-                cell.className += 'border-[var(--m3-primary)] bg-white';
+                cell.classList.add('filled');
                 const img = document.createElement('img');
                 img.src = savedChars[ch];
-                img.className = 'w-full h-full object-contain';
                 img.alt = ch;
+                img.draggable = false;
                 cell.appendChild(img);
 
-                // Overlay with character label
-                const overlay = document.createElement('div');
-                overlay.className = 'absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center';
-                overlay.innerHTML = '<span class="text-white font-bold text-lg">' + ch + '</span>';
-                cell.appendChild(overlay);
-            } else {
-                cell.className += 'border-dashed border-[var(--m3-outline)] bg-[var(--m3-surface-container)]';
-                const label = document.createElement('span');
-                label.className = 'text-sm text-[var(--m3-on-surface-variant)] opacity-50';
+                const label = document.createElement('div');
+                label.className = 'hw-cell-label';
                 label.textContent = ch;
                 cell.appendChild(label);
+            } else {
+                const lbl = document.createElement('span');
+                lbl.className = 'text-[10px] font-bold text-[var(--m3-on-surface-variant)]';
+                lbl.style.opacity = '0.35';
+                lbl.textContent = ch;
+                cell.style.display = 'flex';
+                cell.style.alignItems = 'center';
+                cell.style.justifyContent = 'center';
+                cell.appendChild(lbl);
             }
 
             cell.onclick = () => selectChar(ch);
             grid.appendChild(cell);
         });
 
-        const count = Object.keys(savedChars).length;
-        document.getElementById('savedCount').textContent = '(' + count + '/' + ALL_CHARS.length + ')';
+        updateProgress();
     }
 
-    // -- Tab Switching --
+    // ── Tabs ──
     function switchTab(tab) {
-        document.getElementById('panelDraw').style.display = tab === 'draw' ? '' : 'none';
-        document.getElementById('panelConvert').style.display = tab === 'convert' ? '' : 'none';
-
-        document.getElementById('tabDraw').className = tab === 'draw'
-            ? 'm3-button m3-button-filled flex items-center gap-2'
-            : 'm3-button m3-button-outline flex items-center gap-2';
-        document.getElementById('tabConvert').className = tab === 'convert'
-            ? 'm3-button m3-button-filled flex items-center gap-2'
-            : 'm3-button m3-button-outline flex items-center gap-2';
+        document.getElementById('panelDraw').classList.toggle('visible', tab === 'draw');
+        document.getElementById('panelConvert').classList.toggle('visible', tab === 'convert');
+        document.getElementById('tabDraw').classList.toggle('active', tab === 'draw');
+        document.getElementById('tabConvert').classList.toggle('active', tab === 'convert');
     }
 
-    // -- Text Conversion --
+    // ── Text Conversion ──
     async function convertText() {
         const text = document.getElementById('convertInput').value.trim();
         if (!text) {
@@ -384,23 +935,29 @@
             return;
         }
 
+        const btn = document.getElementById('convertBtn');
+        btn.innerHTML = '<span class="material-icons-round animate-spin" style="font-size:20px">autorenew</span> Umwandeln...';
+        btn.style.pointerEvents = 'none';
+
         try {
             const res = await fetch('/api/handwriting/convert', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text})
+                body: JSON.stringify({text})
             });
 
             const result = await res.json();
             if (result.error) {
                 showToast(result.error);
-                return;
+            } else {
+                renderHandwriting(result.text, result.char_map);
             }
-
-            renderHandwriting(result.text, result.char_map);
         } catch (e) {
             showToast('Fehler bei der Umwandlung');
         }
+
+        btn.innerHTML = '<span class="material-icons-round" style="font-size:20px">brush</span> In Handschrift umwandeln';
+        btn.style.pointerEvents = '';
     }
 
     function renderHandwriting(text, charMap) {
@@ -408,6 +965,8 @@
         const card = document.getElementById('convertResultCard');
         const charSize = parseInt(document.getElementById('charSize').value);
         const charSpacing = parseInt(document.getElementById('charSpacing').value);
+        const lineSpacing = parseInt(document.getElementById('lineSpacing').value);
+        const maxRotation = parseInt(document.getElementById('charRotation').value);
         container.innerHTML = '';
         card.style.display = '';
 
@@ -415,14 +974,16 @@
 
         lines.forEach(line => {
             const lineDiv = document.createElement('div');
-            lineDiv.className = 'flex flex-wrap items-end';
+            lineDiv.style.display = 'flex';
+            lineDiv.style.flexWrap = 'wrap';
+            lineDiv.style.alignItems = 'end';
             lineDiv.style.minHeight = charSize + 'px';
-            lineDiv.style.marginBottom = '8px';
+            lineDiv.style.marginBottom = lineSpacing + 'px';
 
             for (const ch of line) {
                 if (ch === ' ') {
                     const space = document.createElement('div');
-                    space.style.width = (charSize * 0.5) + 'px';
+                    space.style.width = (charSize * 0.4) + 'px';
                     space.style.height = charSize + 'px';
                     lineDiv.appendChild(space);
                     continue;
@@ -436,10 +997,15 @@
                     img.style.height = charSize + 'px';
                     img.style.marginRight = charSpacing + 'px';
                     img.style.objectFit = 'contain';
-                    img.className = 'inline-block';
+                    img.style.display = 'inline-block';
+                    img.draggable = false;
+                    if (maxRotation > 0) {
+                        const rot = (Math.random() - 0.5) * 2 * maxRotation;
+                        const yOff = (Math.random() - 0.5) * 4;
+                        img.style.transform = 'rotate(' + rot + 'deg) translateY(' + yOff + 'px)';
+                    }
                     lineDiv.appendChild(img);
                 } else {
-                    // Fallback: show character as text
                     const span = document.createElement('span');
                     span.textContent = ch;
                     span.style.width = charSize + 'px';
@@ -448,9 +1014,9 @@
                     span.style.marginRight = charSpacing + 'px';
                     span.style.textAlign = 'center';
                     span.style.display = 'inline-block';
-                    span.style.fontSize = (charSize * 0.7) + 'px';
-                    span.style.color = '#aaa';
-                    span.title = 'Zeichen "' + ch + '" nicht gezeichnet';
+                    span.style.fontSize = (charSize * 0.6) + 'px';
+                    span.style.color = '#ccc';
+                    span.title = '"' + ch + '" nicht gezeichnet';
                     lineDiv.appendChild(span);
                 }
             }
@@ -459,28 +1025,26 @@
         });
     }
 
-    // -- Download Result as Image --
-    async function downloadResult() {
+    // ── Download ──
+    async function downloadResult(format) {
         const container = document.getElementById('convertResult');
         if (!container.children.length) return;
 
-        // Use a canvas to render the result
         const charSize = parseInt(document.getElementById('charSize').value);
         const charSpacing = parseInt(document.getElementById('charSpacing').value);
-        const padding = 40;
+        const lineSpacing = parseInt(document.getElementById('lineSpacing').value);
+        const padding = 48;
 
-        // Measure dimensions
-        const lines = container.children;
+        // Measure
         let maxWidth = 0;
         let totalHeight = padding * 2;
-
-        for (const line of lines) {
-            let lineWidth = 0;
+        for (const line of container.children) {
+            let lw = 0;
             for (const el of line.children) {
-                lineWidth += parseInt(el.style.width || charSize) + charSpacing;
+                lw += parseInt(el.style.width || charSize) + parseInt(el.style.marginRight || 0);
             }
-            maxWidth = Math.max(maxWidth, lineWidth);
-            totalHeight += charSize + 8;
+            maxWidth = Math.max(maxWidth, lw);
+            totalHeight += charSize + lineSpacing;
         }
         maxWidth += padding * 2;
 
@@ -492,74 +1056,73 @@
         rCtx.fillStyle = '#ffffff';
         rCtx.fillRect(0, 0, renderCanvas.width, renderCanvas.height);
 
-        let y = padding;
-
-        // Load all images first
+        // Load images
         const images = {};
         const text = document.getElementById('convertInput').value.trim().toUpperCase();
         const uniqueChars = [...new Set(text.replace(/[^A-Z0-9]/g, '').split(''))];
 
-        await Promise.all(uniqueChars.map(ch => {
-            return new Promise(resolve => {
-                if (savedChars[ch]) {
-                    const img = new Image();
-                    img.onload = () => { images[ch] = img; resolve(); };
-                    img.onerror = resolve;
-                    img.src = savedChars[ch];
-                } else {
-                    resolve();
-                }
-            });
-        }));
+        await Promise.all(uniqueChars.map(ch => new Promise(resolve => {
+            if (savedChars[ch]) {
+                const img = new Image();
+                img.onload = () => { images[ch] = img; resolve(); };
+                img.onerror = resolve;
+                img.src = savedChars[ch];
+            } else resolve();
+        })));
 
         // Render
-        const inputText = document.getElementById('convertInput').value.trim().toUpperCase();
-        const inputLines = inputText.split('\n');
+        const inputLines = text.split('\n');
+        let y = padding;
 
         for (const line of inputLines) {
             let x = padding;
             for (const ch of line) {
                 if (ch === ' ') {
-                    x += charSize * 0.5 + charSpacing;
+                    x += charSize * 0.4 + charSpacing;
                     continue;
                 }
                 if (images[ch]) {
                     rCtx.drawImage(images[ch], x, y, charSize, charSize);
                 } else {
                     rCtx.fillStyle = '#cccccc';
-                    rCtx.font = (charSize * 0.7) + 'px sans-serif';
+                    rCtx.font = (charSize * 0.6) + 'px sans-serif';
                     rCtx.textAlign = 'center';
                     rCtx.fillText(ch, x + charSize / 2, y + charSize * 0.75);
                 }
                 x += charSize + charSpacing;
             }
-            y += charSize + 8;
+            y += charSize + lineSpacing;
         }
 
+        const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+        const ext = format === 'jpg' ? 'jpg' : 'png';
+
         const link = document.createElement('a');
-        link.download = 'handschrift.png';
-        link.href = renderCanvas.toDataURL('image/png');
+        link.download = 'handschrift.' + ext;
+        link.href = renderCanvas.toDataURL(mime, 0.95);
         link.click();
-        showToast('Bild heruntergeladen!');
+        showToast('Bild als ' + ext.toUpperCase() + ' gespeichert!');
     }
 
-    // -- Reset All --
+    // ── Reset ──
     async function resetAll() {
-        if (!confirm('Alle gespeicherten Buchstaben loeschen?')) return;
+        if (!confirm('Wirklich alle gespeicherten Buchstaben loeschen?')) return;
 
         try {
             await fetch('/api/handwriting/reset', {method: 'POST'});
             savedChars = {};
+            strokeHistory = [];
             clearCanvas();
             renderSavedGrid();
             updateCharSelectorStyles();
+            selectChar('A');
             showToast('Alle Buchstaben geloescht.');
         } catch (e) {
             showToast('Fehler beim Zuruecksetzen');
         }
     }
 
-    // -- Load saved chars on init --
+    // ── Init ──
     async function init() {
         initCanvas();
         buildCharSelector();
@@ -573,10 +1136,11 @@
 
         renderSavedGrid();
         updateCharSelectorStyles();
+        updateProgress();
 
-        // Auto-select first unsaved character
         const firstUnsaved = ALL_CHARS.find(ch => !savedChars[ch]);
         if (firstUnsaved) selectChar(firstUnsaved);
+        else selectChar('A');
     }
 
     init();
