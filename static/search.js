@@ -28,39 +28,52 @@ const toolsData = [
     { name: "Umfragen", url: "/tools/polls", icon: "ballot", category: "games", keywords: ["abstimmung", "votum", "umfrage", "feedback", "poll", "vote"] },
     { name: "Word Cloud", url: "/tools/word_clouds", icon: "cloud_queue", category: "games", keywords: ["wortwolke", "wörter", "begriffe", "visualisierung", "cloud"] },
     { name: "Handschrift", url: "/tools/handwriting", icon: "draw", category: "text", keywords: ["handwriting", "schrift", "zeichnen", "buchstaben", "font", "handschrift", "schreiben", "text", "umwandeln"] },
+    { name: "Speedtest", url: "/tools/speed-test", icon: "speed", category: "network", keywords: ["netzwerk", "geschwindigkeit", "internet", "download", "upload", "ping"] },
+    { name: "GPS Tacho", url: "/tools/speedometer", icon: "explore", category: "network", keywords: ["geschwindigkeit", "gps", "tacho", "speed", "kmh"] },
+    { name: "Dateien Teilen", url: "/tools/file-share", icon: "share", category: "network", keywords: ["upload", "download", "datei", "share", "teilen", "link"] },
+    { name: "Markdown Editor", url: "/tools/markdown", icon: "edit_note", category: "text", keywords: ["markdown", "editor", "text", "schreiben", "md"] },
+    { name: "Formatierung", url: "/tools/formatter", icon: "auto_fix_high", category: "dev", keywords: ["format", "json", "xml", "konvertieren", "formatieren"] },
+    { name: "Trinkgeld", url: "/tools/tip-calculator", icon: "savings", category: "calc", keywords: ["trinkgeld", "rechner", "tip", "restaurant", "rechnung"] },
+    { name: "Sinnlostext", url: "/tools/lorem-ipsum", icon: "short_text", category: "text", keywords: ["lorem", "ipsum", "platzhalter", "text", "dummy"] },
+    { name: "Daten Zensur", url: "/tools/data-censor", icon: "shield", category: "security", keywords: ["daten", "zensur", "schwärzen", "privacy", "redact"] },
+    { name: "Video Downloader", url: "/tools/video-downloader", icon: "download_for_offline", category: "media", keywords: ["video", "download", "mp4", "mp3", "youtube"] },
 ];
 
+let searchOpen = false;
+
 function toggleSearch() {
-    const wrapper = document.getElementById('searchWrapper');
+    const overlay = document.getElementById('searchOverlay');
     const input = document.getElementById('globalSearch');
 
-    // Close related menu if open
-    const related = document.getElementById('relatedToolsWrapper');
-    if (related && !related.classList.contains('hidden')) toggleRelatedTools();
+    if (!overlay) return;
 
-    if (wrapper.classList.contains('hidden')) {
-        wrapper.classList.remove('hidden');
-        // Trigger reflow
-        void wrapper.offsetWidth;
-        wrapper.classList.remove('w-0', 'opacity-0');
-        wrapper.classList.add('w-10/12', 'md:w-[300px]', 'opacity-100');
-        input.focus();
+    if (!searchOpen) {
+        overlay.classList.add('open');
+        searchOpen = true;
+        setTimeout(() => input.focus(), 100);
     } else {
-        wrapper.classList.remove('w-10/12', 'md:w-[300px]', 'opacity-100');
-        wrapper.classList.add('w-0', 'opacity-0');
-        setTimeout(() => {
-            wrapper.classList.add('hidden');
-            document.getElementById('searchResults').classList.add('hidden');
-            input.value = '';
-        }, 300);
+        overlay.classList.remove('open');
+        searchOpen = false;
+        document.getElementById('searchResults').classList.add('hidden');
+        input.value = '';
+
+        // Reset dashboard filter
+        const cards = Array.from(document.querySelectorAll('.tool-card'));
+        if (document.querySelector('.dashboard-grid')) {
+            cards.forEach(card => {
+                card.classList.remove('hidden');
+                card.closest('section')?.classList.remove('hidden');
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+        }
     }
 }
 
 function closeSearchWithDelay() {
     setTimeout(() => {
-        // Check if focus moved to results
-        if (!document.activeElement.closest('#searchResults')) {
-            toggleSearch();
+        if (!document.activeElement.closest('#searchOverlay')) {
+            if (searchOpen) toggleSearch();
         }
     }, 200);
 }
@@ -109,7 +122,6 @@ function performSearch(query) {
             }
         });
 
-        // Hide empty sections
         document.querySelectorAll('section').forEach(section => {
             if (visibleSections.has(section)) {
                 section.classList.remove('hidden');
@@ -146,35 +158,19 @@ function performSearch(query) {
     const results = scored.filter(tool => tool.score > 0).sort((a, b) => b.score - a.score);
 
     if (results.length > 0) {
-        resultsDiv.innerHTML = results.slice(0, 5).map(tool => `
-            <a href="${tool.url}" class="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0">
-                <span class="material-icons-round text-gray-500 bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">${tool.icon}</span>
+        resultsDiv.innerHTML = results.slice(0, 6).map(tool => `
+            <a href="${tool.url}" class="flex items-center gap-3 px-4 py-3 hover:bg-[var(--md-surface-container-highest)] transition-colors">
+                <span class="material-icons-round text-[var(--md-primary)] bg-[var(--md-primary-container)] p-2 rounded-xl" style="font-size:20px">${tool.icon}</span>
                 <div>
-                    <div class="font-bold text-sm">${tool.name}</div>
-                    <div class="text-xs text-gray-400">Match</div>
+                    <div class="font-bold text-sm text-[var(--md-on-surface)]">${tool.name}</div>
                 </div>
             </a>
         `).join('');
         resultsDiv.classList.remove('hidden');
     } else {
-        resultsDiv.innerHTML = `<div class="p-4 text-center text-gray-400 text-sm">Kein passendes Tool gefunden.</div>`;
+        resultsDiv.innerHTML = `<div class="p-5 text-center text-[var(--md-on-surface-variant)] text-sm">Kein passendes Tool gefunden.</div>`;
         resultsDiv.classList.remove('hidden');
     }
-}
-
-function getEditDistance(a, b) {
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
-            else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
-        }
-    }
-    return matrix[b.length][a.length];
 }
 
 function toggleRelatedTools() {
@@ -191,3 +187,10 @@ function toggleRelatedTools() {
         setTimeout(() => { wrapper.classList.add('hidden'); }, 300);
     }
 }
+
+// Close search on Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchOpen) {
+        toggleSearch();
+    }
+});

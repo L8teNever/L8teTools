@@ -323,6 +323,12 @@ table { border-collapse: collapse; width: 100%; }
   font-size: 26px;
 }
 
+@media (min-width: 900px) {
+  .top-app-bar .brand .material-icons-round {
+    display: none;
+  }
+}
+
 .top-app-bar-actions {
   display: flex;
   align-items: center;
@@ -349,6 +355,75 @@ table { border-collapse: collapse; width: 100%; }
 
 .md-icon-btn:active {
   background: rgba(var(--md-on-surface-rgb), .12);
+}
+
+/* ── 5b. Search Overlay ───────────────────────────────────── */
+
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  padding: 12px 16px;
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 0.3s var(--md-ease-standard), opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.search-overlay.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (min-width: 900px) {
+  .search-overlay {
+    left: var(--nav-rail-width);
+    padding: 12px 32px;
+  }
+}
+
+.search-overlay-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px 4px 20px;
+  background: var(--md-surface-container-high);
+  border-radius: var(--md-shape-xl);
+  border: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-3);
+}
+
+@media (prefers-color-scheme: light) {
+  .search-overlay-box {
+    background: var(--md-surface);
+  }
+}
+
+.search-overlay-results {
+  margin-top: 8px;
+  background: var(--md-surface-container-high);
+  border-radius: var(--md-shape-xl);
+  border: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-3);
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+@media (prefers-color-scheme: light) {
+  .search-overlay-results {
+    background: var(--md-surface);
+  }
+}
+
+@media (min-width: 600px) {
+  .search-overlay-box,
+  .search-overlay-results {
+    max-width: 560px;
+  }
 }
 
 /* ── 6. Navigation Rail (Desktop ≥900px) ──────────────────── */

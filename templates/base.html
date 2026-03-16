@@ -73,35 +73,25 @@
             <span class="material-icons-round">interests</span>
             <span>L8teTools</span>
         </a>
-        <div class="flex items-center gap-2">
-            <!-- Search Container -->
-            <div class="relative flex items-center">
-                <div id="searchWrapper"
-                    class="hidden absolute right-0 top-1/2 -translate-y-1/2 bg-[var(--md-surface-container-high)] shadow-2xl rounded-2xl border border-[var(--md-outline-variant)] flex items-center overflow-hidden transition-all duration-300 w-0 opacity-0 z-50">
-                    <span class="material-icons-round px-4 text-[var(--md-primary)]">search</span>
-                    <input type="text" id="globalSearch"
-                        class="bg-transparent outline-none py-3 pr-4 w-full text-sm font-medium"
-                        placeholder="Wonach suchst du?" oninput="performSearch(this.value)"
-                        onblur="closeSearchWithDelay()">
-                </div>
-
-                <div id="searchResults"
-                    class="hidden absolute top-12 right-0 w-80 bg-[var(--md-surface-container-high)] shadow-2xl rounded-2xl border border-[var(--md-outline-variant)] z-[60] overflow-hidden max-h-[400px] overflow-y-auto">
-                    <!-- Results injected via JS -->
-                </div>
-
-                <button onclick="toggleSearch()"
-                    class="md-icon-btn"
-                    title="Suche">
-                    <span class="material-icons-round">search</span>
-                </button>
-            </div>
-
-            <a href="{{ url_for('settings') }}" class="md-icon-btn" title="Einstellungen">
-                <span class="material-icons-round">settings</span>
-            </a>
-        </div>
     </header>
+
+    <!-- ═══════ Search Overlay (anchored to top bar) ═══════ -->
+    <div id="searchOverlay" class="search-overlay">
+        <div class="search-overlay-box">
+            <span class="material-icons-round text-[var(--md-primary)]" style="font-size:22px">search</span>
+            <input type="text" id="globalSearch"
+                class="bg-transparent outline-none py-3 w-full text-sm font-medium text-[var(--md-on-surface)]"
+                placeholder="Wonach suchst du?" oninput="performSearch(this.value)"
+                onblur="closeSearchWithDelay()">
+            <button onclick="toggleSearch()" class="md-icon-btn" title="Schliessen">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div id="searchResults"
+            class="search-overlay-results hidden">
+            <!-- Results injected via JS -->
+        </div>
+    </div>
 
     <!-- ═══════ Mobile Bottom Navigation (<900px) ═══════ -->
     <nav class="bottom-nav">
