@@ -252,6 +252,41 @@ def create_app():
                 except:
                     db.session.rollback()
 
+        # Migration: Add username column if it doesn't exist
+        try:
+            db.session.execute(db.text('SELECT username FROM user LIMIT 1'))
+        except:
+            db.session.rollback()
+            try:
+                db.session.execute(db.text('ALTER TABLE user ADD COLUMN username VARCHAR(150)'))
+                db.session.execute(db.text('UPDATE user SET username = email'))
+                db.session.commit()
+            except:
+                db.session.rollback()
+
+        # Migration: Add password_hash column if it doesn't exist
+        try:
+            db.session.execute(db.text('SELECT password_hash FROM user LIMIT 1'))
+        except:
+            db.session.rollback()
+            try:
+                db.session.execute(db.text('ALTER TABLE user ADD COLUMN password_hash VARCHAR(150)'))
+                db.session.execute(db.text("UPDATE user SET password_hash = 'cloudflare_auth'"))
+                db.session.commit()
+            except:
+                db.session.rollback()
+
+        # Migration: Add is_admin column if it doesn't exist
+        try:
+            db.session.execute(db.text('SELECT is_admin FROM user LIMIT 1'))
+        except:
+            db.session.rollback()
+            try:
+                db.session.execute(db.text('ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+                db.session.commit()
+            except:
+                db.session.rollback()
+
         # Ensure retention config exists
         retention_config = SystemConfig.query.filter_by(key='file_retention_minutes').first()
         if not retention_config:
