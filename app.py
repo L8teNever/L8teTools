@@ -312,7 +312,7 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     @app.before_request
     def handle_cloudflare_auth():
@@ -360,6 +360,13 @@ def create_app():
     @app.route('/no-access')
     def no_access():
         return render_template('no_access.html')
+
+    @app.route('/logout')
+    def logout():
+        logout_user()
+        # Cloudflare Access logout
+        cf_logout = os.environ.get('CF_LOGOUT_URL', '/')
+        return redirect(cf_logout)
 
     @app.route('/offline')
     def offline():
